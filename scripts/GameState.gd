@@ -45,6 +45,8 @@ func reset() -> void:
 	week = 1
 	day_index = 0
 	hour = DAY_START_HOUR
+	player_name = "Student"
+	dev_mode = false
 	stats = {"magic": 0, "combat": 0, "knowledge": 0, "charisma": 0}
 	max_energy = 100
 	energy = 100
@@ -203,7 +205,13 @@ func availability_ok(a: Dictionary, hour_now: int, energy_now: int, flags_now: D
 		if hour_now < int(r[0]) or hour_now > int(r[1]):
 			return false
 	elif a.has("hours"):
-		if not (hour_now in a["hours"]):
+		# Coerce to int: JSON numbers can parse as floats, and `in` is type-strict.
+		var matched := false
+		for hh in a["hours"]:
+			if int(hh) == hour_now:
+				matched = true
+				break
+		if not matched:
 			return false
 	var req: Dictionary = a.get("requirements", {})
 	if req.has("min_energy") and energy_now < int(req["min_energy"]):
