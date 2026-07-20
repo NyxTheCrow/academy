@@ -46,10 +46,21 @@
 	{
 		"id": "socialize_elara",
 		"name": "Spend the Evening with Elara",
-		"description": "Deepen your friendship with Elara. Builds charisma and your bond.",
+		"description": "A visit-novel scene. Your choices shape your bond with Elara.",
 		"slots": ["Evening"],
 		"requirements": { "min_energy": 10 },
-		"effects": { "stats": { "charisma": 1 }, "relationships": { "elara": 2 }, "energy": -10 }
+		"dialogue": "elara_evening",
+		"effects": { "energy": -10 }
+	},
+	{
+		"id": "spar_cassius",
+		"name": "Duel Cassius in the Training Yard",
+		"description": "A tactical turn-based duel. Win to raise combat and earn respect.",
+		"days": ["Wednesday", "Saturday"],
+		"slots": ["Afternoon"],
+		"requirements": { "min_energy": 20 },
+		"combat": "duel_rival",
+		"effects": { "energy": -20 }
 	},
 	{
 		"id": "advanced_seminar",

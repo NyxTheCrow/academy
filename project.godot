@@ -1,21 +1,22 @@
 ; Engine configuration file.
 ; Magical Academy — Spine Prototype
 ;
-; The autoload order matters: GameData loads content first, then GameState
-; (the clock/state singleton) can rely on it being present.
+; Autoload order matters: GameData (content) first, then GameState (the spine),
+; then Director (the mode/state machine) which drives the three screens.
 
 config_version=5
 
 [application]
 
 config/name="Magical Academy (Spine Prototype)"
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="res://scenes/Root.tscn"
 config/features=PackedStringArray("4.2")
 
 [autoload]
 
 GameData="*res://scripts/GameData.gd"
 GameState="*res://scripts/GameState.gd"
+Director="*res://scripts/Director.gd"
 
 [display]
 

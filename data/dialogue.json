@@ -1,0 +1,21 @@
+{
+	"elara_evening": {
+		"lines": [
+			{ "speaker": "Elara", "text": "There you are! I saved us a table by the window. The whole tower's quiet tonight." },
+			{ "speaker": "You", "text": "It's been a long week. I could use the company." },
+			{ "speaker": "Elara", "text": "Then stay a while. Tell me — what's been on your mind lately?" },
+			{ "choices": [
+				{ "text": "\"Honestly? The exams terrify me.\"", "effects": { "relationships": { "elara": 3 }, "flags": { "confided_in_elara": true } }, "goto": "wrap" },
+				{ "text": "\"Just glad to be here with you.\"", "effects": { "relationships": { "elara": 2 }, "stats": { "charisma": 1 } }, "goto": "wrap" },
+				{ "text": "\"I've been pushing my magic too hard.\"", "effects": { "relationships": { "elara": 1 } }, "goto": "advice" }
+			] },
+
+			{ "label": "advice" },
+			{ "speaker": "Elara", "text": "Then rest. Even the brightest flame gutters if you never let it breathe. Promise me you'll sleep tonight?" },
+			{ "speaker": "You", "text": "...I promise." },
+
+			{ "label": "wrap" },
+			{ "speaker": "Elara", "text": "You always know what to say. Same time next week?" }
+		]
+	}
+}

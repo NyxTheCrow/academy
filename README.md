@@ -1,110 +1,147 @@
 # Magical Academy — Spine Prototype (Godot 4)
 
-A prototype of the **core game-state spine** for a time-management academy sim:
-a canonical calendar/clock, data-driven activities that compete for time slots,
-a resolution system (flat effects + dice-based skill checks), a story flag/event
-system, and a clickable UI. No combat yet — this is the skeleton everything
-else hangs off.
+A prototype of the **core architecture** for a time-management academy sim:
+a canonical calendar/clock, data-driven content, a **mode/state machine** that
+switches between the game's three screens, save/load, and a headless test suite.
 
-> This is the "spine" from the design conversation: **the clock is the backbone,
-> the game state is the nervous system.** Nail these two and the rest is content
-> plugged into them.
+The game has three distinct states, and the spines of all three are set up so
+the base architecture is solid before content goes in:
+
+| Mode | Script | What it is |
+|------|--------|-----------|
+| **Academy** | `scenes/modes/AcademyMode.gd` | The planning UI — clock, stats, activities |
+| **Dialogue** | `scenes/modes/DialogueMode.gd` | VN scene — speaker, portrait, branching choices |
+| **Combat** | `scenes/modes/CombatMode.gd` | Tactical turn-based grid fight |
+
+> From the design chats: **the clock is the backbone, the game state is the
+> nervous system, and the Director is the switchboard between screens.**
 
 ## Run it
 
-1. Install **Godot 4.2+** (standard build, no C# needed) from <https://godotengine.org>.
-2. Open the Godot project manager → **Import** → select this folder's `project.godot`.
-3. Press **F5** (Play). `scenes/Main.tscn` is the main scene.
+1. Install **Godot 4.2+** (standard build, no C#) from <https://godotengine.org>.
+2. Project manager → **Import** → pick this folder's `project.godot`.
+3. Press **F5**. Main scene is `scenes/Root.tscn`.
 
-You'll get a plannable week: pick an activity for each Morning / Afternoon /
-Evening slot, watch stats and energy change, and see events fire as you cross
-thresholds or reach certain dates.
+## Bug-testing tools
 
-## What to try (the loop is already interesting)
+Three ways to test, in increasing automation:
 
-- **Attend Magic Theory** a few mornings until your `magic` hits 15 → an event
-  fires ("Professor Vane has noticed your talent") which sets a flag → a new
-  hidden activity, **Advanced Arcana Seminar**, unlocks on Saturday mornings.
-  That's the full loop: *activity → stat → event → flag → new activity.*
-- **Study in the Library** / **Practice Spells** are **skill checks** — the
-  outcome is `stat + d6` vs a difficulty, with different effects on success/fail.
-- Energy gates activities and refills each morning; **Rest** tops it up mid-day.
+- **In-game debug overlay** — press **F3** while playing. Shows live state
+  (clock, stats, bonds, flags) and gives dev buttons: bump stats, skip a day,
+  refill energy, save/load, reset, and **force-launch a Dialogue or Combat
+  scene** so you can exercise those modes without grinding to their triggers.
+- **Headless test suite** — no editor, no GPU needed:
+  ```bash
+  godot --headless tests/TestRunner.tscn
+  ```
+  Exits non-zero on failure. Covers clock/semester rollover, `apply_effects`,
+  event firing (fire-once semantics), activity gating, and a save/load
+  round-trip.
+- **CI** — `.github/workflows/tests.yml` runs that same suite on every push,
+  so a logic regression fails the build automatically.
 
-## Architecture
+## The mode/state machine
+
+`Director` (autoload) owns a **stack of modes**; only the top is visible. The
+Academy is the persistent base. Sub-modes are launched and awaited:
+
+```gdscript
+# from AcademyMode, when an activity triggers combat:
+var result: Dictionary = await Director.run_mode("combat", {"encounter_id": "duel_rival"})
+GameState.apply_effects(result.get("effects", {}))
+GameState.advance_time()
+```
+
+Every mode extends `GameMode` and hands back a `result` dictionary via its
+`finished` signal. That single contract is what keeps the three screens fully
+decoupled — Dialogue and Combat never touch each other or the calendar; they
+just resolve and return an `effects` bundle.
 
 ```
-project.godot          Autoloads GameData then GameState (order matters).
-scripts/
-  GameData.gd          CONTENT layer. Loads the JSON tables. No game logic.
-  GameState.gd         THE SPINE. Owns the clock + all player state.
-data/
-  activities.json      Every activity, as data. Author here, not in code.
-  events.json          Every triggered event/story beat, as data.
-scenes/
-  Main.tscn / Main.gd  UI shell. Reads GameState, calls it, redraws on signals.
+Root.tscn ─ registers the Director's host, boots Academy, layers DebugOverlay
+  └─ ModeHost
+       ├─ AcademyMode      (base, always at bottom of the stack)
+       ├─ DialogueMode     (pushed over Academy, popped on finish)
+       └─ CombatMode       (pushed over Academy, popped on finish)
 ```
 
-Two rules keep the whole game coherent, and everything routes through them:
+## The spine (unchanged, still the core)
+
+Two rules keep the whole game coherent; everything routes through them:
 
 1. **The clock only moves through `GameState.advance_time()`.**
 2. **State only mutates through `GameState.apply_effects(effects)`.**
 
-Because activities, events, and (later) combat all speak the same `effects`
-dictionary (`{"stats": {...}, "energy": N, "relationships": {...}, "flags": {...}}`),
-adding new systems doesn't mean new mutation paths — they just emit effects.
+Effects are one shape everywhere:
+`{"stats": {...}, "energy": N, "relationships": {...}, "flags": {...}}`.
+Activities, events, dialogue choices, and combat rewards all emit it.
+
+## Files
+
+```
+project.godot              Autoloads: GameData -> GameState -> Director
+scripts/
+  GameData.gd              CONTENT layer — loads the JSON tables
+  GameState.gd             THE SPINE — clock, state, effects, events, save/load
+  Director.gd              MODE MACHINE — the stack of screens
+  GameMode.gd              Base class for all three modes (class_name GameMode)
+scenes/
+  Root.tscn / .gd          Main scene; wires Director + debug overlay
+  DebugOverlay.tscn / .gd  F3 bug-testing panel (floats above every mode)
+  modes/
+    AcademyMode.tscn / .gd
+    DialogueMode.tscn / .gd
+    CombatMode.tscn / .gd
+data/
+  activities.json          Activities (some trigger dialogue/combat)
+  events.json              Date/stat/flag-triggered story beats
+  dialogue.json            VN scenes (lines, labels, branching choices)
+  encounters.json          Combat encounters (enemies, reward, penalty)
+tests/
+  TestRunner.tscn / .gd    Headless spine tests
+.github/workflows/tests.yml  CI: runs the suite on push
+```
+
+## Try the full loop
+
+1. **Attend Magic Theory** a few mornings → at `magic` 15 an event fires and
+   sets a flag → **Advanced Arcana Seminar** unlocks on Saturdays.
+   *(activity → stat → event → flag → new activity)*
+2. **Spend the Evening with Elara** `[scene]` → the VN mode; your choice can
+   branch and sets bonds/flags.
+3. **Duel Cassius** `[fight]` (Wed/Sat afternoons) → the tactical combat mode;
+   win to gain combat and set a flag, lose and pay energy.
+
+All three write results back through the same `apply_effects` boundary.
 
 ## Authoring content (no code)
 
-Add an activity by appending to `data/activities.json`:
-
-```json
-{
-  "id": "meditate",
-  "name": "Meditate in the Grove",
-  "description": "Quiet focus. Restores energy and nudges knowledge.",
-  "slots": ["Evening"],
-  "days": ["Saturday", "Sunday"],
-  "requirements": { "min_energy": 0 },
-  "effects": { "stats": { "knowledge": 1 }, "energy": 15 }
-}
-```
-
-Supported fields: `days`, `slots` (availability gates), `requirements`
-(`min_energy`, `min_stats`, `flags`), and either flat `effects` or a
-`skill_check` (`stat`, `difficulty`, `success`, `failure`).
-
-Events (`data/events.json`) share the same `effects` shape and trigger on any
-mix of `semester` / `week` / `day` / `slot` / `min_stats` / `flags`.
-
-## Where tactical combat plugs in (next milestone)
-
-Combat is a **separate scene/module**, not part of the spine — this is what
-keeps the risky part isolated:
-
-1. An activity or event sets an intent, e.g. `"combat": "duel_rival"` (or emits
-   a signal). The spine stays combat-agnostic.
-2. `Main` (or a small router) instances a `Combat.tscn`, handing it the
-   relevant slice of `GameState` (your stats, learned spells, party).
-3. The combat scene runs the tactical turn-based fight on its own grid.
-4. On resolution it returns **one `effects` dictionary** back through
-   `GameState.apply_effects(...)` — rewards, injuries, flags — then
-   `advance_time()`. Combat writes to state exactly like any activity does.
-
-Keeping combat behind that `effects` boundary means you can build and balance
-the tactical layer in isolation without ever touching the calendar spine.
+- **Activity** → append to `data/activities.json`. Add `"dialogue": "scene_id"`
+  or `"combat": "encounter_id"` to make it launch a mode instead of resolving
+  instantly.
+- **Dialogue** → add a scene to `data/dialogue.json`: a list of
+  `{speaker,text}` lines, `{label}` jump targets, and `{choices:[...]}` where a
+  choice has `effects` and an optional `goto` label.
+- **Encounter** → add to `data/encounters.json`: `enemies` plus `reward` /
+  `penalty` effect bundles.
 
 ## Status
 
 - [x] Canonical clock (semester → week → day → 3 slots)
 - [x] Data-driven activities with availability + requirement gating
 - [x] Resolution: flat effects **and** dice skill checks
-- [x] Relationships, energy economy, story flags
-- [x] Event system (date / stat / flag triggers, once-only)
-- [x] Clickable planning UI (clock, stats, journal, activity buttons)
-- [ ] Save/load (serialize the GameState fields — deliberately kept flat for this)
-- [ ] VN-style dialogue scenes for events
-- [ ] Tactical combat module
+- [x] Event system (date / stat / flag triggers, fire-once)
+- [x] **Mode/state machine** with Academy / Dialogue / Combat spines
+- [x] **VN dialogue** engine (branching choices, labels)
+- [x] **Tactical combat** spine (grid, move + attack, enemy AI, win/lose)
+- [x] **Save / load** (JSON to `user://`)
+- [x] **Debug overlay** + **headless test suite** + **CI**
+- [ ] Deeper combat (terrain, abilities, statuses, a party)
+- [ ] Portrait/background art in dialogue (placeholders for now)
+- [ ] Multiple save slots / main menu
 
-_Note: authored without a Godot binary available in the build environment, so it
-hasn't been run through the editor here. JSON validated; GDScript is Godot 4.2
-syntax. If the first import surfaces anything, it'll be trivial to fix._
+_Authored without a Godot binary in the build environment, so it hasn't been
+run through the editor here — the environment's proxy blocks the Godot
+download. JSON is validated and GDScript is consistent-tab Godot 4.2 syntax;
+the CI job (or a local run) is the real check. If the first import surfaces
+anything, it'll be small — tell me the error and I'll fix it fast._

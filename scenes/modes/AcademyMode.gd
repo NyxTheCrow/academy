@@ -1,11 +1,9 @@
-extends Control
-## Main — the UI shell for the spine prototype.
+extends GameMode
+## AcademyMode — the planning UI and the base mode of the game.
 ##
-## Deliberately built entirely in code so the whole game loop is readable in
-## one place: a date/clock header, a stats sidebar, a scrolling journal, and a
-## column of activity buttons for the current slot. It never touches game
-## state directly — it reads from GameState and calls perform_activity(), then
-## redraws whenever GameState emits state_changed.
+## Reads GameState, shows the clock / stats / journal / activity buttons, and
+## on a button press either resolves a plain activity or launches a sub-mode
+## (dialogue or combat) via the Director, applying the result when it returns.
 
 var date_label: Label
 var stats_label: Label
@@ -20,8 +18,17 @@ func _ready() -> void:
 	_refresh()
 	_on_message("[i]Welcome to the Academy. Plan your time wisely — every slot counts.[/i]")
 
+func on_resumed() -> void:
+	_refresh()
+
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.10, 0.11, 0.16)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -33,7 +40,7 @@ func _build_ui() -> void:
 	root_h.add_theme_constant_override("separation", 18)
 	margin.add_child(root_h)
 
-	# --- Sidebar: clock + stats + relationships ---
+	# --- Sidebar: clock + stats + relationships + save/load ---
 	var sidebar := VBoxContainer.new()
 	sidebar.custom_minimum_size = Vector2(300, 0)
 	sidebar.add_theme_constant_override("separation", 10)
@@ -45,14 +52,27 @@ func _build_ui() -> void:
 	sidebar.add_child(date_label)
 
 	sidebar.add_child(HSeparator.new())
-	sidebar.add_child(_section_title("Stats"))
+	sidebar.add_child(_title("Stats"))
 	stats_label = Label.new()
 	sidebar.add_child(stats_label)
 
 	sidebar.add_child(HSeparator.new())
-	sidebar.add_child(_section_title("Relationships"))
+	sidebar.add_child(_title("Relationships"))
 	relations_label = Label.new()
 	sidebar.add_child(relations_label)
+
+	sidebar.add_child(HSeparator.new())
+	var save_row := HBoxContainer.new()
+	save_row.add_theme_constant_override("separation", 8)
+	var save_btn := Button.new()
+	save_btn.text = "Save"
+	save_btn.pressed.connect(func(): GameState.save_game())
+	var load_btn := Button.new()
+	load_btn.text = "Load"
+	load_btn.pressed.connect(func(): GameState.load_game())
+	save_row.add_child(save_btn)
+	save_row.add_child(load_btn)
+	sidebar.add_child(save_row)
 
 	# --- Main column: journal + activities ---
 	var main_v := VBoxContainer.new()
@@ -60,25 +80,27 @@ func _build_ui() -> void:
 	main_v.add_theme_constant_override("separation", 10)
 	root_h.add_child(main_v)
 
-	main_v.add_child(_section_title("Journal"))
+	main_v.add_child(_title("Journal"))
 	log_box = RichTextLabel.new()
 	log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_box.bbcode_enabled = true
 	log_box.scroll_following = true
 	main_v.add_child(log_box)
 
-	main_v.add_child(_section_title("What will you do?"))
+	main_v.add_child(_title("What will you do?"))
 	activity_container = VBoxContainer.new()
 	activity_container.add_theme_constant_override("separation", 6)
 	main_v.add_child(activity_container)
 
-func _section_title(text: String) -> Label:
+func _title(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = "— %s —" % text
 	lbl.add_theme_font_size_override("font_size", 15)
 	return lbl
 
 func _refresh() -> void:
+	if date_label == null:
+		return
 	date_label.text = GameState.date_string()
 
 	var s := "Energy:  %d / %d\n\n" % [GameState.energy, GameState.max_energy]
@@ -109,14 +131,34 @@ func _rebuild_activities() -> void:
 
 	for a in acts:
 		var btn := Button.new()
-		btn.text = a.get("name", "Activity")
+		var label: String = a.get("name", "Activity")
+		if a.has("dialogue"):
+			label += "  [scene]"
+		elif a.has("combat"):
+			label += "  [fight]"
+		btn.text = label
 		btn.tooltip_text = a.get("description", "")
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.pressed.connect(_on_activity_pressed.bind(a))
 		activity_container.add_child(btn)
 
 func _on_activity_pressed(a: Dictionary) -> void:
-	GameState.perform_activity(a)
+	# Mode-triggering activities: run the sub-mode, then apply everything and
+	# advance one slot once it returns. Plain activities go straight through
+	# the spine's perform_activity().
+	if a.has("dialogue"):
+		var res: Dictionary = await Director.run_mode("dialogue", {"scene_id": a["dialogue"]})
+		GameState.apply_effects(a.get("effects", {}))
+		GameState.apply_effects(res.get("effects", {}))
+		GameState.advance_time()
+	elif a.has("combat"):
+		var res2: Dictionary = await Director.run_mode("combat", {"encounter_id": a["combat"]})
+		GameState.apply_effects(a.get("effects", {}))
+		GameState.apply_effects(res2.get("effects", {}))
+		GameState.advance_time()
+	else:
+		GameState.perform_activity(a)
 
 func _on_message(text: String) -> void:
-	log_box.append_text(text + "\n")
+	if log_box != null:
+		log_box.append_text(text + "\n")

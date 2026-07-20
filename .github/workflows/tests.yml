@@ -1,0 +1,27 @@
+name: Spine Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  godot-headless-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot 4.2.2 (headless)
+        run: |
+          set -e
+          curl -L -o godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.2.2-stable/Godot_v4.2.2-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          mv Godot_v4.2.2-stable_linux.x86_64 godot
+          chmod +x godot
+
+      - name: Import project resources
+        run: ./godot --headless --path . --import || true
+
+      - name: Run spine tests
+        run: ./godot --headless --path . tests/TestRunner.tscn
