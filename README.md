@@ -4,17 +4,38 @@ A prototype of the **core architecture** for a time-management academy sim:
 a canonical calendar/clock, data-driven content, a **mode/state machine** that
 switches between the game's three screens, save/load, and a headless test suite.
 
-The game has three distinct states, and the spines of all three are set up so
-the base architecture is solid before content goes in:
+The game's distinct states each have a mode, and the base architecture is set
+up so content can go in:
 
 | Mode | Script | What it is |
 |------|--------|-----------|
-| **Academy** | `scenes/modes/AcademyMode.gd` | The planning UI — clock, stats, activities |
+| **CharCreation** | `scenes/modes/CharCreationMode.gd` | New-game setup: name, stats, background, dev toggle |
+| **Academy** | `scenes/modes/AcademyMode.gd` | The planning UI — clock, stats, activities, NPCs |
 | **Dialogue** | `scenes/modes/DialogueMode.gd` | VN scene — speaker, portrait, branching choices |
-| **Combat** | `scenes/modes/CombatMode.gd` | Tactical turn-based grid fight |
+| **Combat** | `scenes/modes/CombatMode.gd` | Tactical turn-based grid fight (with Fire Wall) |
 
 > From the design chats: **the clock is the backbone, the game state is the
 > nervous system, and the Director is the switchboard between screens.**
+
+## Core systems
+
+- **Hourly clock** — the day runs 08:00–22:00; activities have a `duration`
+  (hours) and are gated by `hours` / `hour_range`. The clock lives in
+  `GameState` and only moves through `advance_time(hours)`.
+- **Character creation** runs first: pick a name, spend a few stat points,
+  choose a data-driven background (`data/backgrounds.json`), and toggle dev
+  mode. It writes straight into `GameState`, then the academy boots.
+- **Dev vs normal display** — `GameState.dev_mode`. Dev reveals all data
+  (skill-check dice math, NPC stats). Normal hides it. Toggle with **F2** or
+  the debug panel; chosen at character creation.
+- **Four NPC students** (`Students` autoload, `data/students.json`) share the
+  player's stats, hours, and action list. Every hour each one picks an action
+  by a weighted random roll (their own bias) and grows their own stats. Shown
+  in the Academy sidebar — names + current action in normal mode, full stats
+  in dev mode. Saved and loaded with the game.
+- **Fire Wall** (combat) — an ability that raises a 3-tile hazard zone; any
+  unit that moves onto it or ends its turn on it takes damage. Lasts a few
+  rounds.
 
 ## Run it
 
