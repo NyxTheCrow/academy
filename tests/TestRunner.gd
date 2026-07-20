@@ -134,14 +134,14 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/DialogueMode.tscn",
 		"res://scenes/modes/CombatMode.tscn",
 	]:
-		var name := path.get_file()
+		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)
 		if packed == null:
-			_check(false, "loads %s" % name)
+			_check(false, "loads %s" % fname)
 			continue
 		var m: Node = packed.instantiate()
 		# A parse error would leave the root without its script -> no enter().
-		_check(m != null and m.has_method("enter"), "%s script attached (enter())" % name)
-		_check(m != null and m.has_signal("finished"), "%s has finished signal" % name)
+		_check(m != null and m.has_method("enter"), "%s script attached (enter())" % fname)
+		_check(m != null and m.has_signal("finished"), "%s has finished signal" % fname)
 		if m != null:
 			m.free()
