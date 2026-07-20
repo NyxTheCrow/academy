@@ -1,4 +1,4 @@
-extends GameMode
+extends "res://scripts/GameMode.gd"
 ## AcademyMode — the planning UI and the base mode of the game.
 ##
 ## Reads GameState, shows the clock / stats / journal / activity buttons, and

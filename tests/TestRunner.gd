@@ -19,6 +19,7 @@ func _ready() -> void:
 	_test_event_firing()
 	_test_activity_availability()
 	_test_save_load_roundtrip()
+	_test_modes_and_director()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -121,3 +122,26 @@ func _test_save_load_roundtrip() -> void:
 	_eq(GameState.week, snap_week, "loaded week")
 	_eq(GameState.slot_index, snap_slot, "loaded slot")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+func _test_modes_and_director() -> void:
+	# Guards the class of bug where a mode script or the Director autoload fails
+	# to compile — which the pure-logic tests above would otherwise miss.
+	print("[modes + director]")
+	_check(Director != null, "Director autoload loaded")
+	_check(Director.has_method("run_mode"), "Director has run_mode()")
+	for path in [
+		"res://scenes/modes/AcademyMode.tscn",
+		"res://scenes/modes/DialogueMode.tscn",
+		"res://scenes/modes/CombatMode.tscn",
+	]:
+		var name := path.get_file()
+		var packed: PackedScene = load(path)
+		if packed == null:
+			_check(false, "loads %s" % name)
+			continue
+		var m: Node = packed.instantiate()
+		# A parse error would leave the root without its script -> no enter().
+		_check(m != null and m.has_method("enter"), "%s script attached (enter())" % name)
+		_check(m != null and m.has_signal("finished"), "%s has finished signal" % name)
+		if m != null:
+			m.free()

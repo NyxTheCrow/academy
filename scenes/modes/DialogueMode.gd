@@ -1,4 +1,4 @@
-extends GameMode
+extends "res://scripts/GameMode.gd"
 ## DialogueMode — the VN spine.
 ##
 ## Plays a data-driven dialogue scene (from data/dialogue.json). A scene is a

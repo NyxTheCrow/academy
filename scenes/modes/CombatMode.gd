@@ -1,4 +1,4 @@
-extends GameMode
+extends "res://scripts/GameMode.gd"
 ## CombatMode — the tactical-combat spine.
 ##
 ## A deliberately small but complete turn-based grid fight: units with HP/attack
