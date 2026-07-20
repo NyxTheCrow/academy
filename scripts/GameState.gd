@@ -1,47 +1,50 @@
 extends Node
 ## GameState — THE SPINE.
 ##
-## Owns the canonical clock and the entire player game state. Two rules keep
-## the whole game coherent, and everything (activities, events, dialogue,
-## combat) routes through them:
+## Owns the canonical clock and the entire player game state. Two rules keep the
+## whole game coherent, and everything (activities, events, dialogue, combat,
+## NPCs) routes through them:
 ##   1. The clock only ever moves through advance_time().
 ##   2. State only ever mutates through apply_effects().
-## Because every system speaks the same `effects` dictionary, adding a new
-## system never means a new mutation path — it just emits effects.
 
-signal state_changed          ## the clock or player state changed; UI should refresh
-signal message(text: String)  ## narrative / journal line for the UI to display
+signal state_changed             ## clock or player state changed; UI should refresh
+signal message(text: String)     ## narrative / journal line for the UI
+signal hour_ticked(hour: int)    ## emitted once per in-game hour advanced (NPCs listen)
 
 # --- Time configuration -----------------------------------------------------
-const SLOTS := ["Morning", "Afternoon", "Evening"]
 const DAYS := ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 const WEEKS_PER_SEMESTER := 4
-const SAVE_VERSION := 1
+const DAY_START_HOUR := 8   # the day begins at 08:00
+const DAY_END_HOUR := 22    # at 22:00 the student sleeps; clock rolls to next day
+const SAVE_VERSION := 2
 
 # --- The clock --------------------------------------------------------------
 var semester: int = 1
 var week: int = 1        # 1-based
 var day_index: int = 0   # 0-based index into DAYS
-var slot_index: int = 0  # 0-based index into SLOTS
+var hour: int = DAY_START_HOUR
 
 # --- Player state -----------------------------------------------------------
+var player_name: String = "Student"
+var dev_mode: bool = false
 var stats := {}
 var max_energy: int = 100
 var energy: int = 100
 var relationships := {}   # npc_id -> affinity (int)
-var flags := {}           # arbitrary story flags (string -> Variant)
+var flags := {}           # arbitrary story flags
 var fired_events := {}    # event_id -> true, so "once" events fire once
 
 func _ready() -> void:
 	randomize()
 	reset()
 
-## Reset all state to a fresh new game. Also used by the test runner.
+## Reset core player state to a fresh new game. Does not touch NPCs (Students
+## has its own reset) or the chosen name/dev_mode, which character creation sets.
 func reset() -> void:
 	semester = 1
 	week = 1
 	day_index = 0
-	slot_index = 0
+	hour = DAY_START_HOUR
 	stats = {"magic": 0, "combat": 0, "knowledge": 0, "charisma": 0}
 	max_energy = 100
 	energy = 100
@@ -54,22 +57,25 @@ func reset() -> void:
 func day_name() -> String:
 	return DAYS[day_index]
 
-func slot_name() -> String:
-	return SLOTS[slot_index]
+func time_string() -> String:
+	return "%02d:00" % hour
 
 func is_school_day() -> bool:
 	return day_index < 5  # Monday..Friday
 
 func date_string() -> String:
-	return "Semester %d  ·  Week %d  ·  %s  ·  %s" % [semester, week, day_name(), slot_name()]
+	return "Semester %d  ·  Week %d  ·  %s  ·  %s" % [semester, week, day_name(), time_string()]
 
-## Advance exactly one time slot. This is the ONLY place the clock moves.
-func advance_time() -> void:
-	slot_index += 1
-	if slot_index >= SLOTS.size():
-		slot_index = 0
-		_advance_day()
-	_check_events()
+## Advance the clock by `hours` in-game hours (default 1). The ONLY place the
+## clock moves. Emits hour_ticked for each hour so NPCs can act, checks events.
+func advance_time(hours := 1) -> void:
+	for _i in range(max(1, hours)):
+		hour += 1
+		if hour >= DAY_END_HOUR:
+			hour = DAY_START_HOUR
+			_advance_day()
+		hour_ticked.emit(hour)
+		_check_events()
 	state_changed.emit()
 
 func _advance_day() -> void:
@@ -87,9 +93,9 @@ func _advance_week() -> void:
 		message.emit("A new semester begins. (Semester %d)" % semester)
 
 # --- Resolution -------------------------------------------------------------
-## Perform a plain activity dictionary: optional skill check, apply effects,
-## then advance one slot. Mode-triggering activities (dialogue/combat) are
-## driven by AcademyMode instead, so their sub-scene can resolve first.
+## Perform a plain activity: optional skill check, apply effects, then advance
+## by the activity's duration (hours). Mode-triggering activities (dialogue /
+## combat) are driven by AcademyMode so their sub-scene can resolve first.
 func perform_activity(activity: Dictionary) -> void:
 	var act_name: String = activity.get("name", "Activity")
 	var check: Variant = activity.get("skill_check", null)
@@ -97,8 +103,11 @@ func perform_activity(activity: Dictionary) -> void:
 		_resolve_skill_check(act_name, check)
 	else:
 		apply_effects(activity.get("effects", {}))
-		message.emit("You spent the %s: %s." % [slot_name().to_lower(), act_name])
-	advance_time()
+		message.emit("You spent %d hour(s): %s." % [duration_of(activity), act_name])
+	advance_time(duration_of(activity))
+
+func duration_of(activity: Dictionary) -> int:
+	return maxi(1, int(activity.get("duration", 1)))
 
 func _resolve_skill_check(act_name: String, check: Dictionary) -> void:
 	var stat_id: String = check.get("stat", "")
@@ -106,17 +115,20 @@ func _resolve_skill_check(act_name: String, check: Dictionary) -> void:
 	var roll: int = randi_range(1, 6)
 	var stat_value: int = int(stats.get(stat_id, 0))
 	var total: int = stat_value + roll
-	if total >= difficulty:
-		message.emit("%s — [color=lightgreen]Success![/color] (%s %d + roll %d = %d vs %d)"
-			% [act_name, stat_id, stat_value, roll, total, difficulty])
+	var ok := total >= difficulty
+	if ok:
 		apply_effects(check.get("success", {}))
 	else:
-		message.emit("%s — [color=salmon]Failed.[/color] (%s %d + roll %d = %d vs %d)"
-			% [act_name, stat_id, stat_value, roll, total, difficulty])
 		apply_effects(check.get("failure", {}))
+	# The dice math is a "dev" detail; players just see the outcome.
+	if dev_mode:
+		message.emit("%s — %s (%s %d + roll %d = %d vs %d)" % [
+			act_name, ("[color=lightgreen]Success![/color]" if ok else "[color=salmon]Failed.[/color]"),
+			stat_id, stat_value, roll, total, difficulty])
+	else:
+		message.emit("%s — %s" % [act_name, ("[color=lightgreen]it goes well.[/color]" if ok else "[color=salmon]it doesn't click.[/color]")])
 
 ## Apply an effects dictionary to game state. The single mutation gateway.
-## Supported keys: "stats", "energy", "relationships", "flags".
 func apply_effects(effects: Dictionary) -> void:
 	if effects.has("stats"):
 		for k in effects["stats"]:
@@ -131,8 +143,7 @@ func apply_effects(effects: Dictionary) -> void:
 			flags[fl] = effects["flags"][fl]
 	state_changed.emit()
 
-## Merge effects dictionary `add` into `into` (used to accumulate results from
-## a dialogue or combat scene before handing one dictionary back). Pure/static.
+## Merge effects `add` into `into` (accumulate a dialogue/combat result). Static.
 static func merge_effects(into: Dictionary, add: Dictionary) -> void:
 	for cat in ["stats", "relationships"]:
 		if add.has(cat):
@@ -149,8 +160,6 @@ static func merge_effects(into: Dictionary, add: Dictionary) -> void:
 			into["flags"][k] = add["flags"][k]
 
 # --- Events -----------------------------------------------------------------
-## Checked after every time advance. Fires any event whose trigger conditions
-## are all met (date and/or stat and/or flag conditions).
 func _check_events() -> void:
 	for ev in GameData.events:
 		var id: String = ev.get("id", "")
@@ -170,7 +179,7 @@ func _event_triggers(ev: Dictionary) -> bool:
 		return false
 	if t.has("day") and str(t["day"]) != day_name():
 		return false
-	if t.has("slot") and str(t["slot"]) != slot_name():
+	if t.has("hour") and int(t["hour"]) != hour:
 		return false
 	if t.has("min_stats"):
 		for k in t["min_stats"]:
@@ -182,43 +191,61 @@ func _event_triggers(ev: Dictionary) -> bool:
 				return false
 	return true
 
-# --- Queries for the UI -----------------------------------------------------
-## Activities available in the current day/slot given their requirements.
-func available_activities() -> Array:
-	var out: Array = []
-	for a in GameData.activities:
-		if _activity_available(a):
-			out.append(a)
-	return out
-
-func _activity_available(a: Dictionary) -> bool:
-	var slots: Variant = a.get("slots", null)
-	if slots != null and not (slot_name() in slots):
-		return false
+# --- Availability (shared by the player and NPCs) ---------------------------
+## True if activity `a` can be started at `hour_now` given `energy_now`/`flags_now`.
+## day_index is always "now" (the whole world shares the calendar).
+func availability_ok(a: Dictionary, hour_now: int, energy_now: int, flags_now: Dictionary) -> bool:
 	var days: Variant = a.get("days", null)
 	if days != null and not (day_name() in days):
 		return false
+	if a.has("hour_range"):
+		var r: Array = a["hour_range"]
+		if hour_now < int(r[0]) or hour_now > int(r[1]):
+			return false
+	elif a.has("hours"):
+		if not (hour_now in a["hours"]):
+			return false
 	var req: Dictionary = a.get("requirements", {})
-	if req.has("min_energy") and energy < int(req["min_energy"]):
+	if req.has("min_energy") and energy_now < int(req["min_energy"]):
 		return false
-	if req.has("min_stats"):
-		for k in req["min_stats"]:
-			if int(stats.get(k, 0)) < int(req["min_stats"][k]):
-				return false
+	# Stat gates are player-only (stats are per-actor); available_activities()
+	# applies them. NPCs share this time/energy/flag availability check.
 	if req.has("flags"):
 		for fl in req["flags"]:
-			if flags.get(fl, false) != req["flags"][fl]:
+			if flags_now.get(fl, false) != req["flags"][fl]:
 				return false
 	return true
 
+## Activities the PLAYER can start right now.
+func available_activities() -> Array:
+	var out: Array = []
+	for a in GameData.activities:
+		if not availability_ok(a, hour, energy, flags):
+			continue
+		if a.has("requirements") and a["requirements"].has("min_stats"):
+			var ok := true
+			for k in a["requirements"]["min_stats"]:
+				if int(stats.get(k, 0)) < int(a["requirements"]["min_stats"][k]):
+					ok = false
+			if not ok:
+				continue
+		out.append(a)
+	return out
+
 # --- Save / load ------------------------------------------------------------
+# Resolve the Students autoload at runtime (it registers after GameState, so we
+# must not reference it by its global name here — that would fail to compile).
+func _students_node():
+	return get_node_or_null("/root/Students")
+
 func save_game(path := "user://savegame.json") -> bool:
 	var data := {
 		"version": SAVE_VERSION,
-		"semester": semester, "week": week,
-		"day_index": day_index, "slot_index": slot_index,
+		"player_name": player_name, "dev_mode": dev_mode,
+		"semester": semester, "week": week, "day_index": day_index, "hour": hour,
 		"stats": stats, "energy": energy, "max_energy": max_energy,
 		"relationships": relationships, "flags": flags, "fired_events": fired_events,
+		"students": _students_node().serialize() if _students_node() else [],
 	}
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
@@ -240,16 +267,21 @@ func load_game(path := "user://savegame.json") -> bool:
 		push_error("[GameState] save file is corrupt: %s" % path)
 		return false
 	var d: Dictionary = parsed
+	player_name = str(d.get("player_name", "Student"))
+	dev_mode = bool(d.get("dev_mode", false))
 	semester = int(d.get("semester", 1))
 	week = int(d.get("week", 1))
 	day_index = int(d.get("day_index", 0))
-	slot_index = int(d.get("slot_index", 0))
+	hour = int(d.get("hour", DAY_START_HOUR))
 	stats = d.get("stats", stats)
 	energy = int(d.get("energy", 100))
 	max_energy = int(d.get("max_energy", 100))
 	relationships = d.get("relationships", {})
 	flags = d.get("flags", {})
 	fired_events = d.get("fired_events", {})
+	var sn := _students_node()
+	if sn:
+		sn.deserialize(d.get("students", []))
 	message.emit("[i]Game loaded.[/i]")
 	state_changed.emit()
 	return true

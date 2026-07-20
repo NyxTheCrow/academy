@@ -1,0 +1,28 @@
+{
+	"backgrounds": [
+		{
+			"id": "scholar",
+			"name": "Scholar",
+			"description": "Raised among books. Starts stronger in Knowledge.",
+			"effects": { "stats": { "knowledge": 3, "magic": 1 }, "flags": { "bg_scholar": true } }
+		},
+		{
+			"id": "duelist",
+			"name": "Duelist",
+			"description": "Trained to fight before you could read a spell. Strong Combat.",
+			"effects": { "stats": { "combat": 3, "magic": 1 }, "flags": { "bg_duelist": true } }
+		},
+		{
+			"id": "socialite",
+			"name": "Socialite",
+			"description": "You know everyone worth knowing. Strong Charisma.",
+			"effects": { "stats": { "charisma": 3, "knowledge": 1 }, "flags": { "bg_socialite": true } }
+		},
+		{
+			"id": "prodigy",
+			"name": "Prodigy",
+			"description": "Raw talent that unsettles the faculty. Strong Magic.",
+			"effects": { "stats": { "magic": 4 }, "flags": { "bg_prodigy": true } }
+		}
+	]
+}

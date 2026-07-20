@@ -5,9 +5,11 @@ extends "res://scripts/GameMode.gd"
 ## on a button press either resolves a plain activity or launches a sub-mode
 ## (dialogue or combat) via the Director, applying the result when it returns.
 
+var header_label: Label
 var date_label: Label
 var stats_label: Label
 var relations_label: Label
+var students_label: RichTextLabel
 var log_box: RichTextLabel
 var activity_container: VBoxContainer
 
@@ -42,12 +44,16 @@ func _build_ui() -> void:
 
 	# --- Sidebar: clock + stats + relationships + save/load ---
 	var sidebar := VBoxContainer.new()
-	sidebar.custom_minimum_size = Vector2(300, 0)
+	sidebar.custom_minimum_size = Vector2(320, 0)
 	sidebar.add_theme_constant_override("separation", 10)
 	root_h.add_child(sidebar)
 
+	header_label = Label.new()
+	header_label.add_theme_font_size_override("font_size", 20)
+	sidebar.add_child(header_label)
+
 	date_label = Label.new()
-	date_label.add_theme_font_size_override("font_size", 18)
+	date_label.add_theme_font_size_override("font_size", 16)
 	date_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(date_label)
 
@@ -60,6 +66,14 @@ func _build_ui() -> void:
 	sidebar.add_child(_title("Relationships"))
 	relations_label = Label.new()
 	sidebar.add_child(relations_label)
+
+	sidebar.add_child(HSeparator.new())
+	sidebar.add_child(_title("Other Students"))
+	students_label = RichTextLabel.new()
+	students_label.bbcode_enabled = true
+	students_label.fit_content = true
+	students_label.custom_minimum_size = Vector2(300, 90)
+	sidebar.add_child(students_label)
 
 	sidebar.add_child(HSeparator.new())
 	var save_row := HBoxContainer.new()
@@ -101,6 +115,8 @@ func _title(text: String) -> Label:
 func _refresh() -> void:
 	if date_label == null:
 		return
+	var mode_tag := "  [color=orange][DEV][/color]" if GameState.dev_mode else ""
+	header_label.text = GameState.player_name
 	date_label.text = GameState.date_string()
 
 	var s := "Energy:  %d / %d\n\n" % [GameState.energy, GameState.max_energy]
@@ -116,7 +132,20 @@ func _refresh() -> void:
 			r += "%s:  %d\n" % [str(npc).capitalize(), GameState.relationships[npc]]
 		relations_label.text = r
 
+	_refresh_students()
 	_rebuild_activities()
+
+func _refresh_students() -> void:
+	# Normal mode: just who's doing what. Dev mode: full stats too.
+	var out := ""
+	for npc in Students.npcs:
+		out += "[b]%s[/b] — %s\n" % [npc["name"], npc["current_action"]]
+		if GameState.dev_mode:
+			var st: Dictionary = npc["stats"]
+			out += "    [color=gray]MAG %d · CMB %d · KN %d · CHA %d · EN %d[/color]\n" % [
+				int(st.get("magic", 0)), int(st.get("combat", 0)),
+				int(st.get("knowledge", 0)), int(st.get("charisma", 0)), int(npc["energy"])]
+	students_label.text = out
 
 func _rebuild_activities() -> void:
 	for c in activity_container.get_children():
@@ -150,12 +179,12 @@ func _on_activity_pressed(a: Dictionary) -> void:
 		var res: Dictionary = await Director.run_mode("dialogue", {"scene_id": a["dialogue"]})
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.apply_effects(res.get("effects", {}))
-		GameState.advance_time()
+		GameState.advance_time(GameState.duration_of(a))
 	elif a.has("combat"):
 		var res2: Dictionary = await Director.run_mode("combat", {"encounter_id": a["combat"]})
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.apply_effects(res2.get("effects", {}))
-		GameState.advance_time()
+		GameState.advance_time(GameState.duration_of(a))
 	else:
 		GameState.perform_activity(a)
 

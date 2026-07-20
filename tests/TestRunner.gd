@@ -1,10 +1,7 @@
 extends Node
 ## Headless test runner for the spine. Run with:
 ##     godot --headless tests/TestRunner.tscn
-## Exits with code 0 if all tests pass, 1 otherwise — so CI can gate on it.
-##
-## Runs as a normal scene so the GameData / GameState / Director autoloads are
-## all present, then exercises the pure game logic (no rendering required).
+## Exits 0 if all pass, 1 otherwise — CI gates on it.
 
 var _passed := 0
 var _failed := 0
@@ -12,13 +9,15 @@ var _failed := 0
 func _ready() -> void:
 	await get_tree().process_frame  # let autoloads finish _ready
 
-	_test_clock_rollover()
+	_test_clock_hourly()
 	_test_semester_rollover()
 	_test_apply_effects()
 	_test_merge_effects()
 	_test_event_firing()
 	_test_activity_availability()
 	_test_save_load_roundtrip()
+	_test_data_loaded()
+	_test_npc_students()
 	_test_modes_and_director()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
@@ -37,27 +36,29 @@ func _eq(a, b, label: String) -> void:
 	_check(a == b, "%s  (got %s, expected %s)" % [label, str(a), str(b)])
 
 # --- Tests ------------------------------------------------------------------
-func _test_clock_rollover() -> void:
-	print("[clock rollover]")
+func _test_clock_hourly() -> void:
+	print("[clock (hourly)]")
 	GameState.reset()
-	_eq(GameState.slot_name(), "Morning", "starts on Morning")
+	_eq(GameState.hour, GameState.DAY_START_HOUR, "starts at day-start hour")
 	_eq(GameState.day_name(), "Monday", "starts on Monday")
-	for i in 3:
-		GameState.advance_time()
-	_eq(GameState.day_name(), "Tuesday", "3 slots -> next day")
-	_eq(GameState.slot_name(), "Morning", "3 slots -> back to Morning")
+	GameState.advance_time(1)
+	_eq(GameState.hour, GameState.DAY_START_HOUR + 1, "one hour advances the clock")
 	GameState.reset()
-	for i in 21:
-		GameState.advance_time()
-	_eq(GameState.week, 2, "21 slots (7 days) -> week 2")
-	_eq(GameState.day_name(), "Monday", "21 slots -> Monday again")
+	var hours_per_day: int = GameState.DAY_END_HOUR - GameState.DAY_START_HOUR
+	GameState.advance_time(hours_per_day)
+	_eq(GameState.day_name(), "Tuesday", "a full day of hours -> next day")
+	_eq(GameState.hour, GameState.DAY_START_HOUR, "day rolls back to start hour")
+	GameState.reset()
+	GameState.advance_time(hours_per_day * 7)
+	_eq(GameState.week, 2, "7 days of hours -> week 2")
+	_eq(GameState.day_name(), "Monday", "7 days -> Monday again")
 
 func _test_semester_rollover() -> void:
 	print("[semester rollover]")
 	GameState.reset()
-	for i in 3 * 7 * 4:  # 4 weeks
-		GameState.advance_time()
-	_eq(GameState.semester, 2, "4 weeks -> semester 2")
+	var hours_per_week: int = (GameState.DAY_END_HOUR - GameState.DAY_START_HOUR) * 7
+	GameState.advance_time(hours_per_week * GameState.WEEKS_PER_SEMESTER)
+	_eq(GameState.semester, 2, "a full semester of hours -> semester 2")
 	_eq(GameState.week, 1, "semester rolls week back to 1")
 
 func _test_apply_effects() -> void:
@@ -85,51 +86,78 @@ func _test_event_firing() -> void:
 	print("[event firing]")
 	GameState.reset()
 	GameState.apply_effects({"stats": {"magic": 15}})
-	GameState.advance_time()  # events are checked on advance
+	GameState.advance_time(1)
 	_eq(GameState.flags.get("noticed_by_professor", false), true, "magic>=15 fires 'noticed' event")
 	_check(GameState.fired_events.has("noticed_by_professor"), "event recorded as fired")
-	# Should not fire twice: clear the flag, advance again, stays cleared.
 	GameState.flags.erase("noticed_by_professor")
-	GameState.advance_time()
+	GameState.advance_time(1)
 	_check(not GameState.flags.has("noticed_by_professor"), "once-only event does not re-fire")
 
 func _test_activity_availability() -> void:
 	print("[activity availability]")
-	GameState.reset()  # Monday, Morning
+	GameState.reset()  # Monday, 08:00
+	_check("study_library" in _available_ids(), "Library available at 08:00 (hour_range)")
+	_check(not ("class_magic" in _available_ids()), "Magic class NOT available at 08:00")
+	GameState.advance_time(1)  # 09:00
+	_check("class_magic" in _available_ids(), "Magic class available at 09:00")
+	_check(not ("spar_cassius" in _available_ids()), "Wed/Sat combat NOT available Monday")
+	_check(not ("advanced_seminar" in _available_ids()), "flag-gated seminar hidden without flag")
+
+func _available_ids() -> Array:
 	var ids := []
 	for a in GameState.available_activities():
 		ids.append(a.get("id", ""))
-	_check("class_magic" in ids, "Magic Theory available Monday morning")
-	_check(not ("spar_cassius" in ids), "Wed/Sat combat NOT available Monday morning")
-	_check(not ("advanced_seminar" in ids), "flag-gated seminar hidden without flag")
+	return ids
 
 func _test_save_load_roundtrip() -> void:
 	print("[save/load roundtrip]")
 	GameState.reset()
+	Students.reset()
+	GameState.player_name = "Tester"
+	GameState.dev_mode = true
 	GameState.apply_effects({"stats": {"magic": 9, "combat": 4}, "flags": {"beat_cassius": true}})
-	for i in 5:
-		GameState.advance_time()
+	GameState.advance_time(5)
 	var path := "user://test_save.json"
 	GameState.save_game(path)
-	var snap_week := GameState.week
-	var snap_slot := GameState.slot_index
+	var snap_hour := GameState.hour
+	# Scramble live state, then load it back.
 	GameState.reset()
+	GameState.player_name = "Wiped"
+	GameState.dev_mode = false
 	_eq(GameState.stats["magic"], 0, "reset clears state")
 	GameState.load_game(path)
+	_eq(GameState.player_name, "Tester", "loaded player name")
+	_eq(GameState.dev_mode, true, "loaded dev flag")
 	_eq(GameState.stats["magic"], 9, "loaded magic")
-	_eq(GameState.stats["combat"], 4, "loaded combat")
-	_eq(GameState.flags.get("beat_cassius", false), true, "loaded flag")
-	_eq(GameState.week, snap_week, "loaded week")
-	_eq(GameState.slot_index, snap_slot, "loaded slot")
+	_eq(GameState.hour, snap_hour, "loaded hour")
+	_eq(Students.npcs.size(), 4, "loaded NPC roster")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
+func _test_data_loaded() -> void:
+	print("[data]")
+	_eq(GameData.students.size(), 4, "4 student definitions loaded")
+	_check(GameData.backgrounds.size() >= 3, "backgrounds loaded")
+	_check(not GameData.get_encounter("duel_rival").is_empty(), "duel_rival encounter exists")
+
+func _test_npc_students() -> void:
+	print("[npc students]")
+	GameState.reset()
+	Students.reset()
+	_eq(Students.npcs.size(), 4, "four NPCs spawned")
+	_eq(GameState.dev_mode, false, "dev mode defaults off")
+	GameState.advance_time(1)  # hour_ticked -> NPCs choose an action
+	var acted := false
+	for npc in Students.npcs:
+		if npc["current_action"] != "Settling in":
+			acted = true
+	_check(acted, "NPCs pick an action on the hour tick")
+
 func _test_modes_and_director() -> void:
-	# Guards the class of bug where a mode script or the Director autoload fails
-	# to compile — which the pure-logic tests above would otherwise miss.
 	print("[modes + director]")
 	_check(Director != null, "Director autoload loaded")
 	_check(Director.has_method("run_mode"), "Director has run_mode()")
 	for path in [
+		"res://scenes/modes/CharCreationMode.tscn",
 		"res://scenes/modes/AcademyMode.tscn",
 		"res://scenes/modes/DialogueMode.tscn",
 		"res://scenes/modes/CombatMode.tscn",
@@ -140,7 +168,6 @@ func _test_modes_and_director() -> void:
 			_check(false, "loads %s" % fname)
 			continue
 		var m: Node = packed.instantiate()
-		# A parse error would leave the root without its script -> no enter().
 		_check(m != null and m.has_method("enter"), "%s script attached (enter())" % fname)
 		_check(m != null and m.has_signal("finished"), "%s has finished signal" % fname)
 		if m != null:

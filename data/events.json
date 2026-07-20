@@ -1,7 +1,7 @@
 [
 	{
 		"id": "orientation",
-		"trigger": { "week": 1, "day": "Monday", "slot": "Afternoon" },
+		"trigger": { "week": 1, "day": "Monday", "hour": 9 },
 		"once": true,
 		"text": "Orientation complete. The Headmistress wishes you a fruitful year.",
 		"effects": {}
@@ -15,7 +15,7 @@
 	},
 	{
 		"id": "midterms",
-		"trigger": { "week": 3, "day": "Monday", "slot": "Morning" },
+		"trigger": { "week": 3, "day": "Monday", "hour": 9 },
 		"once": true,
 		"text": "Midterm examinations loom this week. Have you studied enough?",
 		"effects": {}

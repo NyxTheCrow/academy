@@ -16,11 +16,16 @@ func _ready() -> void:
 	_refresh()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
-		panel.visible = not panel.visible
-		if panel.visible:
-			_refresh()
-		get_viewport().set_input_as_handled()
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F3:
+			panel.visible = not panel.visible
+			if panel.visible:
+				_refresh()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F2:
+			GameState.dev_mode = not GameState.dev_mode
+			GameState.state_changed.emit()
+			get_viewport().set_input_as_handled()
 
 func _build_ui() -> void:
 	panel = PanelContainer.new()
@@ -39,7 +44,7 @@ func _build_ui() -> void:
 	margin.add_child(v)
 
 	var title := Label.new()
-	title.text = "DEBUG  (F3 to hide)"
+	title.text = "DEBUG  (F3 hide · F2 dev toggle)"
 	title.add_theme_font_size_override("font_size", 14)
 	v.add_child(title)
 
@@ -61,6 +66,7 @@ func _build_ui() -> void:
 		_btn("Reset", func(): GameState.reset()),
 	]))
 	v.add_child(_row([
+		_btn("Toggle Dev", _toggle_dev),
 		_btn("→ Dialogue", _force_dialogue),
 		_btn("→ Combat", _force_combat),
 	]))
@@ -79,11 +85,14 @@ func _btn(text: String, cb: Callable) -> Button:
 	return b
 
 func _skip_day() -> void:
-	for i in 3:
-		GameState.advance_time()
+	GameState.advance_time(maxi(1, GameState.DAY_END_HOUR - GameState.hour))
 
 func _refill_energy() -> void:
 	GameState.apply_effects({"energy": 100})
+
+func _toggle_dev() -> void:
+	GameState.dev_mode = not GameState.dev_mode
+	GameState.state_changed.emit()
 
 func _bump_stats() -> void:
 	var e := {"stats": {}}
@@ -102,7 +111,8 @@ func _force_combat() -> void:
 func _refresh() -> void:
 	if state_label == null:
 		return
-	var s := "[b]%s[/b]\n" % GameState.date_string()
+	var s := "[b]%s[/b]  %s\n" % [GameState.player_name, "[color=orange]DEV[/color]" if GameState.dev_mode else "normal"]
+	s += "%s\n" % GameState.date_string()
 	s += "Energy %d/%d\n" % [GameState.energy, GameState.max_energy]
 	s += "Stats: %s\n" % str(GameState.stats)
 	s += "Bonds: %s\n" % str(GameState.relationships)
