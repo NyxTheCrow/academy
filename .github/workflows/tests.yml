@@ -20,8 +20,14 @@ jobs:
           mv Godot_v4.2.2-stable_linux.x86_64 godot
           chmod +x godot
 
-      - name: Import project resources
-        run: ./godot --headless --path . --import || true
+      - name: Import project resources (fail on any script/parse error)
+        run: |
+          set -o pipefail
+          ./godot --headless --path . --import 2>&1 | tee import.log || true
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|does not inherit" import.log; then
+            echo "::error::Godot reported script/parse errors during import (see log above)."
+            exit 1
+          fi
 
       - name: Run spine tests
         run: ./godot --headless --path . tests/TestRunner.tscn

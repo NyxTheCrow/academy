@@ -65,6 +65,7 @@ func _show_top() -> void:
 
 func _instance(mode_name: String) -> GameMode:
 	var path: String = MODE_SCENES[mode_name]
-	var mode := load(path).instantiate() as GameMode
+	var packed: PackedScene = load(path)
+	var mode := packed.instantiate() as GameMode
 	mode.set_anchors_preset(Control.PRESET_FULL_RECT)
 	return mode
