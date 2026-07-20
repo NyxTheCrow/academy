@@ -1,0 +1,23 @@
+[
+	{
+		"id": "orientation",
+		"trigger": { "week": 1, "day": "Monday", "slot": "Afternoon" },
+		"once": true,
+		"text": "Orientation complete. The Headmistress wishes you a fruitful year.",
+		"effects": {}
+	},
+	{
+		"id": "noticed_by_professor",
+		"trigger": { "min_stats": { "magic": 15 } },
+		"once": true,
+		"text": "Professor Vane has noticed your talent. An Advanced Arcana Seminar now opens on Saturday mornings.",
+		"effects": { "flags": { "noticed_by_professor": true } }
+	},
+	{
+		"id": "midterms",
+		"trigger": { "week": 3, "day": "Monday", "slot": "Morning" },
+		"once": true,
+		"text": "Midterm examinations loom this week. Have you studied enough?",
+		"effects": {}
+	}
+]

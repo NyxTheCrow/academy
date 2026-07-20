@@ -1,0 +1,70 @@
+[
+	{
+		"id": "class_magic",
+		"name": "Attend Magic Theory",
+		"description": "Core coursework. Reliable magic and knowledge gains. School mornings only.",
+		"days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+		"slots": ["Morning"],
+		"requirements": { "min_energy": 10 },
+		"effects": { "stats": { "magic": 3, "knowledge": 1 }, "energy": -10 }
+	},
+	{
+		"id": "class_combat",
+		"name": "Attend Combat Drills",
+		"description": "Physical training with the academy's battlemages. School afternoons.",
+		"days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+		"slots": ["Afternoon"],
+		"requirements": { "min_energy": 20 },
+		"effects": { "stats": { "combat": 3 }, "energy": -20 }
+	},
+	{
+		"id": "study_library",
+		"name": "Study in the Library",
+		"description": "Self-directed study. A knowledge check — sometimes you have a real breakthrough.",
+		"slots": ["Morning", "Afternoon", "Evening"],
+		"requirements": { "min_energy": 15 },
+		"skill_check": {
+			"stat": "knowledge",
+			"difficulty": 8,
+			"success": { "stats": { "knowledge": 3, "magic": 1 }, "energy": -15 },
+			"failure": { "stats": { "knowledge": 1 }, "energy": -15 }
+		}
+	},
+	{
+		"id": "practice_spells",
+		"name": "Practice Spells Alone",
+		"description": "Risky solo practice. Big magic gain on success, but failure drains you.",
+		"slots": ["Afternoon", "Evening"],
+		"requirements": { "min_energy": 15 },
+		"skill_check": {
+			"stat": "magic",
+			"difficulty": 9,
+			"success": { "stats": { "magic": 4 }, "energy": -15 },
+			"failure": { "stats": { "magic": 1 }, "energy": -25 }
+		}
+	},
+	{
+		"id": "socialize_elara",
+		"name": "Spend the Evening with Elara",
+		"description": "Deepen your friendship with Elara. Builds charisma and your bond.",
+		"slots": ["Evening"],
+		"requirements": { "min_energy": 10 },
+		"effects": { "stats": { "charisma": 1 }, "relationships": { "elara": 2 }, "energy": -10 }
+	},
+	{
+		"id": "advanced_seminar",
+		"name": "Advanced Arcana Seminar",
+		"description": "A hidden opportunity — only open once a professor has noticed your talent.",
+		"days": ["Saturday"],
+		"slots": ["Morning"],
+		"requirements": { "flags": { "noticed_by_professor": true }, "min_energy": 20 },
+		"effects": { "stats": { "magic": 5, "knowledge": 3 }, "energy": -20 }
+	},
+	{
+		"id": "rest",
+		"name": "Rest",
+		"description": "Recover some energy and let the slot pass.",
+		"slots": ["Morning", "Afternoon", "Evening"],
+		"effects": { "energy": 25 }
+	}
+]
