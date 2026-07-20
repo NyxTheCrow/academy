@@ -42,11 +42,18 @@ func _build_ui() -> void:
 	root_h.add_theme_constant_override("separation", 18)
 	margin.add_child(root_h)
 
-	# --- Sidebar: clock + stats + relationships + save/load ---
+	# --- Sidebar: clock + stats + relationships + students + save/load ---
+	# Wrapped in a ScrollContainer so it never overflows the window (dev mode
+	# adds several NPC stat lines).
+	var sidebar_scroll := ScrollContainer.new()
+	sidebar_scroll.custom_minimum_size = Vector2(320, 0)
+	sidebar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	root_h.add_child(sidebar_scroll)
+
 	var sidebar := VBoxContainer.new()
-	sidebar.custom_minimum_size = Vector2(320, 0)
+	sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sidebar.add_theme_constant_override("separation", 10)
-	root_h.add_child(sidebar)
+	sidebar_scroll.add_child(sidebar)
 
 	header_label = Label.new()
 	header_label.add_theme_font_size_override("font_size", 20)
@@ -72,7 +79,7 @@ func _build_ui() -> void:
 	students_label = RichTextLabel.new()
 	students_label.bbcode_enabled = true
 	students_label.fit_content = true
-	students_label.custom_minimum_size = Vector2(300, 90)
+	students_label.custom_minimum_size = Vector2(0, 40)
 	sidebar.add_child(students_label)
 
 	sidebar.add_child(HSeparator.new())
@@ -97,14 +104,22 @@ func _build_ui() -> void:
 	main_v.add_child(_title("Journal"))
 	log_box = RichTextLabel.new()
 	log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	log_box.custom_minimum_size = Vector2(0, 140)
 	log_box.bbcode_enabled = true
+	log_box.scroll_active = true
 	log_box.scroll_following = true
 	main_v.add_child(log_box)
 
 	main_v.add_child(_title("What will you do?"))
+	# Scrollable so a long activity list never pushes the layout off-screen.
+	var act_scroll := ScrollContainer.new()
+	act_scroll.custom_minimum_size = Vector2(0, 190)
+	act_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	main_v.add_child(act_scroll)
 	activity_container = VBoxContainer.new()
+	activity_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	activity_container.add_theme_constant_override("separation", 6)
-	main_v.add_child(activity_container)
+	act_scroll.add_child(activity_container)
 
 func _title(text: String) -> Label:
 	var lbl := Label.new()
@@ -168,6 +183,8 @@ func _rebuild_activities() -> void:
 		btn.text = label
 		btn.tooltip_text = a.get("description", "")
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.clip_text = true
 		btn.pressed.connect(_on_activity_pressed.bind(a))
 		activity_container.add_child(btn)
 
