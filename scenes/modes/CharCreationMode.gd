@@ -134,7 +134,7 @@ func _stat_row(stat: String) -> HBoxContainer:
 	return h
 
 func _adjust(stat: String, delta: int) -> void:
-	var next := _alloc[stat] + delta
+	var next: int = int(_alloc[stat]) + delta
 	if next < 1:
 		return
 	if delta > 0 and _points_left() <= 0:

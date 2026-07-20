@@ -279,7 +279,7 @@ func load_game(path := "user://savegame.json") -> bool:
 	relationships = d.get("relationships", {})
 	flags = d.get("flags", {})
 	fired_events = d.get("fired_events", {})
-	var sn := _students_node()
+	var sn = _students_node()  # untyped: duck-typed autoload
 	if sn:
 		sn.deserialize(d.get("students", []))
 	message.emit("[i]Game loaded.[/i]")
