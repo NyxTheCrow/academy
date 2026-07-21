@@ -22,6 +22,17 @@ up so content can go in:
 The world runs on **two core states — TIME and LOCATION — and a shared
 tag/requirement system** that decides who can do what, and when.
 
+**Stats:** the only stat is **Morale** (Despairing → Elated). It shapes how you
+feel, and toughens you in a fight; everything else that used to be a stat is now
+either a **tag** or read qualitatively. Combat HP/attack derive from morale plus
+tag bonuses.
+
+**Menus** (opened from the Academy sidebar, all sharing a `MenuMode` scaffold):
+Character sheet, Schedule (recurring timetable, today highlighted), Other People
+(roster with a favourite ★ toggle, pinned + saved), Spells (`data/spells.json`,
+each known/locked by your tags), and Inventory (`data/items.json`, usable items
+apply effects and are consumed). Favourites and inventory persist in the save.
+
 - **Time** is minute-resolution (starts 07:00). Every action costs minutes;
   the clock rolls day → week → semester. `sleep()` jumps to the next 07:00.
   The clock only moves through `GameState.advance_time(minutes)`.
