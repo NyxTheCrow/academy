@@ -17,7 +17,7 @@ func _populate() -> void:
 	content.add_child(_h("Condition"))
 	for nk in ["hunger", "thirst", "bladder", "hygiene", "calm", "mana"]:
 		var nv := int(g.needs.get(nk, 0))
-		var label := "Mana Reserves" if nk == "mana" else nk.capitalize()
+		var label: String = "Mana Reserves" if nk == "mana" else str(nk).capitalize()
 		content.add_child(_kv(label, str(nv) if g.dev_mode else g.need_descriptor(nk, nv)))
 	content.add_child(HSeparator.new())
 	# Tags are hidden from the player; dev only.

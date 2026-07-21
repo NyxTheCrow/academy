@@ -201,7 +201,7 @@ func _rebuild_stats() -> void:
 	# Visible self-assessed needs (words in player mode, numbers in dev).
 	for nk in ["hunger", "thirst", "bladder", "hygiene", "calm", "mana"]:
 		var nv := int(GameState.needs.get(nk, 0))
-		var label := "Mana" if nk == "mana" else nk.capitalize()
+		var label: String = "Mana" if nk == "mana" else str(nk).capitalize()
 		stats_box.add_child(_stat_row(nk, label, GameState.need_descriptor(nk, nv), str(nv)))
 
 func _stat_row(key: String, label: String, descriptor: String, number: String) -> HBoxContainer:
