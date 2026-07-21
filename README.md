@@ -10,7 +10,7 @@ up so content can go in:
 | Mode | Script | What it is |
 |------|--------|-----------|
 | **CharCreation** | `scenes/modes/CharCreationMode.gd` | New-game setup: name, stats, background, dev toggle |
-| **Academy** | `scenes/modes/AcademyMode.gd` | The planning UI — clock, stats, activities, NPCs |
+| **Academy** | `scenes/modes/AcademyMode.gd` | Location view — where you are, time, stats/tags, NPCs, actions |
 | **Dialogue** | `scenes/modes/DialogueMode.gd` | VN scene — speaker, portrait, branching choices |
 | **Combat** | `scenes/modes/CombatMode.gd` | Tactical turn-based grid fight (with Fire Wall) |
 
@@ -19,23 +19,38 @@ up so content can go in:
 
 ## Core systems
 
-- **Hourly clock** — the day runs 08:00–22:00; activities have a `duration`
-  (hours) and are gated by `hours` / `hour_range`. The clock lives in
-  `GameState` and only moves through `advance_time(hours)`.
-- **Character creation** runs first: pick a name, spend a few stat points,
-  choose a data-driven background (`data/backgrounds.json`), and toggle dev
-  mode. It writes straight into `GameState`, then the academy boots.
-- **Dev vs normal display** — `GameState.dev_mode`. Dev reveals all data
-  (skill-check dice math, NPC stats). Normal hides it. Toggle with **F2** or
-  the debug panel; chosen at character creation.
-- **Four NPC students** (`Students` autoload, `data/students.json`) share the
-  player's stats, hours, and action list. Every hour each one picks an action
-  by a weighted random roll (their own bias) and grows their own stats. Shown
-  in the Academy sidebar — names + current action in normal mode, full stats
-  in dev mode. Saved and loaded with the game.
-- **Fire Wall** (combat) — an ability that raises a 3-tile hazard zone; any
-  unit that moves onto it or ends its turn on it takes damage. Lasts a few
-  rounds.
+The world runs on **two core states — TIME and LOCATION — and a shared
+tag/requirement system** that decides who can do what, and when.
+
+- **Time** is minute-resolution (starts 07:00). Every action costs minutes;
+  the clock rolls day → week → semester. `sleep()` jumps to the next 07:00.
+  The clock only moves through `GameState.advance_time(minutes)`.
+- **Location** is a first-class state. `data/locations.json` defines 5 rooms —
+  **room, corridor A, classroom, corridor B, dueling room** — with
+  `connections`. Moving between adjacent rooms is just a timed action.
+- **Tags / requirements** — every character (you and the 4 NPCs) has a set of
+  **tags**. A single evaluator, `GameState.requirement_met(req, tags, stats,
+  energy)`, gates **every** action — location actions *and* combat actions — on
+  `tags` / `without_tags` / `time_after` / `time_before` / `days` /
+  `min_stats` / `min_energy` / `flags`. Backgrounds, events, and actions
+  grant or remove tags (e.g. reaching magic 15 grants `can_duel`; the Prodigy
+  background grants `pyromancer`).
+- **Location actions** — each room lists its actions (`data/locations.json`);
+  which ones show up for you depends on your tags and the time. Movement
+  actions are generated from `connections`.
+- **Combat actions** — a shared list (`data/combat_actions.json`); the actions
+  on your bar are those your tags unlock. `move` + `strike` are available to
+  all; **Fire Wall** needs `pyromancer`, **Brace** needs `duelist`. Each
+  action has a `kind` (move / melee / wall / self) that drives its behaviour.
+  Fire Wall still lays a 3-tile hazard zone that burns anyone who enters or
+  ends a turn on it.
+- **Character creation** runs first: name, a few stat points, a data-driven
+  background (which grants tags), and the dev/normal toggle.
+- **Dev vs normal** — `GameState.dev_mode`. Dev reveals all data (NPC stats &
+  tags, hazard timers, dice math). Toggle with **F2** or the debug panel.
+- **NPCs roam** — each of the 4 students has a location + tags and acts
+  through the *same* location-action + requirement system every time the clock
+  advances, wandering between rooms. Shown in the sidebar with where they are.
 
 ## Run it
 
