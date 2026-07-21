@@ -1,15 +1,15 @@
 extends "res://scripts/GameMode.gd"
 ## AcademyMode — the exploration / location view and base mode.
 ##
-## Shows where you are (location + description), the time, your stats/tags, the
-## other students and where they are, a journal, and the actions available here
-## right now. Actions come from GameState.available_actions() — location actions
-## whose tag/time requirements you meet, plus movement to connected locations.
+## Player mode shows no numbers: energy, stats, and bonds appear as words
+## (Fresh / Adept / Friend). Dev mode shows the raw numbers. Hoverable "chips"
+## (stat names, tags) surface a lexicon definition on hover and open the
+## searchable Lexicon on click.
 
 var header_label: Label
 var date_label: Label
-var stats_label: Label
-var tags_label: RichTextLabel
+var stats_box: VBoxContainer
+var tags_flow: HFlowContainer
 var relations_label: Label
 var students_label: RichTextLabel
 var place_label: Label
@@ -29,7 +29,6 @@ func on_resumed() -> void:
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-
 	var bg := ColorRect.new()
 	bg.color = Color(0.10, 0.11, 0.16)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -46,9 +45,9 @@ func _build_ui() -> void:
 	root_h.add_theme_constant_override("separation", 18)
 	margin.add_child(root_h)
 
-	# --- Sidebar (scrollable): clock, stats, tags, relationships, students ---
+	# --- Sidebar (scrollable) ---
 	var sidebar_scroll := ScrollContainer.new()
-	sidebar_scroll.custom_minimum_size = Vector2(320, 0)
+	sidebar_scroll.custom_minimum_size = Vector2(330, 0)
 	sidebar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root_h.add_child(sidebar_scroll)
 
@@ -67,16 +66,14 @@ func _build_ui() -> void:
 	sidebar.add_child(date_label)
 
 	sidebar.add_child(HSeparator.new())
-	sidebar.add_child(_title("Stats"))
-	stats_label = Label.new()
-	sidebar.add_child(stats_label)
+	sidebar.add_child(_title("Condition"))
+	stats_box = VBoxContainer.new()
+	stats_box.add_theme_constant_override("separation", 2)
+	sidebar.add_child(stats_box)
 
 	sidebar.add_child(_title("Tags"))
-	tags_label = RichTextLabel.new()
-	tags_label.bbcode_enabled = true
-	tags_label.fit_content = true
-	tags_label.custom_minimum_size = Vector2(0, 24)
-	sidebar.add_child(tags_label)
+	tags_flow = HFlowContainer.new()
+	sidebar.add_child(tags_flow)
 
 	sidebar.add_child(HSeparator.new())
 	sidebar.add_child(_title("Relationships"))
@@ -92,6 +89,10 @@ func _build_ui() -> void:
 	sidebar.add_child(students_label)
 
 	sidebar.add_child(HSeparator.new())
+	var lex_btn := Button.new()
+	lex_btn.text = "Lexicon  (search terms)"
+	lex_btn.pressed.connect(_open_lexicon.bind(""))
+	sidebar.add_child(lex_btn)
 	var save_row := HBoxContainer.new()
 	save_row.add_theme_constant_override("separation", 8)
 	var save_btn := Button.new()
@@ -104,7 +105,7 @@ func _build_ui() -> void:
 	save_row.add_child(load_btn)
 	sidebar.add_child(save_row)
 
-	# --- Main column: location, journal, actions ---
+	# --- Main column ---
 	var main_v := VBoxContainer.new()
 	main_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_v.add_theme_constant_override("separation", 10)
@@ -112,6 +113,7 @@ func _build_ui() -> void:
 
 	place_label = Label.new()
 	place_label.add_theme_font_size_override("font_size", 24)
+	place_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	main_v.add_child(place_label)
 	place_desc = Label.new()
 	place_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -143,34 +145,81 @@ func _title(text: String) -> Label:
 	lbl.add_theme_font_size_override("font_size", 15)
 	return lbl
 
+# --- A hoverable term chip: tooltip = lexicon definition, click = open it ----
+func _hover_chip(key: String, display: String) -> Button:
+	var b := Button.new()
+	b.text = display
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var def := Lexicon.define(key)
+	if def != "":
+		b.tooltip_text = def
+	b.pressed.connect(_open_lexicon.bind(key))
+	return b
+
+func _open_lexicon(focus := "") -> void:
+	await Director.run_mode("lexicon", {"focus": focus})
+
 func _refresh() -> void:
 	if date_label == null:
 		return
 	header_label.text = GameState.player_name + ("   [DEV]" if GameState.dev_mode else "")
-	date_label.text = GameState.date_string()
+	date_label.text = GameState.date_string() if GameState.dev_mode else GameState.brief_date()
 
 	var loc := GameState.current_location()
 	place_label.text = str(loc.get("name", GameState.location))
+	place_label.tooltip_text = Lexicon.define(str(loc.get("name", "")))
 	place_desc.text = str(loc.get("description", ""))
 
-	var s := "Energy:  %d / %d\n\n" % [GameState.energy, GameState.max_energy]
-	for k in GameState.stats:
-		s += "%s:  %d\n" % [str(k).capitalize(), GameState.stats[k]]
-	stats_label.text = s
-
-	# Tags are always shown (they gate what you can do); dev mode just adds NPCs'.
-	tags_label.text = "[color=gray]%s[/color]" % (", ".join(PackedStringArray(GameState.tags)) if not GameState.tags.is_empty() else "none")
-
-	if GameState.relationships.is_empty():
-		relations_label.text = "(no bonds yet)"
-	else:
-		var r := ""
-		for npc in GameState.relationships:
-			r += "%s:  %d\n" % [str(npc).capitalize(), GameState.relationships[npc]]
-		relations_label.text = r
-
+	_rebuild_stats()
+	_rebuild_tags()
+	_rebuild_relations()
 	_refresh_students()
 	_rebuild_actions()
+
+func _rebuild_stats() -> void:
+	for c in stats_box.get_children():
+		c.queue_free()
+	stats_box.add_child(_stat_row("Energy", "Energy",
+		GameState.energy_descriptor(), "%d / %d" % [GameState.energy, GameState.max_energy]))
+	for k in GameState.stats:
+		var v := int(GameState.stats[k])
+		stats_box.add_child(_stat_row(str(k), str(k).capitalize(),
+			GameState.stat_descriptor(v), str(v)))
+
+func _stat_row(key: String, label: String, descriptor: String, number: String) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	var chip := _hover_chip(key, label)
+	chip.custom_minimum_size = Vector2(120, 0)
+	h.add_child(chip)
+	var val := Label.new()
+	val.text = number if GameState.dev_mode else descriptor
+	h.add_child(val)
+	return h
+
+func _rebuild_tags() -> void:
+	for c in tags_flow.get_children():
+		c.queue_free()
+	if GameState.tags.is_empty():
+		var l := Label.new()
+		l.text = "(none)"
+		tags_flow.add_child(l)
+		return
+	for t in GameState.tags:
+		tags_flow.add_child(_hover_chip(str(t), str(t)))
+
+func _rebuild_relations() -> void:
+	if GameState.relationships.is_empty():
+		relations_label.text = "(no bonds yet)"
+		return
+	var r := ""
+	for npc in GameState.relationships:
+		var v := int(GameState.relationships[npc])
+		var shown := str(v) if GameState.dev_mode else GameState.relationship_descriptor(v)
+		r += "%s:  %s\n" % [str(npc).capitalize(), shown]
+	relations_label.text = r
 
 func _refresh_students() -> void:
 	var out := ""
@@ -188,14 +237,12 @@ func _refresh_students() -> void:
 func _rebuild_actions() -> void:
 	for c in action_container.get_children():
 		c.queue_free()
-
 	var actions := GameState.available_actions()
 	if actions.is_empty():
 		var lbl := Label.new()
 		lbl.text = "(Nothing to do here.)"
 		action_container.add_child(lbl)
 		return
-
 	for a in actions:
 		var btn := Button.new()
 		btn.text = _action_label(a)
@@ -211,6 +258,8 @@ func _action_label(a: Dictionary) -> String:
 	if a.has("goto"):
 		label = "→ " + label
 	var dur := int(a.get("duration", 0))
+	# Time cost is a small number, but it's a clock reading rather than a hidden
+	# stat, so it stays visible in both modes (the design keeps time legible).
 	if dur > 0:
 		label += "   (%d min)" % dur
 	if a.has("dialogue"):
@@ -239,7 +288,7 @@ func _on_action_pressed(a: Dictionary) -> void:
 	else:
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.advance_time(dur)
-		GameState.message.emit("You spend %d minutes: %s." % [dur, a.get("name", "…")])
+		GameState.message.emit("You spend a while: %s." % a.get("name", "…"))
 
 func _on_message(text: String) -> void:
 	if log_box != null:

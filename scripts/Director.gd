@@ -21,6 +21,7 @@ const MODE_SCENES := {
 	"academy": "res://scenes/modes/AcademyMode.tscn",
 	"dialogue": "res://scenes/modes/DialogueMode.tscn",
 	"combat": "res://scenes/modes/CombatMode.tscn",
+	"lexicon": "res://scenes/modes/LexiconMode.tscn",
 }
 
 var _host: Node = null

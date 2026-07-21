@@ -21,6 +21,8 @@ func _ready() -> void:
 	_test_save_load_roundtrip()
 	_test_data_loaded()
 	_test_npc_students()
+	_test_descriptors()
+	_test_lexicon()
 	_test_modes_and_director()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
@@ -193,6 +195,35 @@ func _test_npc_students() -> void:
 			acted = true
 	_check(acted, "NPCs act when time advances")
 
+func _test_descriptors() -> void:
+	print("[descriptors (numberless)]")
+	GameState.reset()
+	GameState.dev_mode = false
+	_check(not GameState.show_numbers(), "player mode hides numbers")
+	GameState.dev_mode = true
+	_check(GameState.show_numbers(), "dev mode shows numbers")
+	_eq(GameState.stat_descriptor(0), "Untrained", "stat 0 -> Untrained")
+	_eq(GameState.stat_descriptor(20), "Skilled", "stat 20 -> Skilled")
+	_eq(GameState.hp_descriptor(10, 10), "Unhurt", "full HP -> Unhurt")
+	_eq(GameState.hp_descriptor(1, 10), "Near death", "1/10 HP -> Near death")
+	_eq(GameState.relationship_descriptor(0), "Stranger", "0 bond -> Stranger")
+	GameState.energy = 90
+	_eq(GameState.energy_descriptor(), "Fresh", "90 energy -> Fresh")
+	GameState.energy = 5
+	_eq(GameState.energy_descriptor(), "Exhausted", "5 energy -> Exhausted")
+	GameState.reset()
+	_eq(GameState.time_of_day(), "Dawn", "07:00 -> Dawn")
+
+func _test_lexicon() -> void:
+	print("[lexicon]")
+	_check(Lexicon.all().size() >= 10, "lexicon entries loaded")
+	_check(not Lexicon.lookup("magic").is_empty(), "lookup by term")
+	_check(not Lexicon.lookup("mag").is_empty(), "lookup by alias")
+	_eq(Lexicon.search("").size(), Lexicon.all().size(), "empty query returns all")
+	_check(Lexicon.search("fire").size() >= 1, "search finds Fire Wall")
+	_check(Lexicon.search("zzqqxx").is_empty(), "no matches -> empty")
+	_check(Lexicon.define("Magic") != "", "define returns text")
+
 func _test_modes_and_director() -> void:
 	print("[modes + director]")
 	_check(Director != null, "Director autoload loaded")
@@ -201,6 +232,7 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/AcademyMode.tscn",
 		"res://scenes/modes/DialogueMode.tscn",
 		"res://scenes/modes/CombatMode.tscn",
+		"res://scenes/modes/LexiconMode.tscn",
 	]:
 		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)

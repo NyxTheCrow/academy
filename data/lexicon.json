@@ -1,0 +1,22 @@
+[
+	{ "term": "Magic", "category": "Stat", "aliases": ["mag"], "definition": "Your raw arcane power. Governs spellcasting and, in combat, part of your attack strength." },
+	{ "term": "Combat", "category": "Stat", "aliases": ["cmb"], "definition": "Your martial skill and toughness. Raises your health and damage in a fight." },
+	{ "term": "Knowledge", "category": "Stat", "aliases": ["kn"], "definition": "Book-learning and theory. Unlocks study opportunities and academic paths." },
+	{ "term": "Charisma", "category": "Stat", "aliases": ["cha"], "definition": "Presence and social grace. Shapes how others respond to you." },
+	{ "term": "Energy", "category": "State", "definition": "How rested you are. It drains as you act and restores when you sleep. Shown as Fresh, Rested, Tired, Drowsy, or Exhausted." },
+	{ "term": "Tag", "category": "Mechanic", "aliases": ["tags", "variable"], "definition": "A label a character carries (like 'dressed' or 'pyromancer'). Actions check your tags to decide whether you may take them." },
+	{ "term": "Action", "category": "Mechanic", "definition": "Something you can do in a location or in combat. Each costs time; availability depends on your tags, the hour, and your stats." },
+	{ "term": "Dressed", "category": "Tag", "definition": "You are in uniform. Required to attend lectures. Gained by changing clothes in your room." },
+	{ "term": "Enrolled", "category": "Tag", "definition": "You are a registered student. Nearly everyone at the Academy has this." },
+	{ "term": "Can Duel", "category": "Tag", "aliases": ["can_duel"], "definition": "You are permitted to fight a formal duel. Duelists start with it; others earn it once a professor takes notice." },
+	{ "term": "Pyromancer", "category": "Tag", "definition": "A caster trained in fire. Unlocks the Fire Wall action in combat." },
+	{ "term": "Duelist", "category": "Tag", "definition": "A trained fighter. Unlocks the Brace action in combat and permits formal duels." },
+	{ "term": "Fire Wall", "category": "Combat Action", "aliases": ["firewall"], "definition": "Raise a 3-tile wall of flame. Any unit that moves onto it or ends its turn on it is burned. Lasts a few rounds. Requires the Pyromancer tag." },
+	{ "term": "Brace", "category": "Combat Action", "definition": "Steady yourself, recovering a little health and ending your turn. Requires the Duelist tag." },
+	{ "term": "Strike", "category": "Combat Action", "definition": "A basic melee attack against an adjacent foe. Available to everyone." },
+	{ "term": "Room", "category": "Location", "definition": "Your dormitory. Where you dress, wash up, study privately, and sleep." },
+	{ "term": "Classroom", "category": "Location", "definition": "Where lectures are held on weekday mornings. You must be enrolled and dressed to attend." },
+	{ "term": "Dueling Room", "category": "Location", "aliases": ["dueling room", "duelling room"], "definition": "A warded ring for magical combat. Spar with a dummy, or duel a rival if you may." },
+	{ "term": "Elara", "category": "Character", "definition": "A scholarly classmate, often found in the classroom. Warm, and easy to confide in." },
+	{ "term": "Cassius", "category": "Character", "definition": "A gifted duelist who haunts the dueling room. Beating him earns real respect." }
+]

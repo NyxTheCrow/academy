@@ -132,7 +132,8 @@ func _build_ui(title: String) -> void:
 	for act in _actions:
 		var ab := Button.new()
 		ab.text = act.get("name", "?")
-		ab.tooltip_text = act.get("description", "")
+		var def := Lexicon.define(str(act.get("name", "")))
+		ab.tooltip_text = def if def != "" else str(act.get("description", ""))
 		ab.pressed.connect(_on_ability.bind(act))
 		ab.set_meta("action_id", act.get("id", ""))
 		_ability_bar.add_child(ab)
@@ -192,12 +193,17 @@ func _redraw() -> void:
 
 	var s := ""
 	for u in _units:
-		s += "%s  HP %d/%d\n" % [u["name"], u["hp"], u["max_hp"]]
-	if not _hazards.is_empty():
-		s += "\nFire Walls: %d" % _hazards.size()
 		if GameState.dev_mode:
+			s += "%s  HP %d/%d\n" % [u["name"], u["hp"], u["max_hp"]]
+		else:
+			s += "%s  —  %s\n" % [u["name"], GameState.hp_descriptor(int(u["hp"]), int(u["max_hp"]))]
+	if not _hazards.is_empty():
+		if GameState.dev_mode:
+			s += "\nFire Walls: %d" % _hazards.size()
 			for hz in _hazards:
 				s += "  [%s ttl%d]" % [str(hz["pos"]), hz["ttl"]]
+		else:
+			s += "\nFlames linger on the field."
 	s += "\n\n" + ("Your turn" if _player_turn else "Enemy turn")
 	if _player_turn:
 		if not _pending.is_empty():
@@ -243,7 +249,10 @@ func _resolve_self(act: Dictionary) -> void:
 		return
 	if act.has("heal"):
 		_player["hp"] = mini(int(_player["max_hp"]), int(_player["hp"]) + int(act["heal"]))
-		_log("You %s, recovering %d HP." % [str(act.get("name", "brace")).to_lower(), int(act["heal"])])
+		if GameState.dev_mode:
+			_log("You %s, recovering %d HP." % [str(act.get("name", "brace")).to_lower(), int(act["heal"])])
+		else:
+			_log("You steady yourself.")
 	_has_acted = true
 	_pending = {}
 	_after_action()
@@ -284,7 +293,10 @@ func _place_wall(center: Vector2i, act: Dictionary) -> void:
 		if p.y >= 0 and p.y < GRID_H and _hazard_at(p).is_empty():
 			_hazards.append({"pos": p, "dmg": dmg, "ttl": ttl})
 			placed += 1
-	_log("You raise a wall of flame (%d tiles)." % placed)
+	if GameState.dev_mode:
+		_log("You raise a wall of flame (%d tiles)." % placed)
+	else:
+		_log("You raise a wall of flame.")
 
 func _move_unit(u: Dictionary, newpos: Vector2i) -> void:
 	u["pos"] = newpos
@@ -297,7 +309,12 @@ func _attack(attacker: Dictionary, defender: Dictionary) -> void:
 
 func _damage(target: Dictionary, amount: int, source: String) -> void:
 	target["hp"] = int(target["hp"]) - amount
-	_log("%s takes [color=orange]%d[/color] from %s." % [target["name"], amount, source])
+	if GameState.dev_mode:
+		_log("%s takes [color=orange]%d[/color] from %s." % [target["name"], amount, source])
+	elif source == "the flames":
+		_log("The flames scorch %s." % target["name"])
+	else:
+		_log("%s strikes %s." % [source, target["name"]])
 	if target["hp"] <= 0:
 		_log("[color=yellow]%s is defeated![/color]" % target["name"])
 		_units.erase(target)

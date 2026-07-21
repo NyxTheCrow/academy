@@ -69,6 +69,55 @@ func time_string() -> String:
 func date_string() -> String:
 	return "Semester %d  ·  Week %d  ·  %s  ·  %s" % [semester, week, day_name(), time_string()]
 
+## Player-facing date with no numbers (e.g. "Monday, Morning").
+func brief_date() -> String:
+	return "%s, %s" % [day_name(), time_of_day()]
+
+func time_of_day() -> String:
+	var h := minutes_of_day / 60
+	if h < 5: return "Deep Night"
+	elif h < 8: return "Dawn"
+	elif h < 12: return "Morning"
+	elif h < 14: return "Midday"
+	elif h < 17: return "Afternoon"
+	elif h < 21: return "Evening"
+	else: return "Night"
+
+# --- Qualitative descriptors (player mode shows these instead of numbers) ----
+## Whether the UI should show raw numbers. Player mode = numberless.
+func show_numbers() -> bool:
+	return dev_mode
+
+func energy_descriptor() -> String:
+	if energy >= 80: return "Fresh"
+	elif energy >= 55: return "Rested"
+	elif energy >= 30: return "Tired"
+	elif energy >= 10: return "Drowsy"
+	else: return "Exhausted"
+
+static func stat_descriptor(v: int) -> String:
+	if v <= 1: return "Untrained"
+	elif v <= 4: return "Novice"
+	elif v <= 9: return "Apprentice"
+	elif v <= 15: return "Adept"
+	elif v <= 24: return "Skilled"
+	else: return "Master"
+
+static func hp_descriptor(hp: int, maxhp: int) -> String:
+	if hp >= maxhp: return "Unhurt"
+	var f := float(hp) / float(maxi(1, maxhp))
+	if f >= 0.7: return "Grazed"
+	elif f >= 0.4: return "Wounded"
+	elif f >= 0.15: return "Bloodied"
+	else: return "Near death"
+
+static func relationship_descriptor(v: int) -> String:
+	if v <= 0: return "Stranger"
+	elif v <= 3: return "Acquaintance"
+	elif v <= 7: return "Friend"
+	elif v <= 12: return "Close"
+	else: return "Inseparable"
+
 ## Parse "HH:MM" into minutes-of-day.
 func _hm(s) -> int:
 	var parts: PackedStringArray = str(s).split(":")
