@@ -10,6 +10,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	_test_time_minutes()
+	_test_calendar()
 	_test_sleep()
 	_test_apply_effects_tags()
 	_test_merge_effects()
@@ -21,6 +22,7 @@ func _ready() -> void:
 	_test_save_load_roundtrip()
 	_test_data_loaded()
 	_test_stats_and_menus()
+	_test_needs()
 	_test_npc_students()
 	_test_descriptors()
 	_test_lexicon()
@@ -61,7 +63,23 @@ func _test_time_minutes() -> void:
 	_eq(GameState.time_string(), "07:00", "same time next day")
 	GameState.reset()
 	GameState.advance_time(GameState.DAY_MINUTES * 7)
-	_eq(GameState.week, 2, "7 days -> week 2")
+	_eq(GameState.day_count, 7, "7 days -> day_count 7")
+	_eq(GameState.day_name(), "Monday", "7 days -> Monday again")
+
+func _test_calendar() -> void:
+	print("[calendar hierarchy]")
+	GameState.reset()
+	_eq(GameState.day_count, 0, "starts at day 0")
+	_eq(GameState.weekday_index(), 0, "day 0 is Monday")
+	_eq(GameState.week_of_month(), 0, "day 0 week-of-month 0")
+	GameState.advance_time(GameState.DAY_MINUTES * GameState.DAYS_PER_MONTH)  # +1 month
+	_eq(GameState.month_of_trimester(), 1, "a month later -> month index 1")
+	GameState.reset()
+	GameState.advance_time(GameState.DAY_MINUTES * GameState.DAYS_PER_TRIMESTER)  # +1 trimester
+	_eq(GameState.trimester_of_year(), 1, "a trimester later -> trimester index 1")
+	GameState.reset()
+	GameState.advance_time(GameState.DAY_MINUTES * GameState.DAYS_PER_YEAR)  # +1 year
+	_eq(GameState.year_index(), 1, "a year later -> year index 1")
 
 func _test_sleep() -> void:
 	print("[sleep]")
@@ -163,11 +181,14 @@ func _test_save_load_roundtrip() -> void:
 	GameState.apply_effects({"stats": {"morale": 4}})
 	GameState.toggle_favorite("elara")
 	GameState.add_item("charm")
-	GameState.advance_time(120)
+	GameState.needs["hunger"] = 42
+	GameState.advance_time(GameState.DAY_MINUTES * 3 + 120)
 	var path := "user://test_save.json"
 	GameState.save_game(path)
 	var snap_min := GameState.minutes_of_day
+	var snap_day := GameState.day_count
 	var snap_morale := int(GameState.stats["morale"])
+	var snap_hunger := int(GameState.needs["hunger"])
 	GameState.reset()
 	GameState.player_name = "Wiped"
 	GameState.load_game(path)
@@ -175,15 +196,30 @@ func _test_save_load_roundtrip() -> void:
 	_eq(GameState.location, "classroom", "loaded location")
 	_check(GameState.has_tag("pyromancer"), "loaded tag")
 	_eq(int(GameState.stats["morale"]), snap_morale, "loaded morale")
+	_eq(int(GameState.needs["hunger"]), snap_hunger, "loaded need")
 	_eq(GameState.minutes_of_day, snap_min, "loaded time")
+	_eq(GameState.day_count, snap_day, "loaded day_count")
 	_check(GameState.is_favorite("elara"), "loaded favourite")
 	_check(GameState.has_item("charm"), "loaded inventory item")
 	_eq(Students.npcs.size(), 4, "loaded NPCs")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
+func _test_needs() -> void:
+	print("[needs]")
+	GameState.reset()
+	_eq(GameState.needs.keys().size(), 6, "six needs")
+	_eq(GameState.need_descriptor("hunger", 90), "Full", "hunger 90 -> Full")
+	_eq(GameState.need_descriptor("hunger", 5), "Starving", "hunger 5 -> Starving")
+	_eq(GameState.need_descriptor("bladder", 5), "Desperate", "bladder 5 -> Desperate")
+	var before := int(GameState.needs["hunger"])
+	GameState.advance_time(600)  # a long stretch drifts needs down
+	_check(int(GameState.needs["hunger"]) < before, "hunger drifts down over time")
+	GameState.apply_effects({"needs": {"hunger": 100}})
+	_eq(int(GameState.needs["hunger"]), 100, "eating restores hunger (clamped)")
+
 func _test_data_loaded() -> void:
 	print("[data]")
-	_eq(GameData.locations.size(), 5, "5 locations")
+	_eq(GameData.locations.size(), 8, "8 locations")
 	_check(GameData.combat_actions.size() >= 3, "combat actions loaded")
 	_eq(GameData.students.size(), 4, "4 students")
 	_check(GameData.backgrounds.size() >= 3, "backgrounds loaded")
@@ -239,8 +275,6 @@ func _test_descriptors() -> void:
 	_eq(GameState.energy_descriptor(), "Fresh", "90 energy -> Fresh")
 	GameState.energy = 5
 	_eq(GameState.energy_descriptor(), "Exhausted", "5 energy -> Exhausted")
-	GameState.reset()
-	_eq(GameState.time_of_day(), "Dawn", "07:00 -> Dawn")
 
 func _test_lexicon() -> void:
 	print("[lexicon]")

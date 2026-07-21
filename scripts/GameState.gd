@@ -1,27 +1,32 @@
 extends Node
 ## GameState — THE SPINE.
 ##
-## Two core states: TIME (minute-resolution clock) and LOCATION (where you are).
-## Everything a character can do is an "action" gated by a shared requirement
-## system (tags / time / stats / flags). The clock only moves through
-## advance_time(); state only mutates through apply_effects().
+## Two core states: TIME (minute clock over an absolute day count) and LOCATION.
+## The clock only moves through advance_time(); state only mutates through
+## apply_effects(). Player-facing state is numberless (words); dev mode shows
+## the numbers.
 
 signal state_changed
 signal message(text: String)
-signal time_advanced(minutes: int)  ## NPCs act on this
-signal day_changed                  ## NPCs refill energy on this
+signal time_advanced(minutes: int)
+signal day_changed
 
-# --- Calendar / time --------------------------------------------------------
+# --- Calendar ---------------------------------------------------------------
 const DAYS := ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-const WEEKS_PER_SEMESTER := 4
 const DAY_MINUTES := 1440
 const START_MINUTES := 420          # 07:00
-const WALK_MINUTES := 5             # cost of moving between adjacent locations
-const SAVE_VERSION := 3
+const WALK_MINUTES := 5
+const SAVE_VERSION := 4
 
-var semester: int = 1
-var week: int = 1
-var day_index: int = 0
+# Calendar hierarchy (all display-derived from day_count):
+const WEEKS_PER_MONTH := 4
+const MONTHS_PER_TRIMESTER := 3
+const TRIMESTERS_PER_YEAR := 3
+const DAYS_PER_MONTH := 28          # 4 weeks
+const DAYS_PER_TRIMESTER := 84      # 3 months
+const DAYS_PER_YEAR := 252          # 3 trimesters
+
+var day_count: int = 0              # absolute days since the game began
 var minutes_of_day: int = START_MINUTES
 
 # --- Location ---------------------------------------------------------------
@@ -30,29 +35,29 @@ var location: String = "room"
 # --- Player -----------------------------------------------------------------
 var player_name: String = "Student"
 var dev_mode: bool = false
-var stats := {}
-var tags: Array = []       # variables/tags that gate actions
+var stats := {}                     # hidden aptitudes (currently just morale)
+var needs := {}                     # visible self-assessed conditions
+var tags: Array = []
 var max_energy: int = 100
 var energy: int = 100
 var relationships := {}
 var flags := {}
 var fired_events := {}
-var inventory: Array = []   # item ids
-var favorites: Array = []   # favourited npc ids
+var inventory: Array = []
+var favorites: Array = []
 
 func _ready() -> void:
 	randomize()
 	reset()
 
 func reset() -> void:
-	semester = 1
-	week = 1
-	day_index = 0
+	day_count = 0
 	minutes_of_day = START_MINUTES
 	location = "room"
 	player_name = "Student"
 	dev_mode = false
 	stats = {"morale": 5}
+	needs = {"hunger": 75, "thirst": 75, "bladder": 85, "hygiene": 85, "calm": 70, "mana": 100}
 	tags = ["student", "enrolled"]
 	max_energy = 100
 	energy = 100
@@ -63,128 +68,59 @@ func reset() -> void:
 	favorites = []
 	state_changed.emit()
 
-# --- Time helpers -----------------------------------------------------------
+# --- Calendar helpers (display-derived) -------------------------------------
+func weekday_index() -> int:
+	return day_count % 7
+
 func day_name() -> String:
-	return DAYS[day_index]
+	return DAYS[weekday_index()]
+
+func is_school_day() -> bool:
+	return weekday_index() < 5
+
+func week_of_year() -> int:
+	return day_count / 7                       # 0-based
+
+func week_of_month() -> int:
+	return (day_count / 7) % WEEKS_PER_MONTH    # 0-based
+
+func month_of_trimester() -> int:
+	return (day_count / DAYS_PER_MONTH) % MONTHS_PER_TRIMESTER
+
+func trimester_of_year() -> int:
+	return (day_count / DAYS_PER_TRIMESTER) % TRIMESTERS_PER_YEAR
+
+func year_index() -> int:
+	return day_count / DAYS_PER_YEAR
 
 func time_string() -> String:
 	return "%02d:%02d" % [minutes_of_day / 60, minutes_of_day % 60]
 
 func date_string() -> String:
-	return "Semester %d  ·  Week %d  ·  %s  ·  %s" % [semester, week, day_name(), time_string()]
+	return "Trimester %d · Month %d · Week %d · %s · %s" % [
+		trimester_of_year() + 1, month_of_trimester() + 1, week_of_month() + 1, day_name(), time_string()]
 
-## Player-facing date with no numbers (e.g. "Monday, Morning").
-func brief_date() -> String:
-	return "%s, %s" % [day_name(), time_of_day()]
-
-func time_of_day() -> String:
-	var h := minutes_of_day / 60
-	if h < 5: return "Deep Night"
-	elif h < 8: return "Dawn"
-	elif h < 12: return "Morning"
-	elif h < 14: return "Midday"
-	elif h < 17: return "Afternoon"
-	elif h < 21: return "Evening"
-	else: return "Night"
-
-# --- Qualitative descriptors (player mode shows these instead of numbers) ----
-## Whether the UI should show raw numbers. Player mode = numberless.
-func show_numbers() -> bool:
-	return dev_mode
-
-func energy_descriptor() -> String:
-	if energy >= 80: return "Fresh"
-	elif energy >= 55: return "Rested"
-	elif energy >= 30: return "Tired"
-	elif energy >= 10: return "Drowsy"
-	else: return "Exhausted"
-
-static func stat_descriptor(v: int) -> String:
-	if v <= 1: return "Untrained"
-	elif v <= 4: return "Novice"
-	elif v <= 9: return "Apprentice"
-	elif v <= 15: return "Adept"
-	elif v <= 24: return "Skilled"
-	else: return "Master"
-
-static func hp_descriptor(hp: int, maxhp: int) -> String:
-	if hp >= maxhp: return "Unhurt"
-	var f := float(hp) / float(maxi(1, maxhp))
-	if f >= 0.7: return "Grazed"
-	elif f >= 0.4: return "Wounded"
-	elif f >= 0.15: return "Bloodied"
-	else: return "Near death"
-
-static func relationship_descriptor(v: int) -> String:
-	if v <= 0: return "Stranger"
-	elif v <= 3: return "Acquaintance"
-	elif v <= 7: return "Friend"
-	elif v <= 12: return "Close"
-	else: return "Inseparable"
-
-static func morale_descriptor(v: int) -> String:
-	if v <= 1: return "Despairing"
-	elif v <= 3: return "Low"
-	elif v <= 6: return "Steady"
-	elif v <= 9: return "Good"
-	elif v <= 13: return "High"
-	else: return "Elated"
-
-## Player-facing word for a stat by key (morale has its own scale).
-func stat_word(key: String) -> String:
-	var v := int(stats.get(key, 0))
-	return morale_descriptor(v) if key == "morale" else stat_descriptor(v)
-
-# --- Favourites & inventory -------------------------------------------------
-func is_favorite(id: String) -> bool:
-	return id in favorites
-
-func toggle_favorite(id: String) -> void:
-	if id in favorites:
-		favorites.erase(id)
-	else:
-		favorites.append(id)
-	state_changed.emit()
-
-func has_item(id: String) -> bool:
-	return id in inventory
-
-func add_item(id: String) -> void:
-	inventory.append(id)
-	state_changed.emit()
-
-func remove_item(id: String) -> void:
-	inventory.erase(id)
-	state_changed.emit()
-
-## Parse "HH:MM" into minutes-of-day.
 func _hm(s) -> int:
 	var parts: PackedStringArray = str(s).split(":")
 	var h := int(parts[0])
 	var m := int(parts[1]) if parts.size() > 1 else 0
 	return h * 60 + m
 
-## Advance the clock by `mins` minutes. The ONLY place the clock moves.
+## Advance the clock by `mins`. The ONLY place the clock moves.
 func advance_time(mins: int) -> void:
 	minutes_of_day += maxi(0, mins)
 	while minutes_of_day >= DAY_MINUTES:
 		minutes_of_day -= DAY_MINUTES
 		_advance_day()
+	_drift_needs(maxi(0, mins))
 	time_advanced.emit(mins)
 	_check_events()
 	state_changed.emit()
 
 func _advance_day() -> void:
-	day_index += 1
+	day_count += 1
 	energy = max_energy
 	day_changed.emit()
-	if day_index >= DAYS.size():
-		day_index = 0
-		week += 1
-		if week > WEEKS_PER_SEMESTER:
-			week = 1
-			semester += 1
-			message.emit("A new semester begins. (Semester %d)" % semester)
 
 ## Sleep until 07:00 the next morning; fully rested.
 func sleep() -> void:
@@ -197,6 +133,20 @@ func sleep() -> void:
 func set_location(loc: String) -> void:
 	location = loc
 	state_changed.emit()
+
+# --- Needs drift ------------------------------------------------------------
+func _drift_needs(minutes: int) -> void:
+	needs["hunger"] = clampi(int(needs.get("hunger", 0)) - int(minutes * 0.05), 0, 100)
+	needs["thirst"] = clampi(int(needs.get("thirst", 0)) - int(minutes * 0.06), 0, 100)
+	needs["bladder"] = clampi(int(needs.get("bladder", 0)) - int(minutes * 0.06), 0, 100)
+	needs["hygiene"] = clampi(int(needs.get("hygiene", 0)) - int(minutes * 0.03), 0, 100)
+	needs["mana"] = clampi(int(needs.get("mana", 0)) + int(minutes * 0.08), 0, 100)
+	var calm := int(needs.get("calm", 60))
+	var target := 60
+	if calm < target:
+		needs["calm"] = mini(target, calm + int(minutes * 0.04))
+	elif calm > target:
+		needs["calm"] = maxi(target, calm - int(minutes * 0.04))
 
 # --- Tags -------------------------------------------------------------------
 func has_tag(t: String) -> bool:
@@ -211,9 +161,7 @@ func remove_tag(t: String) -> void:
 	tags.erase(t)
 	state_changed.emit()
 
-# --- Requirements (shared by location actions AND combat actions) -----------
-## True if `req` is satisfied by an actor with `tags_in`/`stats_in`/`energy_in`.
-## Time, day, and story flags are global (read from GameState).
+# --- Requirements -----------------------------------------------------------
 func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, energy_in: int) -> bool:
 	if req.is_empty():
 		return true
@@ -247,8 +195,6 @@ func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, ener
 func current_location() -> Dictionary:
 	return GameData.locations.get(location, {})
 
-## Actions the PLAYER can take here now: location actions whose requirements
-## are met, plus a movement action for each connection.
 func available_actions() -> Array:
 	var loc := current_location()
 	var out: Array = []
@@ -264,11 +210,13 @@ func available_actions() -> Array:
 	return out
 
 # --- Resolution -------------------------------------------------------------
-## Apply an effects dictionary. The single mutation gateway.
 func apply_effects(effects: Dictionary) -> void:
 	if effects.has("stats"):
 		for k in effects["stats"]:
 			stats[k] = int(stats.get(k, 0)) + int(effects["stats"][k])
+	if effects.has("needs"):
+		for k in effects["needs"]:
+			needs[k] = clampi(int(needs.get(k, 0)) + int(effects["needs"][k]), 0, 100)
 	if effects.has("energy"):
 		energy = clampi(energy + int(effects["energy"]), 0, max_energy)
 	if effects.has("relationships"):
@@ -286,9 +234,8 @@ func apply_effects(effects: Dictionary) -> void:
 			tags.erase(t)
 	state_changed.emit()
 
-## Merge effects `add` into `into` (accumulate a dialogue/combat result). Static.
 static func merge_effects(into: Dictionary, add: Dictionary) -> void:
-	for cat in ["stats", "relationships"]:
+	for cat in ["stats", "needs", "relationships"]:
 		if add.has(cat):
 			if not into.has(cat):
 				into[cat] = {}
@@ -309,6 +256,115 @@ static func merge_effects(into: Dictionary, add: Dictionary) -> void:
 		for k in add["flags"]:
 			into["flags"][k] = add["flags"][k]
 
+# --- Qualitative descriptors ------------------------------------------------
+func show_numbers() -> bool:
+	return dev_mode
+
+func energy_descriptor() -> String:
+	if energy >= 80: return "Fresh"
+	elif energy >= 55: return "Rested"
+	elif energy >= 30: return "Tired"
+	elif energy >= 10: return "Drowsy"
+	else: return "Exhausted"
+
+static func stat_descriptor(v: int) -> String:
+	if v <= 1: return "Untrained"
+	elif v <= 4: return "Novice"
+	elif v <= 9: return "Apprentice"
+	elif v <= 15: return "Adept"
+	elif v <= 24: return "Skilled"
+	else: return "Master"
+
+static func morale_descriptor(v: int) -> String:
+	if v <= 1: return "Despairing"
+	elif v <= 3: return "Low"
+	elif v <= 6: return "Steady"
+	elif v <= 9: return "Good"
+	elif v <= 13: return "High"
+	else: return "Elated"
+
+static func hp_descriptor(hp: int, maxhp: int) -> String:
+	if hp >= maxhp: return "Unhurt"
+	var f := float(hp) / float(maxi(1, maxhp))
+	if f >= 0.7: return "Grazed"
+	elif f >= 0.4: return "Wounded"
+	elif f >= 0.15: return "Bloodied"
+	else: return "Near death"
+
+static func relationship_descriptor(v: int) -> String:
+	if v <= 0: return "Stranger"
+	elif v <= 3: return "Acquaintance"
+	elif v <= 7: return "Friend"
+	elif v <= 12: return "Close"
+	else: return "Inseparable"
+
+## Self-assessment word for a need (higher value = better/fuller).
+static func need_descriptor(key: String, v: int) -> String:
+	match key:
+		"hunger":
+			if v >= 85: return "Full"
+			elif v >= 60: return "Satisfied"
+			elif v >= 35: return "Peckish"
+			elif v >= 15: return "Hungry"
+			else: return "Starving"
+		"thirst":
+			if v >= 85: return "Slaked"
+			elif v >= 60: return "Fine"
+			elif v >= 35: return "Thirsty"
+			elif v >= 15: return "Parched"
+			else: return "Dry as dust"
+		"bladder":
+			if v >= 80: return "Empty"
+			elif v >= 55: return "Comfortable"
+			elif v >= 30: return "Need to go"
+			elif v >= 12: return "Bursting"
+			else: return "Desperate"
+		"hygiene":
+			if v >= 85: return "Fresh"
+			elif v >= 60: return "Clean"
+			elif v >= 35: return "Grubby"
+			elif v >= 15: return "Filthy"
+			else: return "Reeking"
+		"calm":
+			if v >= 85: return "Serene"
+			elif v >= 60: return "Composed"
+			elif v >= 40: return "Tense"
+			elif v >= 20: return "Anxious"
+			else: return "Panicked"
+		"mana":
+			if v >= 85: return "Brimming"
+			elif v >= 60: return "Ample"
+			elif v >= 35: return "Low"
+			elif v >= 15: return "Nearly spent"
+			else: return "Empty"
+	return str(v)
+
+func stat_word(key: String) -> String:
+	var v := int(stats.get(key, 0))
+	return morale_descriptor(v) if key == "morale" else stat_descriptor(v)
+
+# --- Favourites & inventory -------------------------------------------------
+func is_favorite(id: String) -> bool:
+	return id in favorites
+
+func toggle_favorite(id: String) -> void:
+	if id in favorites:
+		favorites.erase(id)
+	else:
+		favorites.append(id)
+	state_changed.emit()
+
+func has_item(id: String) -> bool:
+	return id in inventory
+
+func add_item(id: String) -> void:
+	inventory.append(id)
+	state_changed.emit()
+
+func remove_item(id: String) -> void:
+	inventory.erase(id)
+	state_changed.emit()
+
 # --- Events -----------------------------------------------------------------
 func _check_events() -> void:
 	for ev in GameData.events:
@@ -323,10 +379,6 @@ func _check_events() -> void:
 
 func _event_triggers(ev: Dictionary) -> bool:
 	var t: Dictionary = ev.get("trigger", {})
-	if t.has("semester") and int(t["semester"]) != semester:
-		return false
-	if t.has("week") and int(t["week"]) != week:
-		return false
 	if t.has("day") and str(t["day"]) != day_name():
 		return false
 	if t.has("location") and str(t["location"]) != location:
@@ -353,9 +405,8 @@ func save_game(path := "user://savegame.json") -> bool:
 	var data := {
 		"version": SAVE_VERSION,
 		"player_name": player_name, "dev_mode": dev_mode,
-		"semester": semester, "week": week, "day_index": day_index,
-		"minutes_of_day": minutes_of_day, "location": location,
-		"stats": stats, "tags": tags, "energy": energy, "max_energy": max_energy,
+		"day_count": day_count, "minutes_of_day": minutes_of_day, "location": location,
+		"stats": stats, "needs": needs, "tags": tags, "energy": energy, "max_energy": max_energy,
 		"relationships": relationships, "flags": flags, "fired_events": fired_events,
 		"inventory": inventory, "favorites": favorites,
 		"students": _students_node().serialize() if _students_node() else [],
@@ -382,12 +433,11 @@ func load_game(path := "user://savegame.json") -> bool:
 	var d: Dictionary = parsed
 	player_name = str(d.get("player_name", "Student"))
 	dev_mode = bool(d.get("dev_mode", false))
-	semester = int(d.get("semester", 1))
-	week = int(d.get("week", 1))
-	day_index = int(d.get("day_index", 0))
+	day_count = int(d.get("day_count", 0))
 	minutes_of_day = int(d.get("minutes_of_day", START_MINUTES))
 	location = str(d.get("location", "room"))
 	stats = d.get("stats", stats)
+	needs = d.get("needs", needs)
 	tags = d.get("tags", [])
 	energy = int(d.get("energy", 100))
 	max_energy = int(d.get("max_energy", 100))

@@ -13,7 +13,16 @@ func _populate() -> void:
 	content.add_child(_kv("Morale", str(morale) if g.dev_mode else g.morale_descriptor(morale)))
 	content.add_child(_kv("Energy",
 		("%d / %d" % [g.energy, g.max_energy]) if g.dev_mode else g.energy_descriptor()))
-	content.add_child(_kv("Tags", ", ".join(PackedStringArray(g.tags)) if not g.tags.is_empty() else "none"))
+	content.add_child(HSeparator.new())
+	content.add_child(_h("Condition"))
+	for nk in ["hunger", "thirst", "bladder", "hygiene", "calm", "mana"]:
+		var nv := int(g.needs.get(nk, 0))
+		var label := "Mana Reserves" if nk == "mana" else nk.capitalize()
+		content.add_child(_kv(label, str(nv) if g.dev_mode else g.need_descriptor(nk, nv)))
+	content.add_child(HSeparator.new())
+	# Tags are hidden from the player; dev only.
+	if g.dev_mode:
+		content.add_child(_kv("Tags", ", ".join(PackedStringArray(g.tags)) if not g.tags.is_empty() else "none"))
 	content.add_child(_kv("Items carried", str(g.inventory.size())))
 	content.add_child(_kv("Favourites", str(g.favorites.size())))
 	var known := 0

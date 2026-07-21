@@ -1,6 +1,12 @@
 [
 	{ "term": "Morale", "category": "Stat", "aliases": ["mood", "spirit"], "definition": "Your state of mind — the game's core stat. High morale steadies you (and toughens you in a fight); low morale drags everything down. Shown as Despairing, Low, Steady, Good, High, or Elated." },
 	{ "term": "Energy", "category": "State", "definition": "How rested you are. It drains as you act and restores when you sleep. Shown as Fresh, Rested, Tired, Drowsy, or Exhausted." },
+	{ "term": "Hunger", "category": "Need", "definition": "How fed you are, by your own reckoning — Full down to Starving. Drifts down as the day passes; eat to restore it." },
+	{ "term": "Thirst", "category": "Need", "definition": "How hydrated you feel — Slaked down to Dry as dust. Drink to restore it." },
+	{ "term": "Bladder", "category": "Need", "definition": "How badly you need to relieve yourself — Empty down to Desperate." },
+	{ "term": "Hygiene", "category": "Need", "definition": "How clean you feel — Fresh down to Reeking. Wash up to restore it." },
+	{ "term": "Calm", "category": "Need", "definition": "Your composure — Serene down to Panicked. Drifts toward a middling steadiness over time." },
+	{ "term": "Mana Reserves", "category": "Need", "aliases": ["mana"], "definition": "Your inner reservoir of magic — Brimming down to Empty. Recovers with rest." },
 	{ "term": "Favourite", "category": "Mechanic", "aliases": ["favorite", "favourites"], "definition": "Mark a person as a favourite in the People menu to pin them to the top of your list." },
 	{ "term": "Inventory", "category": "Mechanic", "definition": "The items you carry. Some can be used from the Inventory menu to recover energy or lift your morale." },
 	{ "term": "Spell", "category": "Mechanic", "aliases": ["spells"], "definition": "Magic you have learned. Which spells you know depends on your tags; see the Spells menu." },

@@ -1,4 +1,12 @@
 {
+	"ceremony_welcome": {
+		"lines": [
+			{ "speaker": "Headmistress Vane", "text": "Welcome, first-years, to the Academy. You stand where a thousand mages have stood before you." },
+			{ "speaker": "Headmistress Vane", "text": "A few rules. Curfew is at ten. The dueling ring is warded, but the dungeons beneath are not — do not wander. Attend your lectures. Mind your betters." },
+			{ "speaker": "Headmistress Vane", "text": "Your dormitories are in Building A. Settle in tonight; classes begin Monday. That is all." },
+			{ "speaker": "You", "text": "(You find your room number on the slip they handed you, and slip out with the others.)" }
+		]
+	},
 	"elara_evening": {
 		"lines": [
 			{ "speaker": "Elara", "text": "There you are! I saved us a table by the window. The whole tower's quiet tonight." },

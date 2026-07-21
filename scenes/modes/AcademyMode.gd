@@ -9,6 +9,7 @@ extends "res://scripts/GameMode.gd"
 var header_label: Label
 var date_label: Label
 var stats_box: VBoxContainer
+var tags_title: Label
 var tags_flow: HFlowContainer
 var relations_label: Label
 var students_label: RichTextLabel
@@ -71,7 +72,8 @@ func _build_ui() -> void:
 	stats_box.add_theme_constant_override("separation", 2)
 	sidebar.add_child(stats_box)
 
-	sidebar.add_child(_title("Tags"))
+	tags_title = _title("Tags")
+	sidebar.add_child(tags_title)
 	tags_flow = HFlowContainer.new()
 	sidebar.add_child(tags_flow)
 
@@ -196,6 +198,11 @@ func _rebuild_stats() -> void:
 		var v := int(GameState.stats[k])
 		stats_box.add_child(_stat_row(str(k), str(k).capitalize(),
 			GameState.stat_word(str(k)), str(v)))
+	# Visible self-assessed needs (words in player mode, numbers in dev).
+	for nk in ["hunger", "thirst", "bladder", "hygiene", "calm", "mana"]:
+		var nv := int(GameState.needs.get(nk, 0))
+		var label := "Mana" if nk == "mana" else nk.capitalize()
+		stats_box.add_child(_stat_row(nk, label, GameState.need_descriptor(nk, nv), str(nv)))
 
 func _stat_row(key: String, label: String, descriptor: String, number: String) -> HBoxContainer:
 	var h := HBoxContainer.new()
@@ -209,8 +216,14 @@ func _stat_row(key: String, label: String, descriptor: String, number: String) -
 	return h
 
 func _rebuild_tags() -> void:
+	# Tags are hidden from the player; only dev mode sees them.
+	var show_tags := GameState.dev_mode
+	tags_title.visible = show_tags
+	tags_flow.visible = show_tags
 	for c in tags_flow.get_children():
 		c.queue_free()
+	if not show_tags:
+		return
 	if GameState.tags.is_empty():
 		var l := Label.new()
 		l.text = "(none)"

@@ -1,11 +1,39 @@
 {
+	"school_gates": {
+		"name": "School Gates",
+		"description": "Wrought-iron gates at dusk. A queue of new students shuffles toward a brass automaton that checks each in turn.",
+		"connections": [],
+		"actions": [
+			{ "id": "wait_in_line", "name": "Wait in line to be identified", "duration": 30, "effects": { "tags": ["id_checked"] }, "requires": { "without_tags": ["id_checked"] } },
+			{ "id": "enter_courtyard", "name": "Enter the courtyard", "duration": 5, "goto": "courtyard", "requires": { "tags": ["id_checked"] } }
+		]
+	},
+	"courtyard": {
+		"name": "Courtyard",
+		"description": "A broad flagstoned courtyard between the two great halls. Building A holds the dormitories; Building B, the amphitheatre.",
+		"connections": [],
+		"actions": [
+			{ "id": "to_gates", "name": "Return to the gates", "duration": 5, "goto": "school_gates" },
+			{ "id": "enter_building_a", "name": "Enter Building A (dormitories)", "duration": 5, "goto": "corridor_b" },
+			{ "id": "enter_building_b", "name": "Enter Building B (amphitheatre)", "duration": 5, "goto": "amphitheater" }
+		]
+	},
+	"amphitheater": {
+		"name": "Amphitheatre (Building B)",
+		"description": "A steep bowl of seats around a speaker's dais. First-years file in for the welcoming ceremony.",
+		"connections": [],
+		"actions": [
+			{ "id": "welcome_ceremony", "name": "Attend the welcoming ceremony", "duration": 60, "dialogue": "ceremony_welcome", "effects": { "tags": ["oriented"] }, "requires": { "without_tags": ["oriented"] } },
+			{ "id": "leave_amph", "name": "Leave the amphitheatre", "duration": 5, "goto": "courtyard" }
+		]
+	},
 	"room": {
 		"name": "Your Room",
 		"description": "A small dormitory room. A bed, a desk, and a wardrobe.",
 		"connections": ["corridor_a"],
 		"actions": [
 			{ "id": "change_clothes", "name": "Change into uniform", "duration": 5, "effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] }, "requires": { "without_tags": ["dressed"] } },
-			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "stats": { "morale": 1 } } },
+			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "needs": { "hygiene": 30 } } },
 			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "morale": 1 } } },
 			{ "id": "sleep", "name": "Sleep until morning", "duration": 0, "sleep": true }
 		]
@@ -30,7 +58,7 @@
 	},
 	"corridor_b": {
 		"name": "Corridor B",
-		"description": "A shorter hall hung with duelling trophies.",
+		"description": "A shorter hall in Building A, hung with duelling trophies.",
 		"connections": ["classroom", "dueling_room"],
 		"actions": [
 			{ "id": "watch_trophies", "name": "Admire the trophies", "duration": 5, "effects": { "stats": { "morale": 1 } } }
