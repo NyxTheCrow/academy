@@ -245,12 +245,12 @@ func _test_descriptors() -> void:
 func _test_lexicon() -> void:
 	print("[lexicon]")
 	_check(Lexicon.all().size() >= 10, "lexicon entries loaded")
-	_check(not Lexicon.lookup("magic").is_empty(), "lookup by term")
-	_check(not Lexicon.lookup("mag").is_empty(), "lookup by alias")
+	_check(not Lexicon.lookup("morale").is_empty(), "lookup by term")
+	_check(not Lexicon.lookup("mood").is_empty(), "lookup by alias")
 	_eq(Lexicon.search("").size(), Lexicon.all().size(), "empty query returns all")
 	_check(Lexicon.search("fire").size() >= 1, "search finds Fire Wall")
 	_check(Lexicon.search("zzqqxx").is_empty(), "no matches -> empty")
-	_check(Lexicon.define("Magic") != "", "define returns text")
+	_check(Lexicon.define("Morale") != "", "define returns text")
 
 func _test_modes_and_director() -> void:
 	print("[modes + director]")
