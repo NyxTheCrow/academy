@@ -31,7 +31,7 @@ var _ability_bar: HBoxContainer
 
 func enter(context: Dictionary) -> void:
 	var enc := GameData.get_encounter(str(context.get("encounter_id", "")))
-	_reward = enc.get("reward", {"effects": {"stats": {"combat": 2}}})
+	_reward = enc.get("reward", {"effects": {"stats": {"morale": 1}}})
 	_penalty = enc.get("penalty", {"effects": {"energy": -30}})
 	# Filter the shared action list by the player's tags.
 	_actions.clear()
@@ -45,12 +45,17 @@ func enter(context: Dictionary) -> void:
 
 func _spawn_units(enc: Dictionary) -> void:
 	_units.clear()
-	var combat_stat: int = int(GameState.stats.get("combat", 0))
-	var magic_stat: int = int(GameState.stats.get("magic", 0))
+	# Player toughness/attack derive from morale, with small bonuses from tags.
+	var morale: int = int(GameState.stats.get("morale", 0))
+	var hp: int = 20 + morale
+	var atk: int = 5 + int(morale / 3.0)
+	if GameState.has_tag("duelist"):
+		atk += 2
+	if GameState.has_tag("pyromancer"):
+		atk += 1
 	_player = {
 		"name": GameState.player_name, "team": "player", "glyph": "@",
-		"max_hp": 20 + combat_stat * 2, "hp": 20 + combat_stat * 2,
-		"atk": 4 + combat_stat + int(magic_stat / 2.0), "pos": Vector2i(0, GRID_H / 2),
+		"max_hp": hp, "hp": hp, "atk": atk, "pos": Vector2i(0, GRID_H / 2),
 	}
 	_units.append(_player)
 	var enemies: Array = enc.get("enemies", [{"name": "Rival", "hp": 22, "atk": 5, "move": 3}])

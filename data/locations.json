@@ -5,8 +5,8 @@
 		"connections": ["corridor_a"],
 		"actions": [
 			{ "id": "change_clothes", "name": "Change into uniform", "duration": 5, "effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] }, "requires": { "without_tags": ["dressed"] } },
-			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"] } },
-			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "stats": { "knowledge": 2 }, "energy": -10 } },
+			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "stats": { "morale": 1 } } },
+			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "morale": 1 } } },
 			{ "id": "sleep", "name": "Sleep until morning", "duration": 0, "sleep": true }
 		]
 	},
@@ -24,8 +24,8 @@
 		"description": "Rows of desks beneath a vaulted, rune-carved ceiling.",
 		"connections": ["corridor_a", "corridor_b"],
 		"actions": [
-			{ "id": "attend_lecture", "name": "Attend the lecture", "duration": 60, "effects": { "stats": { "magic": 3, "knowledge": 2 }, "energy": -10, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "time_after": "09:00", "time_before": "12:00", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] } },
-			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "stats": { "knowledge": 2 }, "energy": -10 } }
+			{ "id": "attend_lecture", "name": "Attend the lecture", "duration": 60, "effects": { "energy": -10, "stats": { "morale": 1 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "time_after": "09:00", "time_before": "12:00", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] } },
+			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "energy": -10, "stats": { "morale": 1 } } }
 		]
 	},
 	"corridor_b": {
@@ -33,7 +33,7 @@
 		"description": "A shorter hall hung with duelling trophies.",
 		"connections": ["classroom", "dueling_room"],
 		"actions": [
-			{ "id": "watch_trophies", "name": "Admire the trophies", "duration": 5, "effects": { "stats": { "charisma": 1 } } }
+			{ "id": "watch_trophies", "name": "Admire the trophies", "duration": 5, "effects": { "stats": { "morale": 1 } } }
 		]
 	},
 	"dueling_room": {
@@ -41,7 +41,7 @@
 		"description": "A sand-floored ring warded for magical combat.",
 		"connections": ["corridor_b"],
 		"actions": [
-			{ "id": "spar", "name": "Spar with a training dummy", "duration": 30, "effects": { "stats": { "combat": 2 }, "energy": -15 }, "combat": "training_dummy" },
+			{ "id": "spar", "name": "Spar with a training dummy", "duration": 30, "effects": { "energy": -15 }, "combat": "training_dummy" },
 			{ "id": "duel_cassius", "name": "Duel Cassius", "duration": 20, "combat": "duel_rival", "requires": { "tags": ["can_duel"] } }
 		]
 	}

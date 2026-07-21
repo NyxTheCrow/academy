@@ -1,10 +1,10 @@
 [
 	{
 		"id": "noticed_by_professor",
-		"trigger": { "min_stats": { "magic": 15 } },
+		"trigger": { "flags": { "attended_lecture": true } },
 		"once": true,
-		"text": "Professor Vane has noticed your talent. You feel emboldened — perhaps you could hold your own in a duel now.",
-		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"] }
+		"text": "After the lecture, Professor Vane holds you back a moment. 'You have promise,' she says. You feel emboldened — perhaps you could hold your own in a duel now.",
+		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"], "stats": { "morale": 1 } }
 	},
 	{
 		"id": "curfew_warning",

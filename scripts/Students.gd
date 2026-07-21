@@ -16,7 +16,7 @@ func _ready() -> void:
 func reset() -> void:
 	npcs.clear()
 	for data in GameData.students:
-		var stats := {"magic": 0, "combat": 0, "knowledge": 0, "charisma": 0}
+		var stats := {"morale": 0}
 		for k in data.get("stats", {}):
 			stats[k] = int(data["stats"][k])
 		npcs.append({

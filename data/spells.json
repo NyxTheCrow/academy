@@ -1,0 +1,7 @@
+[
+	{ "id": "ward", "name": "Ward", "element": "Force", "requires": {}, "description": "A basic protective ward every student learns in their first week." },
+	{ "id": "ember", "name": "Ember Bolt", "element": "Fire", "requires": { "tags": ["mage"] }, "description": "A small dart of flame. The first offensive spell taught to mages." },
+	{ "id": "fire_wall", "name": "Fire Wall", "element": "Fire", "requires": { "tags": ["pyromancer"] }, "description": "Raise a 3-tile wall of flame that burns anyone who enters or lingers. Usable in combat." },
+	{ "id": "mend", "name": "Mending", "element": "Life", "requires": { "tags": ["scholar"] }, "description": "Knit small wounds and steady frayed nerves." },
+	{ "id": "rally", "name": "Rally", "element": "Mind", "requires": { "tags": ["duelist"] }, "description": "Steel yourself against fear — the discipline behind the Brace action." }
+]

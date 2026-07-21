@@ -1,0 +1,5 @@
+[
+	{ "name": "Magic Theory Lecture", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "time": "09:00 – 11:00", "location": "Classroom", "note": "Be dressed and enrolled to attend." },
+	{ "name": "Open Duelling", "days": ["Wednesday", "Saturday"], "time": "15:00", "location": "Dueling Room", "note": "Spar the dummy, or duel a rival if you may." },
+	{ "name": "Curfew", "days": ["Every day"], "time": "22:00", "location": "Your Room", "note": "Return and sleep to restore energy." }
+]

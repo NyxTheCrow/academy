@@ -1,0 +1,20 @@
+{
+	"textbook": {
+		"name": "Arcana Primer",
+		"description": "A well-thumbed textbook of first-year theory. Reassuring to hold before an exam.",
+		"use": { "stats": { "morale": 1 } },
+		"consumable": false
+	},
+	"bread": {
+		"name": "Bread Roll",
+		"description": "A humble roll from the dining hall. Eat it to recover a little energy.",
+		"use": { "energy": 15 },
+		"consumable": true
+	},
+	"charm": {
+		"name": "Luck Charm",
+		"description": "A small carved trinket said to lift the spirits of whoever carries it.",
+		"use": { "stats": { "morale": 2 } },
+		"consumable": true
+	}
+}

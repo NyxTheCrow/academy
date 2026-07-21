@@ -4,15 +4,15 @@
 		"enemies": [
 			{ "name": "Cassius", "hp": 24, "atk": 5, "move": 3 }
 		],
-		"reward": { "effects": { "stats": { "combat": 3, "charisma": 1 }, "flags": { "beat_cassius": true } } },
-		"penalty": { "effects": { "energy": -30, "stats": { "charisma": -1 } } }
+		"reward": { "effects": { "stats": { "morale": 3 }, "flags": { "beat_cassius": true } } },
+		"penalty": { "effects": { "energy": -30, "stats": { "morale": -2 } } }
 	},
 	"training_dummy": {
 		"name": "Sparring Practice",
 		"enemies": [
 			{ "name": "Practice Golem", "hp": 16, "atk": 3, "move": 2 }
 		],
-		"reward": { "effects": { "stats": { "combat": 2 } } },
+		"reward": { "effects": { "stats": { "morale": 1 } } },
 		"penalty": { "effects": { "energy": -15 } }
 	}
 }

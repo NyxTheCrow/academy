@@ -22,6 +22,11 @@ const MODE_SCENES := {
 	"dialogue": "res://scenes/modes/DialogueMode.tscn",
 	"combat": "res://scenes/modes/CombatMode.tscn",
 	"lexicon": "res://scenes/modes/LexiconMode.tscn",
+	"character": "res://scenes/modes/CharacterSheetMode.tscn",
+	"schedule": "res://scenes/modes/ScheduleMode.tscn",
+	"people": "res://scenes/modes/PeopleMode.tscn",
+	"spells": "res://scenes/modes/SpellsMode.tscn",
+	"inventory": "res://scenes/modes/InventoryMode.tscn",
 }
 
 var _host: Node = null

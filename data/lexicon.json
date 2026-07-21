@@ -1,9 +1,9 @@
 [
-	{ "term": "Magic", "category": "Stat", "aliases": ["mag"], "definition": "Your raw arcane power. Governs spellcasting and, in combat, part of your attack strength." },
-	{ "term": "Combat", "category": "Stat", "aliases": ["cmb"], "definition": "Your martial skill and toughness. Raises your health and damage in a fight." },
-	{ "term": "Knowledge", "category": "Stat", "aliases": ["kn"], "definition": "Book-learning and theory. Unlocks study opportunities and academic paths." },
-	{ "term": "Charisma", "category": "Stat", "aliases": ["cha"], "definition": "Presence and social grace. Shapes how others respond to you." },
+	{ "term": "Morale", "category": "Stat", "aliases": ["mood", "spirit"], "definition": "Your state of mind — the game's core stat. High morale steadies you (and toughens you in a fight); low morale drags everything down. Shown as Despairing, Low, Steady, Good, High, or Elated." },
 	{ "term": "Energy", "category": "State", "definition": "How rested you are. It drains as you act and restores when you sleep. Shown as Fresh, Rested, Tired, Drowsy, or Exhausted." },
+	{ "term": "Favourite", "category": "Mechanic", "aliases": ["favorite", "favourites"], "definition": "Mark a person as a favourite in the People menu to pin them to the top of your list." },
+	{ "term": "Inventory", "category": "Mechanic", "definition": "The items you carry. Some can be used from the Inventory menu to recover energy or lift your morale." },
+	{ "term": "Spell", "category": "Mechanic", "aliases": ["spells"], "definition": "Magic you have learned. Which spells you know depends on your tags; see the Spells menu." },
 	{ "term": "Tag", "category": "Mechanic", "aliases": ["tags", "variable"], "definition": "A label a character carries (like 'dressed' or 'pyromancer'). Actions check your tags to decide whether you may take them." },
 	{ "term": "Action", "category": "Mechanic", "definition": "Something you can do in a location or in combat. Each costs time; availability depends on your tags, the hour, and your stats." },
 	{ "term": "Dressed", "category": "Tag", "definition": "You are in uniform. Required to attend lectures. Gained by changing clothes in your room." },

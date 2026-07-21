@@ -89,10 +89,15 @@ func _build_ui() -> void:
 	sidebar.add_child(students_label)
 
 	sidebar.add_child(HSeparator.new())
-	var lex_btn := Button.new()
-	lex_btn.text = "Lexicon  (search terms)"
-	lex_btn.pressed.connect(_open_lexicon.bind(""))
-	sidebar.add_child(lex_btn)
+	sidebar.add_child(_title("Menus"))
+	for m in [["Character", "character"], ["Schedule", "schedule"], ["Other People", "people"],
+			["Spells", "spells"], ["Inventory", "inventory"], ["Lexicon", "lexicon"]]:
+		var mb := Button.new()
+		mb.text = m[0]
+		mb.pressed.connect(_open_menu.bind(m[1]))
+		sidebar.add_child(mb)
+
+	sidebar.add_child(HSeparator.new())
 	var save_row := HBoxContainer.new()
 	save_row.add_theme_constant_override("separation", 8)
 	var save_btn := Button.new()
@@ -161,11 +166,15 @@ func _hover_chip(key: String, display: String) -> Button:
 func _open_lexicon(focus := "") -> void:
 	await Director.run_mode("lexicon", {"focus": focus})
 
+func _open_menu(mode: String) -> void:
+	await Director.run_mode(mode, {})
+
 func _refresh() -> void:
 	if date_label == null:
 		return
 	header_label.text = GameState.player_name + ("   [DEV]" if GameState.dev_mode else "")
-	date_label.text = GameState.date_string() if GameState.dev_mode else GameState.brief_date()
+	# The clock/date is legible in both modes (numbers here are fine).
+	date_label.text = GameState.date_string()
 
 	var loc := GameState.current_location()
 	place_label.text = str(loc.get("name", GameState.location))
@@ -186,7 +195,7 @@ func _rebuild_stats() -> void:
 	for k in GameState.stats:
 		var v := int(GameState.stats[k])
 		stats_box.add_child(_stat_row(str(k), str(k).capitalize(),
-			GameState.stat_descriptor(v), str(v)))
+			GameState.stat_word(str(k)), str(v)))
 
 func _stat_row(key: String, label: String, descriptor: String, number: String) -> HBoxContainer:
 	var h := HBoxContainer.new()
@@ -229,9 +238,8 @@ func _refresh_students() -> void:
 			npc["name"], Students.location_name(npc["location"]), here, npc["current_action"]]
 		if GameState.dev_mode:
 			var st: Dictionary = npc["stats"]
-			out += "    [color=dimgray]MAG %d · CMB %d · KN %d · CHA %d · tags: %s[/color]\n" % [
-				int(st.get("magic", 0)), int(st.get("combat", 0)), int(st.get("knowledge", 0)),
-				int(st.get("charisma", 0)), ", ".join(PackedStringArray(npc["tags"]))]
+			out += "    [color=dimgray]morale %d · tags: %s[/color]\n" % [
+				int(st.get("morale", 0)), ", ".join(PackedStringArray(npc["tags"]))]
 	students_label.text = out
 
 func _rebuild_actions() -> void:

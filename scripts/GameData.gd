@@ -12,6 +12,9 @@ var dialogue: Dictionary = {}    # scene_id -> { "lines": [...] }
 var encounters: Dictionary = {}  # encounter_id -> { ... }
 var students: Array = []         # NPC definitions
 var backgrounds: Array = []      # character-creation backgrounds
+var spells: Array = []           # spell list
+var items: Dictionary = {}       # item_id -> { name, description, use? }
+var schedule: Array = []         # recurring timetable entries
 
 func _ready() -> void:
 	locations = _load_dict("res://data/locations.json")
@@ -21,8 +24,14 @@ func _ready() -> void:
 	encounters = _load_dict("res://data/encounters.json")
 	students = _load_array("res://data/students.json")
 	backgrounds = _load_dict("res://data/backgrounds.json").get("backgrounds", [])
-	print("[GameData] %d locations, %d combat actions, %d events, %d dialogue, %d encounters, %d students, %d backgrounds"
-		% [locations.size(), combat_actions.size(), events.size(), dialogue.size(), encounters.size(), students.size(), backgrounds.size()])
+	spells = _load_array("res://data/spells.json")
+	items = _load_dict("res://data/items.json")
+	schedule = _load_array("res://data/schedule.json")
+	print("[GameData] %d locations, %d combat actions, %d spells, %d items, %d schedule, %d students"
+		% [locations.size(), combat_actions.size(), spells.size(), items.size(), schedule.size(), students.size()])
+
+func get_item(id: String) -> Dictionary:
+	return items.get(id, {})
 
 func _load_array(path: String) -> Array:
 	var v: Variant = _parse(path)

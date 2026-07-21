@@ -20,6 +20,7 @@ func _ready() -> void:
 	_test_event_firing()
 	_test_save_load_roundtrip()
 	_test_data_loaded()
+	_test_stats_and_menus()
 	_test_npc_students()
 	_test_descriptors()
 	_test_lexicon()
@@ -75,8 +76,8 @@ func _test_sleep() -> void:
 func _test_apply_effects_tags() -> void:
 	print("[apply_effects + tags]")
 	GameState.reset()
-	GameState.apply_effects({"stats": {"magic": 5}, "energy": -10, "tags": ["dressed"], "flags": {"met": true}})
-	_eq(GameState.stats["magic"], 5, "stat added")
+	GameState.apply_effects({"stats": {"morale": 5}, "energy": -10, "tags": ["dressed"], "flags": {"met": true}})
+	_eq(GameState.stats["morale"], 5 + 5, "stat added (base 5 + 5)")
 	_eq(GameState.energy, 90, "energy subtracted")
 	_check(GameState.has_tag("dressed"), "tag added")
 	_check(GameState.flags.get("met", false), "flag set")
@@ -146,9 +147,9 @@ func _combat_ids(tags: Array) -> Array:
 func _test_event_firing() -> void:
 	print("[event firing]")
 	GameState.reset()
-	GameState.apply_effects({"stats": {"magic": 15}})
+	GameState.apply_effects({"flags": {"attended_lecture": true}})
 	GameState.advance_time(5)
-	_check(GameState.flags.get("noticed_by_professor", false), "magic>=15 fires event")
+	_check(GameState.flags.get("noticed_by_professor", false), "attending a lecture fires the event")
 	_check(GameState.has_tag("can_duel"), "event grants a tag")
 
 func _test_save_load_roundtrip() -> void:
@@ -159,19 +160,24 @@ func _test_save_load_roundtrip() -> void:
 	GameState.dev_mode = true
 	GameState.set_location("classroom")
 	GameState.add_tag("pyromancer")
-	GameState.apply_effects({"stats": {"magic": 9}})
+	GameState.apply_effects({"stats": {"morale": 4}})
+	GameState.toggle_favorite("elara")
+	GameState.add_item("charm")
 	GameState.advance_time(120)
 	var path := "user://test_save.json"
 	GameState.save_game(path)
 	var snap_min := GameState.minutes_of_day
+	var snap_morale := int(GameState.stats["morale"])
 	GameState.reset()
 	GameState.player_name = "Wiped"
-	_eq(GameState.stats["magic"], 0, "reset clears state")
 	GameState.load_game(path)
 	_eq(GameState.player_name, "Tester", "loaded name")
 	_eq(GameState.location, "classroom", "loaded location")
 	_check(GameState.has_tag("pyromancer"), "loaded tag")
+	_eq(int(GameState.stats["morale"]), snap_morale, "loaded morale")
 	_eq(GameState.minutes_of_day, snap_min, "loaded time")
+	_check(GameState.is_favorite("elara"), "loaded favourite")
+	_check(GameState.has_item("charm"), "loaded inventory item")
 	_eq(Students.npcs.size(), 4, "loaded NPCs")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
@@ -181,6 +187,28 @@ func _test_data_loaded() -> void:
 	_check(GameData.combat_actions.size() >= 3, "combat actions loaded")
 	_eq(GameData.students.size(), 4, "4 students")
 	_check(GameData.backgrounds.size() >= 3, "backgrounds loaded")
+	_check(GameData.spells.size() >= 3, "spells loaded")
+	_check(GameData.items.size() >= 2, "items loaded")
+	_check(GameData.schedule.size() >= 2, "schedule loaded")
+
+func _test_stats_and_menus() -> void:
+	print("[stats + menus state]")
+	GameState.reset()
+	_eq(GameState.stats.keys().size(), 1, "only one stat now")
+	_check(GameState.stats.has("morale"), "the stat is morale")
+	_eq(GameState.morale_descriptor(0), "Despairing", "morale 0 -> Despairing")
+	_eq(GameState.morale_descriptor(5), "Steady", "morale 5 -> Steady")
+	# Favourites
+	GameState.toggle_favorite("elara")
+	_check(GameState.is_favorite("elara"), "favourite toggled on")
+	GameState.toggle_favorite("elara")
+	_check(not GameState.is_favorite("elara"), "favourite toggled off")
+	# Inventory
+	_check(GameState.has_item("textbook"), "starts with a textbook")
+	GameState.add_item("charm")
+	_check(GameState.has_item("charm"), "item added")
+	GameState.remove_item("charm")
+	_check(not GameState.has_item("charm"), "item removed")
 
 func _test_npc_students() -> void:
 	print("[npc students]")
@@ -233,6 +261,11 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/DialogueMode.tscn",
 		"res://scenes/modes/CombatMode.tscn",
 		"res://scenes/modes/LexiconMode.tscn",
+		"res://scenes/modes/CharacterSheetMode.tscn",
+		"res://scenes/modes/ScheduleMode.tscn",
+		"res://scenes/modes/PeopleMode.tscn",
+		"res://scenes/modes/SpellsMode.tscn",
+		"res://scenes/modes/InventoryMode.tscn",
 	]:
 		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)

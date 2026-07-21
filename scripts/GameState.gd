@@ -37,6 +37,8 @@ var energy: int = 100
 var relationships := {}
 var flags := {}
 var fired_events := {}
+var inventory: Array = []   # item ids
+var favorites: Array = []   # favourited npc ids
 
 func _ready() -> void:
 	randomize()
@@ -50,13 +52,15 @@ func reset() -> void:
 	location = "room"
 	player_name = "Student"
 	dev_mode = false
-	stats = {"magic": 0, "combat": 0, "knowledge": 0, "charisma": 0}
+	stats = {"morale": 5}
 	tags = ["student", "enrolled"]
 	max_energy = 100
 	energy = 100
 	relationships = {}
 	flags = {}
 	fired_events = {}
+	inventory = ["textbook", "bread"]
+	favorites = []
 	state_changed.emit()
 
 # --- Time helpers -----------------------------------------------------------
@@ -117,6 +121,41 @@ static func relationship_descriptor(v: int) -> String:
 	elif v <= 7: return "Friend"
 	elif v <= 12: return "Close"
 	else: return "Inseparable"
+
+static func morale_descriptor(v: int) -> String:
+	if v <= 1: return "Despairing"
+	elif v <= 3: return "Low"
+	elif v <= 6: return "Steady"
+	elif v <= 9: return "Good"
+	elif v <= 13: return "High"
+	else: return "Elated"
+
+## Player-facing word for a stat by key (morale has its own scale).
+func stat_word(key: String) -> String:
+	var v := int(stats.get(key, 0))
+	return morale_descriptor(v) if key == "morale" else stat_descriptor(v)
+
+# --- Favourites & inventory -------------------------------------------------
+func is_favorite(id: String) -> bool:
+	return id in favorites
+
+func toggle_favorite(id: String) -> void:
+	if id in favorites:
+		favorites.erase(id)
+	else:
+		favorites.append(id)
+	state_changed.emit()
+
+func has_item(id: String) -> bool:
+	return id in inventory
+
+func add_item(id: String) -> void:
+	inventory.append(id)
+	state_changed.emit()
+
+func remove_item(id: String) -> void:
+	inventory.erase(id)
+	state_changed.emit()
 
 ## Parse "HH:MM" into minutes-of-day.
 func _hm(s) -> int:
@@ -318,6 +357,7 @@ func save_game(path := "user://savegame.json") -> bool:
 		"minutes_of_day": minutes_of_day, "location": location,
 		"stats": stats, "tags": tags, "energy": energy, "max_energy": max_energy,
 		"relationships": relationships, "flags": flags, "fired_events": fired_events,
+		"inventory": inventory, "favorites": favorites,
 		"students": _students_node().serialize() if _students_node() else [],
 	}
 	var f := FileAccess.open(path, FileAccess.WRITE)
@@ -354,6 +394,8 @@ func load_game(path := "user://savegame.json") -> bool:
 	relationships = d.get("relationships", {})
 	flags = d.get("flags", {})
 	fired_events = d.get("fired_events", {})
+	inventory = d.get("inventory", [])
+	favorites = d.get("favorites", [])
 	var sn = _students_node()
 	if sn:
 		sn.deserialize(d.get("students", []))
