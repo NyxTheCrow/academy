@@ -46,8 +46,19 @@ tag/requirement system** that decides who can do what, and when.
   ends a turn on it.
 - **Character creation** runs first: name, a few stat points, a data-driven
   background (which grants tags), and the dev/normal toggle.
-- **Dev vs normal** — `GameState.dev_mode`. Dev reveals all data (NPC stats &
-  tags, hazard timers, dice math). Toggle with **F2** or the debug panel.
+- **Numberless player mode vs dev mode** — `GameState.dev_mode`. In **player
+  mode the UI shows no numbers at all**: energy reads Fresh / Rested / Tired /
+  Drowsy / Exhausted, stats read Untrained→Master, HP reads Unhurt→Near death,
+  bonds read Stranger→Inseparable, the clock reads "Monday, Morning", and combat
+  hides damage numbers ("Cassius strikes you"). **Dev mode** shows the raw
+  numbers alongside. Descriptor helpers live in `GameState`; toggle with **F2**
+  or the debug panel. (Action time costs stay visible — a clock reading, not a
+  hidden stat.)
+- **Lexicon + hover** — a searchable term glossary (`data/lexicon.json`,
+  `Lexicon` autoload). Open it from the sidebar to live-filter terms and read
+  definitions. Stat names and tags render as **hover chips**: hovering shows the
+  term's definition, clicking opens the Lexicon focused on it. Location names
+  and combat abilities carry the same hover tooltips.
 - **NPCs roam** — each of the 4 students has a location + tags and acts
   through the *same* location-action + requirement system every time the clock
   advances, wandering between rooms. Shown in the sidebar with where they are.
