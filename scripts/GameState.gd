@@ -1,53 +1,57 @@
 extends Node
 ## GameState — THE SPINE.
 ##
-## Owns the canonical clock and the entire player game state. Two rules keep the
-## whole game coherent, and everything (activities, events, dialogue, combat,
-## NPCs) routes through them:
-##   1. The clock only ever moves through advance_time().
-##   2. State only ever mutates through apply_effects().
+## Two core states: TIME (minute-resolution clock) and LOCATION (where you are).
+## Everything a character can do is an "action" gated by a shared requirement
+## system (tags / time / stats / flags). The clock only moves through
+## advance_time(); state only mutates through apply_effects().
 
-signal state_changed             ## clock or player state changed; UI should refresh
-signal message(text: String)     ## narrative / journal line for the UI
-signal hour_ticked(hour: int)    ## emitted once per in-game hour advanced (NPCs listen)
+signal state_changed
+signal message(text: String)
+signal time_advanced(minutes: int)  ## NPCs act on this
+signal day_changed                  ## NPCs refill energy on this
 
-# --- Time configuration -----------------------------------------------------
+# --- Calendar / time --------------------------------------------------------
 const DAYS := ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 const WEEKS_PER_SEMESTER := 4
-const DAY_START_HOUR := 8   # the day begins at 08:00
-const DAY_END_HOUR := 22    # at 22:00 the student sleeps; clock rolls to next day
-const SAVE_VERSION := 2
+const DAY_MINUTES := 1440
+const START_MINUTES := 420          # 07:00
+const WALK_MINUTES := 5             # cost of moving between adjacent locations
+const SAVE_VERSION := 3
 
-# --- The clock --------------------------------------------------------------
 var semester: int = 1
-var week: int = 1        # 1-based
-var day_index: int = 0   # 0-based index into DAYS
-var hour: int = DAY_START_HOUR
+var week: int = 1
+var day_index: int = 0
+var minutes_of_day: int = START_MINUTES
 
-# --- Player state -----------------------------------------------------------
+# --- Location ---------------------------------------------------------------
+var location: String = "room"
+
+# --- Player -----------------------------------------------------------------
 var player_name: String = "Student"
 var dev_mode: bool = false
 var stats := {}
+var tags: Array = []       # variables/tags that gate actions
 var max_energy: int = 100
 var energy: int = 100
-var relationships := {}   # npc_id -> affinity (int)
-var flags := {}           # arbitrary story flags
-var fired_events := {}    # event_id -> true, so "once" events fire once
+var relationships := {}
+var flags := {}
+var fired_events := {}
 
 func _ready() -> void:
 	randomize()
 	reset()
 
-## Reset core player state to a fresh new game. Does not touch NPCs (Students
-## has its own reset) or the chosen name/dev_mode, which character creation sets.
 func reset() -> void:
 	semester = 1
 	week = 1
 	day_index = 0
-	hour = DAY_START_HOUR
+	minutes_of_day = START_MINUTES
+	location = "room"
 	player_name = "Student"
 	dev_mode = false
 	stats = {"magic": 0, "combat": 0, "knowledge": 0, "charisma": 0}
+	tags = ["student", "enrolled"]
 	max_energy = 100
 	energy = 100
 	relationships = {}
@@ -60,77 +64,119 @@ func day_name() -> String:
 	return DAYS[day_index]
 
 func time_string() -> String:
-	return "%02d:00" % hour
-
-func is_school_day() -> bool:
-	return day_index < 5  # Monday..Friday
+	return "%02d:%02d" % [minutes_of_day / 60, minutes_of_day % 60]
 
 func date_string() -> String:
 	return "Semester %d  ·  Week %d  ·  %s  ·  %s" % [semester, week, day_name(), time_string()]
 
-## Advance the clock by `hours` in-game hours (default 1). The ONLY place the
-## clock moves. Emits hour_ticked for each hour so NPCs can act, checks events.
-func advance_time(hours := 1) -> void:
-	for _i in range(max(1, hours)):
-		hour += 1
-		if hour >= DAY_END_HOUR:
-			hour = DAY_START_HOUR
-			_advance_day()
-		hour_ticked.emit(hour)
-		_check_events()
+## Parse "HH:MM" into minutes-of-day.
+func _hm(s) -> int:
+	var parts: PackedStringArray = str(s).split(":")
+	var h := int(parts[0])
+	var m := int(parts[1]) if parts.size() > 1 else 0
+	return h * 60 + m
+
+## Advance the clock by `mins` minutes. The ONLY place the clock moves.
+func advance_time(mins: int) -> void:
+	minutes_of_day += maxi(0, mins)
+	while minutes_of_day >= DAY_MINUTES:
+		minutes_of_day -= DAY_MINUTES
+		_advance_day()
+	time_advanced.emit(mins)
+	_check_events()
 	state_changed.emit()
 
 func _advance_day() -> void:
 	day_index += 1
-	energy = max_energy  # a night's sleep restores energy
+	energy = max_energy
+	day_changed.emit()
 	if day_index >= DAYS.size():
 		day_index = 0
-		_advance_week()
+		week += 1
+		if week > WEEKS_PER_SEMESTER:
+			week = 1
+			semester += 1
+			message.emit("A new semester begins. (Semester %d)" % semester)
 
-func _advance_week() -> void:
-	week += 1
-	if week > WEEKS_PER_SEMESTER:
-		week = 1
-		semester += 1
-		message.emit("A new semester begins. (Semester %d)" % semester)
+## Sleep until 07:00 the next morning; fully rested.
+func sleep() -> void:
+	var delta := (DAY_MINUTES - minutes_of_day) + START_MINUTES
+	advance_time(delta)
+	energy = max_energy
+	message.emit("[i]You sleep, and wake at %s.[/i]" % time_string())
+	state_changed.emit()
+
+func set_location(loc: String) -> void:
+	location = loc
+	state_changed.emit()
+
+# --- Tags -------------------------------------------------------------------
+func has_tag(t: String) -> bool:
+	return t in tags
+
+func add_tag(t: String) -> void:
+	if not (t in tags):
+		tags.append(t)
+		state_changed.emit()
+
+func remove_tag(t: String) -> void:
+	tags.erase(t)
+	state_changed.emit()
+
+# --- Requirements (shared by location actions AND combat actions) -----------
+## True if `req` is satisfied by an actor with `tags_in`/`stats_in`/`energy_in`.
+## Time, day, and story flags are global (read from GameState).
+func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, energy_in: int) -> bool:
+	if req.is_empty():
+		return true
+	if req.has("tags"):
+		for t in req["tags"]:
+			if not (t in tags_in):
+				return false
+	if req.has("without_tags"):
+		for t in req["without_tags"]:
+			if t in tags_in:
+				return false
+	if req.has("time_after") and minutes_of_day < _hm(req["time_after"]):
+		return false
+	if req.has("time_before") and minutes_of_day >= _hm(req["time_before"]):
+		return false
+	if req.has("days") and not (day_name() in req["days"]):
+		return false
+	if req.has("min_energy") and energy_in < int(req["min_energy"]):
+		return false
+	if req.has("min_stats"):
+		for k in req["min_stats"]:
+			if int(stats_in.get(k, 0)) < int(req["min_stats"][k]):
+				return false
+	if req.has("flags"):
+		for f in req["flags"]:
+			if flags.get(f, false) != req["flags"][f]:
+				return false
+	return true
+
+# --- Locations & actions ----------------------------------------------------
+func current_location() -> Dictionary:
+	return GameData.locations.get(location, {})
+
+## Actions the PLAYER can take here now: location actions whose requirements
+## are met, plus a movement action for each connection.
+func available_actions() -> Array:
+	var loc := current_location()
+	var out: Array = []
+	for a in loc.get("actions", []):
+		if requirement_met(a.get("requires", {}), tags, stats, energy):
+			out.append(a)
+	for conn in loc.get("connections", []):
+		var dest: Dictionary = GameData.locations.get(conn, {})
+		out.append({
+			"id": "go_" + str(conn), "name": "Go to " + str(dest.get("name", conn)),
+			"goto": conn, "duration": WALK_MINUTES, "move": true,
+		})
+	return out
 
 # --- Resolution -------------------------------------------------------------
-## Perform a plain activity: optional skill check, apply effects, then advance
-## by the activity's duration (hours). Mode-triggering activities (dialogue /
-## combat) are driven by AcademyMode so their sub-scene can resolve first.
-func perform_activity(activity: Dictionary) -> void:
-	var act_name: String = activity.get("name", "Activity")
-	var check: Variant = activity.get("skill_check", null)
-	if check != null and check is Dictionary:
-		_resolve_skill_check(act_name, check)
-	else:
-		apply_effects(activity.get("effects", {}))
-		message.emit("You spent %d hour(s): %s." % [duration_of(activity), act_name])
-	advance_time(duration_of(activity))
-
-func duration_of(activity: Dictionary) -> int:
-	return maxi(1, int(activity.get("duration", 1)))
-
-func _resolve_skill_check(act_name: String, check: Dictionary) -> void:
-	var stat_id: String = check.get("stat", "")
-	var difficulty: int = int(check.get("difficulty", 5))
-	var roll: int = randi_range(1, 6)
-	var stat_value: int = int(stats.get(stat_id, 0))
-	var total: int = stat_value + roll
-	var ok := total >= difficulty
-	if ok:
-		apply_effects(check.get("success", {}))
-	else:
-		apply_effects(check.get("failure", {}))
-	# The dice math is a "dev" detail; players just see the outcome.
-	if dev_mode:
-		message.emit("%s — %s (%s %d + roll %d = %d vs %d)" % [
-			act_name, ("[color=lightgreen]Success![/color]" if ok else "[color=salmon]Failed.[/color]"),
-			stat_id, stat_value, roll, total, difficulty])
-	else:
-		message.emit("%s — %s" % [act_name, ("[color=lightgreen]it goes well.[/color]" if ok else "[color=salmon]it doesn't click.[/color]")])
-
-## Apply an effects dictionary to game state. The single mutation gateway.
+## Apply an effects dictionary. The single mutation gateway.
 func apply_effects(effects: Dictionary) -> void:
 	if effects.has("stats"):
 		for k in effects["stats"]:
@@ -143,6 +189,13 @@ func apply_effects(effects: Dictionary) -> void:
 	if effects.has("flags"):
 		for fl in effects["flags"]:
 			flags[fl] = effects["flags"][fl]
+	if effects.has("tags"):
+		for t in effects["tags"]:
+			if not (t in tags):
+				tags.append(t)
+	if effects.has("remove_tags"):
+		for t in effects["remove_tags"]:
+			tags.erase(t)
 	state_changed.emit()
 
 ## Merge effects `add` into `into` (accumulate a dialogue/combat result). Static.
@@ -155,6 +208,13 @@ static func merge_effects(into: Dictionary, add: Dictionary) -> void:
 				into[cat][k] = int(into[cat].get(k, 0)) + int(add[cat][k])
 	if add.has("energy"):
 		into["energy"] = int(into.get("energy", 0)) + int(add["energy"])
+	for listcat in ["tags", "remove_tags"]:
+		if add.has(listcat):
+			if not into.has(listcat):
+				into[listcat] = []
+			for t in add[listcat]:
+				if not (t in into[listcat]):
+					into[listcat].append(t)
 	if add.has("flags"):
 		if not into.has("flags"):
 			into["flags"] = {}
@@ -181,7 +241,11 @@ func _event_triggers(ev: Dictionary) -> bool:
 		return false
 	if t.has("day") and str(t["day"]) != day_name():
 		return false
-	if t.has("hour") and int(t["hour"]) != hour:
+	if t.has("location") and str(t["location"]) != location:
+		return false
+	if t.has("time_after") and minutes_of_day < _hm(t["time_after"]):
+		return false
+	if t.has("time_before") and minutes_of_day >= _hm(t["time_before"]):
 		return false
 	if t.has("min_stats"):
 		for k in t["min_stats"]:
@@ -193,56 +257,7 @@ func _event_triggers(ev: Dictionary) -> bool:
 				return false
 	return true
 
-# --- Availability (shared by the player and NPCs) ---------------------------
-## True if activity `a` can be started at `hour_now` given `energy_now`/`flags_now`.
-## day_index is always "now" (the whole world shares the calendar).
-func availability_ok(a: Dictionary, hour_now: int, energy_now: int, flags_now: Dictionary) -> bool:
-	var days: Variant = a.get("days", null)
-	if days != null and not (day_name() in days):
-		return false
-	if a.has("hour_range"):
-		var r: Array = a["hour_range"]
-		if hour_now < int(r[0]) or hour_now > int(r[1]):
-			return false
-	elif a.has("hours"):
-		# Coerce to int: JSON numbers can parse as floats, and `in` is type-strict.
-		var matched := false
-		for hh in a["hours"]:
-			if int(hh) == hour_now:
-				matched = true
-				break
-		if not matched:
-			return false
-	var req: Dictionary = a.get("requirements", {})
-	if req.has("min_energy") and energy_now < int(req["min_energy"]):
-		return false
-	# Stat gates are player-only (stats are per-actor); available_activities()
-	# applies them. NPCs share this time/energy/flag availability check.
-	if req.has("flags"):
-		for fl in req["flags"]:
-			if flags_now.get(fl, false) != req["flags"][fl]:
-				return false
-	return true
-
-## Activities the PLAYER can start right now.
-func available_activities() -> Array:
-	var out: Array = []
-	for a in GameData.activities:
-		if not availability_ok(a, hour, energy, flags):
-			continue
-		if a.has("requirements") and a["requirements"].has("min_stats"):
-			var ok := true
-			for k in a["requirements"]["min_stats"]:
-				if int(stats.get(k, 0)) < int(a["requirements"]["min_stats"][k]):
-					ok = false
-			if not ok:
-				continue
-		out.append(a)
-	return out
-
 # --- Save / load ------------------------------------------------------------
-# Resolve the Students autoload at runtime (it registers after GameState, so we
-# must not reference it by its global name here — that would fail to compile).
 func _students_node():
 	return get_node_or_null("/root/Students")
 
@@ -250,14 +265,15 @@ func save_game(path := "user://savegame.json") -> bool:
 	var data := {
 		"version": SAVE_VERSION,
 		"player_name": player_name, "dev_mode": dev_mode,
-		"semester": semester, "week": week, "day_index": day_index, "hour": hour,
-		"stats": stats, "energy": energy, "max_energy": max_energy,
+		"semester": semester, "week": week, "day_index": day_index,
+		"minutes_of_day": minutes_of_day, "location": location,
+		"stats": stats, "tags": tags, "energy": energy, "max_energy": max_energy,
 		"relationships": relationships, "flags": flags, "fired_events": fired_events,
 		"students": _students_node().serialize() if _students_node() else [],
 	}
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
-		push_error("[GameState] could not open save file for writing: %s" % path)
+		push_error("[GameState] could not open save file: %s" % path)
 		return false
 	f.store_string(JSON.stringify(data, "\t"))
 	f.close()
@@ -280,14 +296,16 @@ func load_game(path := "user://savegame.json") -> bool:
 	semester = int(d.get("semester", 1))
 	week = int(d.get("week", 1))
 	day_index = int(d.get("day_index", 0))
-	hour = int(d.get("hour", DAY_START_HOUR))
+	minutes_of_day = int(d.get("minutes_of_day", START_MINUTES))
+	location = str(d.get("location", "room"))
 	stats = d.get("stats", stats)
+	tags = d.get("tags", [])
 	energy = int(d.get("energy", 100))
 	max_energy = int(d.get("max_energy", 100))
 	relationships = d.get("relationships", {})
 	flags = d.get("flags", {})
 	fired_events = d.get("fired_events", {})
-	var sn = _students_node()  # untyped: duck-typed autoload
+	var sn = _students_node()
 	if sn:
 		sn.deserialize(d.get("students", []))
 	message.emit("[i]Game loaded.[/i]")

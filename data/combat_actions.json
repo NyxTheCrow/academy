@@ -1,0 +1,34 @@
+[
+	{
+		"id": "move",
+		"name": "Move",
+		"kind": "move",
+		"range": 3,
+		"description": "Reposition to a tile within range."
+	},
+	{
+		"id": "strike",
+		"name": "Strike",
+		"kind": "melee",
+		"range": 1,
+		"description": "Attack an adjacent foe."
+	},
+	{
+		"id": "fire_wall",
+		"name": "Fire Wall",
+		"kind": "wall",
+		"dmg": 6,
+		"ttl": 3,
+		"length": 3,
+		"description": "Raise a 3-tile wall of flame. Damages any unit that moves onto it or ends its turn on it.",
+		"requires": { "tags": ["pyromancer"] }
+	},
+	{
+		"id": "brace",
+		"name": "Brace",
+		"kind": "self",
+		"heal": 5,
+		"description": "Steady yourself, recovering a little health and ending your turn.",
+		"requires": { "tags": ["duelist"] }
+	}
+]

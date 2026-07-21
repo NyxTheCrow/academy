@@ -1,23 +1,16 @@
 [
 	{
-		"id": "orientation",
-		"trigger": { "week": 1, "day": "Monday", "hour": 9 },
-		"once": true,
-		"text": "Orientation complete. The Headmistress wishes you a fruitful year.",
-		"effects": {}
-	},
-	{
 		"id": "noticed_by_professor",
 		"trigger": { "min_stats": { "magic": 15 } },
 		"once": true,
-		"text": "Professor Vane has noticed your talent. An Advanced Arcana Seminar now opens on Saturday mornings.",
-		"effects": { "flags": { "noticed_by_professor": true } }
+		"text": "Professor Vane has noticed your talent. You feel emboldened — perhaps you could hold your own in a duel now.",
+		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"] }
 	},
 	{
-		"id": "midterms",
-		"trigger": { "week": 3, "day": "Monday", "hour": 9 },
+		"id": "curfew_warning",
+		"trigger": { "time_after": "22:00" },
 		"once": true,
-		"text": "Midterm examinations loom this week. Have you studied enough?",
+		"text": "It is past curfew. You should return to your room and sleep.",
 		"effects": {}
 	}
 ]

@@ -1,19 +1,18 @@
 extends Node
 ## Students — the NPC manager (autoload).
 ##
-## Four other students share the player's stat model, hours, and action list.
-## Each in-game hour every NPC picks an action by a weighted random roll (their
-## own bias) among the actions available at that hour, and applies its effects
-## to their own stats — so they grow in parallel with the player. NPCs skip
-## player-only actions (dialogue/combat scenes) and skip stat-gated ones.
+## Four other students share the player's world: they each have a location and
+## a set of tags, and they act through the very same location-action + tag
+## requirement system the player uses. Each time the clock advances, every NPC
+## takes one available action in its current location (possibly moving on).
 
-var npcs: Array = []  # runtime state: {id, name, stats, energy, weights, current_action}
+var npcs: Array = []  # {id, name, location, tags, stats, energy, current_action}
 
 func _ready() -> void:
 	reset()
-	GameState.hour_ticked.connect(_on_hour_ticked)
+	GameState.time_advanced.connect(_on_time_advanced)
+	GameState.day_changed.connect(_on_day_changed)
 
-## (Re)build NPC runtime state from the data definitions.
 func reset() -> void:
 	npcs.clear()
 	for data in GameData.students:
@@ -23,60 +22,59 @@ func reset() -> void:
 		npcs.append({
 			"id": data.get("id", ""),
 			"name": data.get("name", "Student"),
+			"location": str(data.get("location", "room")),
+			"tags": (data.get("tags", []) as Array).duplicate(),
 			"stats": stats,
 			"energy": 100,
-			"weights": data.get("action_weights", {}),
-			"current_action": "Settling in",
+			"current_action": "Waiting",
 		})
 
-func _on_hour_ticked(hour: int) -> void:
-	if hour == GameState.DAY_START_HOUR:
-		for npc in npcs:
-			npc["energy"] = 100  # a night's rest
+func _on_day_changed() -> void:
 	for npc in npcs:
-		_npc_act(npc, hour)
+		npc["energy"] = 100
 
-func _npc_act(npc: Dictionary, hour: int) -> void:
+func _on_time_advanced(_minutes: int) -> void:
+	for npc in npcs:
+		_npc_act(npc)
+
+func location_name(loc: String) -> String:
+	return str(GameData.get_location(loc).get("name", loc))
+
+func _npc_act(npc: Dictionary) -> void:
+	var loc := GameData.get_location(npc["location"])
 	var options: Array = []
-	for a in GameData.activities:
-		if a.has("dialogue") or a.has("combat"):
-			continue  # player-only scenes
-		if a.has("requirements") and a["requirements"].has("flags"):
-			continue  # skip flag-gated content for NPCs
-		if GameState.availability_ok(a, hour, npc["energy"], {}):
+	for a in loc.get("actions", []):
+		if a.has("dialogue") or a.has("combat") or a.get("sleep", false):
+			continue  # player-only actions
+		if GameState.requirement_met(a.get("requires", {}), npc["tags"], npc["stats"], npc["energy"]):
 			options.append(a)
+	# Movement options (NPCs wander).
+	for conn in loc.get("connections", []):
+		options.append({"name": "heading to " + location_name(conn), "goto": conn})
 	if options.is_empty():
-		npc["current_action"] = "Idle"
+		npc["current_action"] = "idling in " + location_name(npc["location"])
 		return
-	var chosen: Dictionary = _weighted_pick(options, npc["weights"])
-	npc["current_action"] = chosen.get("name", "…")
-	_apply(npc, chosen)
-
-func _weighted_pick(options: Array, weights: Dictionary) -> Dictionary:
-	var total := 0.0
-	for a in options:
-		total += float(weights.get(a.get("id", ""), 1))
-	var roll := randf() * total
-	for a in options:
-		roll -= float(weights.get(a.get("id", ""), 1))
-		if roll <= 0.0:
-			return a
-	return options.back()
-
-func _apply(npc: Dictionary, activity: Dictionary) -> void:
-	var effects: Dictionary
-	var check: Variant = activity.get("skill_check", null)
-	if check != null and check is Dictionary:
-		var stat_id: String = check.get("stat", "")
-		var total: int = int(npc["stats"].get(stat_id, 0)) + randi_range(1, 6)
-		effects = check.get("success", {}) if total >= int(check.get("difficulty", 5)) else check.get("failure", {})
+	var chosen: Dictionary = options[randi() % options.size()]
+	if chosen.has("goto"):
+		npc["location"] = str(chosen["goto"])
+		npc["current_action"] = str(chosen["name"])
 	else:
-		effects = activity.get("effects", {})
+		npc["current_action"] = str(chosen.get("name", "…"))
+		_apply(npc, chosen.get("effects", {}))
+
+func _apply(npc: Dictionary, effects: Dictionary) -> void:
 	if effects.has("stats"):
 		for k in effects["stats"]:
 			npc["stats"][k] = int(npc["stats"].get(k, 0)) + int(effects["stats"][k])
 	if effects.has("energy"):
 		npc["energy"] = clampi(int(npc["energy"]) + int(effects["energy"]), 0, 100)
+	if effects.has("tags"):
+		for t in effects["tags"]:
+			if not (t in npc["tags"]):
+				npc["tags"].append(t)
+	if effects.has("remove_tags"):
+		for t in effects["remove_tags"]:
+			npc["tags"].erase(t)
 
 # --- Save / load ------------------------------------------------------------
 func serialize() -> Array:

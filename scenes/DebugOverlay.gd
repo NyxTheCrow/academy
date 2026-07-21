@@ -57,8 +57,8 @@ func _build_ui() -> void:
 	v.add_child(HSeparator.new())
 	v.add_child(_row([
 		_btn("+5 all stats", _bump_stats),
-		_btn("+1 day", _skip_day),
-		_btn("Refill energy", _refill_energy),
+		_btn("Sleep→AM", _skip_day),
+		_btn("+1 hour", func(): GameState.advance_time(60)),
 	]))
 	v.add_child(_row([
 		_btn("Save", func(): GameState.save_game()),
@@ -85,7 +85,7 @@ func _btn(text: String, cb: Callable) -> Button:
 	return b
 
 func _skip_day() -> void:
-	GameState.advance_time(maxi(1, GameState.DAY_END_HOUR - GameState.hour))
+	GameState.sleep()
 
 func _refill_energy() -> void:
 	GameState.apply_effects({"energy": 100})
@@ -113,8 +113,9 @@ func _refresh() -> void:
 		return
 	var s := "[b]%s[/b]  %s\n" % [GameState.player_name, "[color=orange]DEV[/color]" if GameState.dev_mode else "normal"]
 	s += "%s\n" % GameState.date_string()
+	s += "Location: %s\n" % GameState.location
 	s += "Energy %d/%d\n" % [GameState.energy, GameState.max_energy]
 	s += "Stats: %s\n" % str(GameState.stats)
-	s += "Bonds: %s\n" % str(GameState.relationships)
+	s += "Tags: %s\n" % str(GameState.tags)
 	s += "Flags: %s\n" % str(GameState.flags)
 	state_label.text = s

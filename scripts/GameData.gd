@@ -5,7 +5,8 @@ extends Node
 ## here is game logic. To add content — activities, events, dialogue scenes,
 ## combat encounters — you edit the JSON, not this file.
 
-var activities: Array = []
+var locations: Dictionary = {}   # location_id -> { name, connections, actions }
+var combat_actions: Array = []   # shared combat action list (tag-gated)
 var events: Array = []
 var dialogue: Dictionary = {}    # scene_id -> { "lines": [...] }
 var encounters: Dictionary = {}  # encounter_id -> { ... }
@@ -13,14 +14,15 @@ var students: Array = []         # NPC definitions
 var backgrounds: Array = []      # character-creation backgrounds
 
 func _ready() -> void:
-	activities = _load_array("res://data/activities.json")
+	locations = _load_dict("res://data/locations.json")
+	combat_actions = _load_array("res://data/combat_actions.json")
 	events = _load_array("res://data/events.json")
 	dialogue = _load_dict("res://data/dialogue.json")
 	encounters = _load_dict("res://data/encounters.json")
 	students = _load_array("res://data/students.json")
 	backgrounds = _load_dict("res://data/backgrounds.json").get("backgrounds", [])
-	print("[GameData] %d activities, %d events, %d dialogue, %d encounters, %d students, %d backgrounds"
-		% [activities.size(), events.size(), dialogue.size(), encounters.size(), students.size(), backgrounds.size()])
+	print("[GameData] %d locations, %d combat actions, %d events, %d dialogue, %d encounters, %d students, %d backgrounds"
+		% [locations.size(), combat_actions.size(), events.size(), dialogue.size(), encounters.size(), students.size(), backgrounds.size()])
 
 func _load_array(path: String) -> Array:
 	var v: Variant = _parse(path)
@@ -42,11 +44,8 @@ func _parse(path: String) -> Variant:
 		push_error("[GameData] failed to parse JSON: %s" % path)
 	return parsed
 
-func get_activity(id: String) -> Dictionary:
-	for a in activities:
-		if a.get("id", "") == id:
-			return a
-	return {}
+func get_location(id: String) -> Dictionary:
+	return locations.get(id, {})
 
 func get_dialogue(id: String) -> Dictionary:
 	return dialogue.get(id, {})
