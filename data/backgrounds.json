@@ -3,26 +3,26 @@
 		{
 			"id": "scholar",
 			"name": "Scholar",
-			"description": "Raised among books. Learns Mending; starts steady.",
-			"effects": { "stats": { "morale": 2 }, "tags": ["scholar"] }
+			"description": "Raised among books. Learns Mending.",
+			"effects": { "tags": ["scholar"] }
 		},
 		{
 			"id": "duelist",
 			"name": "Duelist",
 			"description": "Trained to fight early. May duel formally, and can Brace in combat.",
-			"effects": { "stats": { "morale": 1 }, "tags": ["duelist", "can_duel"] }
+			"effects": { "tags": ["duelist", "can_duel"] }
 		},
 		{
 			"id": "socialite",
 			"name": "Socialite",
-			"description": "You know everyone worth knowing. High spirits.",
-			"effects": { "stats": { "morale": 3 }, "tags": ["socialite"] }
+			"description": "You know everyone worth knowing.",
+			"effects": { "tags": ["socialite"] }
 		},
 		{
 			"id": "prodigy",
 			"name": "Prodigy",
 			"description": "Raw talent that unsettles the faculty. Wields Fire Wall in combat.",
-			"effects": { "stats": { "morale": 1 }, "tags": ["mage", "pyromancer"] }
+			"effects": { "tags": ["mage", "pyromancer"] }
 		}
 	]
 }

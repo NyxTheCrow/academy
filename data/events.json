@@ -4,7 +4,7 @@
 		"trigger": { "flags": { "attended_lecture": true } },
 		"once": true,
 		"text": "After the lecture, Professor Vane holds you back a moment. 'You have promise,' she says. You feel emboldened — perhaps you could hold your own in a duel now.",
-		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"], "stats": { "morale": 1 } }
+		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"] }
 	},
 	{
 		"id": "curfew_warning",

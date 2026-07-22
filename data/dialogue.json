@@ -14,7 +14,7 @@
 			{ "speaker": "Elara", "text": "Then stay a while. Tell me — what's been on your mind lately?" },
 			{ "choices": [
 				{ "text": "\"Honestly? The exams terrify me.\"", "effects": { "relationships": { "elara": 3 }, "flags": { "confided_in_elara": true } }, "goto": "wrap" },
-				{ "text": "\"Just glad to be here with you.\"", "effects": { "relationships": { "elara": 2 }, "stats": { "morale": 1 } }, "goto": "wrap" },
+				{ "text": "\"Just glad to be here with you.\"", "effects": { "relationships": { "elara": 2 }, "needs": { "calm": 5 } }, "goto": "wrap" },
 				{ "text": "\"I've been pushing my magic too hard.\"", "effects": { "relationships": { "elara": 1 } }, "goto": "advice" }
 			] },
 

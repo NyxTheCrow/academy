@@ -9,8 +9,8 @@ func _populate() -> void:
 	content.add_child(_h(g.player_name))
 	content.add_child(_kv("When", g.date_string()))
 	content.add_child(_kv("Where", str(g.current_location().get("name", g.location))))
-	var morale := int(g.stats.get("morale", 0))
-	content.add_child(_kv("Morale", str(morale) if g.dev_mode else g.morale_descriptor(morale)))
+	var focus := int(g.stats.get("focus", 0))
+	content.add_child(_kv("Focus", str(focus) if g.dev_mode else g.focus_descriptor(focus)))
 	content.add_child(_kv("Energy",
 		("%d / %d" % [g.energy, g.max_energy]) if g.dev_mode else g.energy_descriptor()))
 	content.add_child(HSeparator.new())

@@ -17,11 +17,39 @@ const FILES := [
 	["Schedule", "schedule.json", "schedule"],
 	["Combat Actions", "combat_actions.json", "combat_actions"],
 	["Backgrounds", "backgrounds.json", "backgrounds"],
-	["Students", "students.json", "students"],
+	["Characters (NPCs)", "students.json", "students"],
+	["Tags", "tags.json", "tags"],
 	["Events", "events.json", "events"],
 	["Encounters", "encounters.json", "encounters"],
 	["Dialogue", "dialogue.json", "dialogue"],
 ]
+
+# Blank templates the "New entry" button appends, per file. kind is how to
+# insert: array append / dict new-key / backgrounds-array append.
+const TEMPLATES := {
+	"locations": {"kind": "dict", "label": "location", "prefix": "new_location",
+		"tpl": {"name": "New Location", "description": "", "connections": [], "actions": []}},
+	"items": {"kind": "dict", "label": "item", "prefix": "new_item",
+		"tpl": {"name": "New Item", "description": "", "use": {}, "consumable": false}},
+	"encounters": {"kind": "dict", "label": "encounter", "prefix": "new_encounter",
+		"tpl": {"name": "New Encounter", "enemies": [{"name": "Foe", "hp": 20, "atk": 5, "move": 3}], "reward": {"effects": {}}, "penalty": {"effects": {}}}},
+	"dialogue": {"kind": "dict", "label": "dialogue scene", "prefix": "new_scene",
+		"tpl": {"lines": [{"speaker": "?", "text": "..."}]}},
+	"spells": {"kind": "array", "label": "spell",
+		"tpl": {"id": "new_spell", "name": "New Spell", "element": "", "requires": {}, "description": ""}},
+	"students": {"kind": "array", "label": "character",
+		"tpl": {"id": "new_student", "name": "New Student", "location": "room", "tags": ["student", "enrolled"], "stats": {"focus": 5}}},
+	"combat_actions": {"kind": "array", "label": "combat action",
+		"tpl": {"id": "new_action", "name": "New Action", "kind": "self", "requires": {}, "description": ""}},
+	"events": {"kind": "array", "label": "event",
+		"tpl": {"id": "new_event", "trigger": {}, "once": true, "text": "", "effects": {}}},
+	"lexicon": {"kind": "array", "label": "lexicon entry",
+		"tpl": {"term": "New Term", "category": "", "aliases": [], "definition": ""}},
+	"tags": {"kind": "array", "label": "tag",
+		"tpl": {"id": "new_tag", "name": "New Tag", "description": ""}},
+	"backgrounds": {"kind": "backgrounds", "label": "background",
+		"tpl": {"id": "new_background", "name": "New Background", "description": "", "effects": {"tags": []}}},
+}
 
 var _file := ""   # current filename
 var _key := ""    # current runtime key
@@ -107,6 +135,11 @@ func _build_ui() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 8)
 	right.add_child(buttons)
+	var new_btn := Button.new()
+	new_btn.text = "+ New entry"
+	new_btn.tooltip_text = "Append a blank template for this file's type (character, spell, item, location, tag, …)."
+	new_btn.pressed.connect(_on_new_entry)
+	buttons.add_child(new_btn)
 	var apply_btn := Button.new()
 	apply_btn.text = "Apply (live)"
 	apply_btn.pressed.connect(_on_apply)
@@ -149,9 +182,40 @@ func _runtime_data(key: String) -> Variant:
 		"spells": return GameData.spells
 		"items": return GameData.items
 		"schedule": return GameData.schedule
+		"tags": return GameData.tags_registry
 		"backgrounds": return {"backgrounds": GameData.backgrounds}
 		"lexicon": return Lexicon.entries
 	return {}
+
+# --- New-entry templates ----------------------------------------------------
+func _on_new_entry() -> void:
+	var spec: Dictionary = TEMPLATES.get(_key, {})
+	if spec.is_empty():
+		status.text = "(no template for this file)"
+		return
+	var parsed: Variant = _parse_text()
+	if parsed == null:
+		return
+	match spec["kind"]:
+		"array":
+			if parsed is Array:
+				parsed.append(spec["tpl"].duplicate(true))
+		"backgrounds":
+			if parsed is Dictionary and parsed.has("backgrounds"):
+				parsed["backgrounds"].append(spec["tpl"].duplicate(true))
+		"dict":
+			if parsed is Dictionary:
+				parsed[_free_key(parsed, spec["prefix"])] = spec["tpl"].duplicate(true)
+	editor.text = JSON.stringify(parsed, "\t")
+	_ok("Added a new %s template — edit it, then Apply or Save." % spec["label"])
+
+func _free_key(d: Dictionary, prefix: String) -> String:
+	if not d.has(prefix):
+		return prefix
+	var i := 2
+	while d.has("%s_%d" % [prefix, i]):
+		i += 1
+	return "%s_%d" % [prefix, i]
 
 func _apply_runtime(key: String, parsed: Variant) -> void:
 	match key:
@@ -164,6 +228,7 @@ func _apply_runtime(key: String, parsed: Variant) -> void:
 		"spells": GameData.spells = parsed
 		"items": GameData.items = parsed
 		"schedule": GameData.schedule = parsed
+		"tags": GameData.tags_registry = parsed
 		"backgrounds": GameData.backgrounds = (parsed.get("backgrounds", []) if parsed is Dictionary else parsed)
 		"lexicon": Lexicon.entries = parsed
 	GameState.state_changed.emit()

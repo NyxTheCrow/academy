@@ -31,8 +31,8 @@ func _populate() -> void:
 		var line := "[b]%s[/b]  —  %s\n[color=gray]At %s · %s[/color]" % [
 			npc["name"], bond, Students.location_name(npc["location"]), npc["current_action"]]
 		if GameState.dev_mode:
-			line += "\n[color=dimgray]morale %d · tags: %s[/color]" % [
-				int(npc["stats"].get("morale", 0)), ", ".join(PackedStringArray(npc["tags"]))]
+			line += "\n[color=dimgray]focus %d · tags: %s[/color]" % [
+				int(npc["stats"].get("focus", 0)), ", ".join(PackedStringArray(npc["tags"]))]
 		row.add_child(_rich(line))
 		content.add_child(row)
 		content.add_child(HSeparator.new())

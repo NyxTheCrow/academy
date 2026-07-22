@@ -96,8 +96,8 @@ func _test_sleep() -> void:
 func _test_apply_effects_tags() -> void:
 	print("[apply_effects + tags]")
 	GameState.reset()
-	GameState.apply_effects({"stats": {"morale": 5}, "energy": -10, "tags": ["dressed"], "flags": {"met": true}})
-	_eq(GameState.stats["morale"], 5 + 5, "stat added (base 5 + 5)")
+	GameState.apply_effects({"stats": {"focus": -5}, "energy": -10, "tags": ["dressed"], "flags": {"met": true}})
+	_eq(GameState.stats["focus"], 95, "stat changed (100 - 5)")
 	_eq(GameState.energy, 90, "energy subtracted")
 	_check(GameState.has_tag("dressed"), "tag added")
 	_check(GameState.flags.get("met", false), "flag set")
@@ -180,16 +180,16 @@ func _test_save_load_roundtrip() -> void:
 	GameState.dev_mode = true
 	GameState.set_location("classroom")
 	GameState.add_tag("pyromancer")
-	GameState.apply_effects({"stats": {"morale": 4}})
 	GameState.toggle_favorite("elara")
 	GameState.add_item("charm")
 	GameState.needs["hunger"] = 42
 	GameState.advance_time(GameState.DAY_MINUTES * 3 + 120)
+	GameState.apply_effects({"stats": {"focus": -7}})
 	var path := "user://test_save.json"
 	GameState.save_game(path)
 	var snap_min := GameState.minutes_of_day
 	var snap_day := GameState.day_count
-	var snap_morale := int(GameState.stats["morale"])
+	var snap_focus := int(GameState.stats["focus"])
 	var snap_hunger := int(GameState.needs["hunger"])
 	GameState.reset()
 	GameState.player_name = "Wiped"
@@ -197,7 +197,7 @@ func _test_save_load_roundtrip() -> void:
 	_eq(GameState.player_name, "Tester", "loaded name")
 	_eq(GameState.location, "classroom", "loaded location")
 	_check(GameState.has_tag("pyromancer"), "loaded tag")
-	_eq(int(GameState.stats["morale"]), snap_morale, "loaded morale")
+	_eq(int(GameState.stats["focus"]), snap_focus, "loaded focus")
 	_eq(int(GameState.needs["hunger"]), snap_hunger, "loaded need")
 	_eq(GameState.minutes_of_day, snap_min, "loaded time")
 	_eq(GameState.day_count, snap_day, "loaded day_count")
@@ -228,14 +228,15 @@ func _test_data_loaded() -> void:
 	_check(GameData.spells.size() >= 3, "spells loaded")
 	_check(GameData.items.size() >= 2, "items loaded")
 	_check(GameData.schedule.size() >= 2, "schedule loaded")
+	_check(GameData.tags_registry.size() >= 5, "tags registry loaded")
 
 func _test_stats_and_menus() -> void:
 	print("[stats + menus state]")
 	GameState.reset()
 	_eq(GameState.stats.keys().size(), 1, "only one stat now")
-	_check(GameState.stats.has("morale"), "the stat is morale")
-	_eq(GameState.morale_descriptor(0), "Despairing", "morale 0 -> Despairing")
-	_eq(GameState.morale_descriptor(5), "Steady", "morale 5 -> Steady")
+	_check(GameState.stats.has("focus"), "the stat is focus")
+	_eq(GameState.focus_descriptor(100), "Sharp", "focus 100 -> Sharp")
+	_eq(GameState.focus_descriptor(10), "Burnt out", "focus 10 -> Burnt out")
 	# Favourites
 	GameState.toggle_favorite("elara")
 	_check(GameState.is_favorite("elara"), "favourite toggled on")
@@ -281,12 +282,12 @@ func _test_descriptors() -> void:
 func _test_lexicon() -> void:
 	print("[lexicon]")
 	_check(Lexicon.all().size() >= 10, "lexicon entries loaded")
-	_check(not Lexicon.lookup("morale").is_empty(), "lookup by term")
-	_check(not Lexicon.lookup("mood").is_empty(), "lookup by alias")
+	_check(not Lexicon.lookup("focus").is_empty(), "lookup by term")
+	_check(not Lexicon.lookup("bandwidth").is_empty(), "lookup by alias")
 	_eq(Lexicon.search("").size(), Lexicon.all().size(), "empty query returns all")
 	_check(Lexicon.search("fire").size() >= 1, "search finds Fire Wall")
 	_check(Lexicon.search("zzqqxx").is_empty(), "no matches -> empty")
-	_check(Lexicon.define("Morale") != "", "define returns text")
+	_check(Lexicon.define("Focus") != "", "define returns text")
 
 func _test_save_slots() -> void:
 	print("[save slots]")

@@ -252,8 +252,8 @@ func _refresh_students() -> void:
 			npc["name"], Students.location_name(npc["location"]), here, npc["current_action"]]
 		if GameState.dev_mode:
 			var st: Dictionary = npc["stats"]
-			out += "    [color=dimgray]morale %d · tags: %s[/color]\n" % [
-				int(st.get("morale", 0)), ", ".join(PackedStringArray(npc["tags"]))]
+			out += "    [color=dimgray]focus %d · tags: %s[/color]\n" % [
+				int(st.get("focus", 0)), ", ".join(PackedStringArray(npc["tags"]))]
 	students_label.text = out
 
 func _rebuild_actions() -> void:

@@ -15,6 +15,7 @@ var backgrounds: Array = []      # character-creation backgrounds
 var spells: Array = []           # spell list
 var items: Dictionary = {}       # item_id -> { name, description, use? }
 var schedule: Array = []         # recurring timetable entries
+var tags_registry: Array = []    # documented tags (editable reference list)
 
 ## Editable data files live in res://data/. The in-game editor writes overrides
 ## to user://data_overrides/, which take precedence when present.
@@ -35,6 +36,7 @@ func reload() -> void:
 	spells = _load_array(src_path("spells.json"))
 	items = _load_dict(src_path("items.json"))
 	schedule = _load_array(src_path("schedule.json"))
+	tags_registry = _load_array(src_path("tags.json"))
 	print("[GameData] %d locations, %d combat actions, %d spells, %d items, %d schedule, %d students"
 		% [locations.size(), combat_actions.size(), spells.size(), items.size(), schedule.size(), students.size()])
 

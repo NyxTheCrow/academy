@@ -35,7 +35,7 @@ var location: String = "room"
 # --- Player -----------------------------------------------------------------
 var player_name: String = "Student"
 var dev_mode: bool = false
-var stats := {}                     # hidden aptitudes (currently just morale)
+var stats := {}                     # focus (the day's mental bandwidth)
 var needs := {}                     # visible self-assessed conditions
 var tags: Array = []
 var max_energy: int = 100
@@ -56,8 +56,9 @@ func reset() -> void:
 	location = "room"
 	player_name = "Student"
 	dev_mode = false
-	stats = {"morale": 5}
-	needs = {"hunger": 75, "thirst": 75, "bladder": 85, "hygiene": 85, "calm": 70, "mana": 100}
+	# focus = the day's mental bandwidth for learning; refills each morning.
+	stats = {"focus": 100}
+	needs = {"hunger": 75.0, "thirst": 75.0, "bladder": 85.0, "hygiene": 85.0, "calm": 50.0, "mana": 100.0}
 	tags = ["student", "enrolled"]
 	max_energy = 100
 	energy = 100
@@ -120,6 +121,7 @@ func advance_time(mins: int) -> void:
 func _advance_day() -> void:
 	day_count += 1
 	energy = max_energy
+	stats["focus"] = 100   # a fresh day's mental bandwidth
 	day_changed.emit()
 
 ## Sleep until 07:00 the next morning; fully rested.
@@ -135,18 +137,25 @@ func set_location(loc: String) -> void:
 	state_changed.emit()
 
 # --- Needs drift ------------------------------------------------------------
+## Needs drift per minute (stored as floats so small steps accumulate).
+## Rates are tuned so a waking day taxes you but a night's sleep doesn't zero
+## you out. Mana is excluded (it recovers instead); calm eases toward a normal
+## baseline from either direction; focus is a stat (daily reset), not a need.
 func _drift_needs(minutes: int) -> void:
-	needs["hunger"] = clampi(int(needs.get("hunger", 0)) - int(minutes * 0.05), 0, 100)
-	needs["thirst"] = clampi(int(needs.get("thirst", 0)) - int(minutes * 0.06), 0, 100)
-	needs["bladder"] = clampi(int(needs.get("bladder", 0)) - int(minutes * 0.06), 0, 100)
-	needs["hygiene"] = clampi(int(needs.get("hygiene", 0)) - int(minutes * 0.03), 0, 100)
-	needs["mana"] = clampi(int(needs.get("mana", 0)) + int(minutes * 0.08), 0, 100)
-	var calm := int(needs.get("calm", 60))
-	var target := 60
-	if calm < target:
-		needs["calm"] = mini(target, calm + int(minutes * 0.04))
-	elif calm > target:
-		needs["calm"] = maxi(target, calm - int(minutes * 0.04))
+	var m := float(minutes)
+	needs["hunger"] = clampf(float(needs.get("hunger", 0)) - m * 0.08, 0, 100)
+	needs["thirst"] = clampf(float(needs.get("thirst", 0)) - m * 0.12, 0, 100)
+	needs["bladder"] = clampf(float(needs.get("bladder", 0)) - m * 0.10, 0, 100)
+	needs["hygiene"] = clampf(float(needs.get("hygiene", 0)) - m * 0.04, 0, 100)
+	needs["mana"] = clampf(float(needs.get("mana", 0)) + m * 0.08, 0, 100)  # recovers
+	# Calm (stress/fear) settles toward a normal baseline of 50, up or down.
+	var calm := float(needs.get("calm", 50))
+	var baseline := 50.0
+	var step := m * 0.08
+	if calm < baseline:
+		needs["calm"] = minf(baseline, calm + step)
+	elif calm > baseline:
+		needs["calm"] = maxf(baseline, calm - step)
 
 # --- Tags -------------------------------------------------------------------
 func has_tag(t: String) -> bool:
@@ -214,9 +223,11 @@ func apply_effects(effects: Dictionary) -> void:
 	if effects.has("stats"):
 		for k in effects["stats"]:
 			stats[k] = int(stats.get(k, 0)) + int(effects["stats"][k])
+		if stats.has("focus"):
+			stats["focus"] = clampi(int(stats["focus"]), 0, 100)
 	if effects.has("needs"):
 		for k in effects["needs"]:
-			needs[k] = clampi(int(needs.get(k, 0)) + int(effects["needs"][k]), 0, 100)
+			needs[k] = clampf(float(needs.get(k, 0)) + float(effects["needs"][k]), 0, 100)
 	if effects.has("energy"):
 		energy = clampi(energy + int(effects["energy"]), 0, max_energy)
 	if effects.has("relationships"):
@@ -275,13 +286,13 @@ static func stat_descriptor(v: int) -> String:
 	elif v <= 24: return "Skilled"
 	else: return "Master"
 
-static func morale_descriptor(v: int) -> String:
-	if v <= 1: return "Despairing"
-	elif v <= 3: return "Low"
-	elif v <= 6: return "Steady"
-	elif v <= 9: return "Good"
-	elif v <= 13: return "High"
-	else: return "Elated"
+## Focus = the day's remaining mental bandwidth for learning (0–100).
+static func focus_descriptor(v: int) -> String:
+	if v >= 85: return "Sharp"
+	elif v >= 60: return "Clear"
+	elif v >= 35: return "Foggy"
+	elif v >= 15: return "Frazzled"
+	else: return "Burnt out"
 
 static func hp_descriptor(hp: int, maxhp: int) -> String:
 	if hp >= maxhp: return "Unhurt"
@@ -341,7 +352,7 @@ static func need_descriptor(key: String, v: int) -> String:
 
 func stat_word(key: String) -> String:
 	var v := int(stats.get(key, 0))
-	return morale_descriptor(v) if key == "morale" else stat_descriptor(v)
+	return focus_descriptor(v) if key == "focus" else stat_descriptor(v)
 
 # --- Favourites & inventory -------------------------------------------------
 func is_favorite(id: String) -> bool:

@@ -2,7 +2,7 @@
 	"textbook": {
 		"name": "Arcana Primer",
 		"description": "A well-thumbed textbook of first-year theory. Reassuring to hold before an exam.",
-		"use": { "stats": { "morale": 1 } },
+		"use": { "needs": { "calm": 5 } },
 		"consumable": false
 	},
 	"bread": {
@@ -14,7 +14,7 @@
 	"charm": {
 		"name": "Luck Charm",
 		"description": "A small carved trinket said to lift the spirits of whoever carries it.",
-		"use": { "stats": { "morale": 2 } },
+		"use": { "needs": { "calm": 8 } },
 		"consumable": true
 	}
 }

@@ -4,27 +4,27 @@
 		"name": "Elara",
 		"location": "classroom",
 		"tags": ["student", "enrolled", "dressed", "scholar"],
-		"stats": { "morale": 7 }
+		"stats": { "focus": 7 }
 	},
 	{
 		"id": "cassius",
 		"name": "Cassius",
 		"location": "dueling_room",
 		"tags": ["student", "enrolled", "dressed", "duelist", "can_duel"],
-		"stats": { "morale": 6 }
+		"stats": { "focus": 6 }
 	},
 	{
 		"id": "bram",
 		"name": "Bram",
 		"location": "room",
 		"tags": ["student", "enrolled"],
-		"stats": { "morale": 4 }
+		"stats": { "focus": 4 }
 	},
 	{
 		"id": "nyx",
 		"name": "Nyx",
 		"location": "corridor_a",
 		"tags": ["student", "enrolled", "dressed", "mage", "pyromancer"],
-		"stats": { "morale": 5 }
+		"stats": { "focus": 5 }
 	}
 ]

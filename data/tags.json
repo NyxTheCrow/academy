@@ -1,0 +1,14 @@
+[
+	{ "id": "student", "name": "Student", "description": "A registered student of the Academy." },
+	{ "id": "enrolled", "name": "Enrolled", "description": "Permitted to attend lectures." },
+	{ "id": "dressed", "name": "Dressed", "description": "In uniform; required for lectures." },
+	{ "id": "fresh", "name": "Fresh", "description": "Recently washed up." },
+	{ "id": "id_checked", "name": "ID Checked", "description": "Passed the gate automaton at enrolment." },
+	{ "id": "oriented", "name": "Oriented", "description": "Attended the welcoming ceremony." },
+	{ "id": "can_duel", "name": "Can Duel", "description": "Permitted to fight formal duels." },
+	{ "id": "duelist", "name": "Duelist", "description": "A trained fighter; can Brace in combat." },
+	{ "id": "mage", "name": "Mage", "description": "A trained caster." },
+	{ "id": "pyromancer", "name": "Pyromancer", "description": "A fire specialist; can cast Fire Wall." },
+	{ "id": "scholar", "name": "Scholar", "description": "Bookish; learns Mending." },
+	{ "id": "socialite", "name": "Socialite", "description": "Well-connected among the students." }
+]
