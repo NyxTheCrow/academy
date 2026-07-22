@@ -71,6 +71,17 @@ func clear_override(filename: String) -> void:
 	if FileAccess.file_exists(p):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 
+## Write straight to the project's res://data/ file. Only works when running
+## from the Godot editor (res:// is read-only in an exported build). Returns ""
+## on success or an error message.
+func write_project(filename: String, text: String) -> String:
+	var f := FileAccess.open("res://data/" + filename, FileAccess.WRITE)
+	if f == null:
+		return "res:// is read-only here (this only works when running from the Godot editor)"
+	f.store_string(text)
+	f.close()
+	return ""
+
 func get_item(id: String) -> Dictionary:
 	return items.get(id, {})
 

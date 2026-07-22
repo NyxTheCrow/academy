@@ -315,6 +315,12 @@ func _test_data_overrides() -> void:
 	_check(not GameData.has_override("combat_actions.json"), "override cleared")
 	GameData.reload()
 	_eq(GameData.combat_actions.size(), orig, "original restored after revert")
+	# write_project (res:// is writable when running from a directory project)
+	var werr := GameData.write_project("editor_tmp_test.json", "[1, 2, 3]")
+	_check(werr == "", "write_project succeeds (or reports read-only)")
+	if werr == "":
+		_check(FileAccess.file_exists("res://data/editor_tmp_test.json"), "project file written")
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("res://data/editor_tmp_test.json"))
 
 func _test_modes_and_director() -> void:
 	print("[modes + director]")

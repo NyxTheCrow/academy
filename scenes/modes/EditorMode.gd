@@ -111,8 +111,14 @@ func _build_ui() -> void:
 	buttons.add_child(apply_btn)
 	var save_btn := Button.new()
 	save_btn.text = "Save override"
+	save_btn.tooltip_text = "Persist as a user:// override (works everywhere; survives exported builds)."
 	save_btn.pressed.connect(_on_save)
 	buttons.add_child(save_btn)
+	var project_btn := Button.new()
+	project_btn.text = "Write to project"
+	project_btn.tooltip_text = "Write straight into res://data/ (only works when running from the Godot editor)."
+	project_btn.pressed.connect(_on_write_project)
+	buttons.add_child(project_btn)
 	var revert_btn := Button.new()
 	revert_btn.text = "Revert to original"
 	revert_btn.pressed.connect(_on_revert)
@@ -192,6 +198,21 @@ func _on_save() -> void:
 		status.text = "Applied, but save failed: " + werr
 	else:
 		_ok("Saved override + applied.")
+	_update_header()
+
+func _on_write_project() -> void:
+	var parsed: Variant = _parse_text()
+	if parsed == null:
+		return
+	_apply_runtime(_key, parsed)
+	var werr := GameData.write_project(_file, editor.text)
+	if werr != "":
+		status.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
+		status.text = "Applied live, but project write failed: " + werr
+		return
+	# The project file is now the source of truth; drop any redundant override.
+	GameData.clear_override(_file)
+	_ok("Written to res://data/%s (project file updated)." % _file)
 	_update_header()
 
 func _on_revert() -> void:
