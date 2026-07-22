@@ -6,8 +6,12 @@ const SLOTS := 6
 func _menu_title() -> String:
 	return "Saves"
 
+func _load_only() -> bool:
+	return mode_context.get("load_only", false)
+
 func _populate() -> void:
-	content.add_child(_rich("[color=gray]Six slots. Save writes the current game; Load replaces it.[/color]"))
+	var hint := "Pick a slot to load." if _load_only() else "Save writes the current game; Load replaces it."
+	content.add_child(_rich("[color=gray]%s[/color]" % hint))
 	content.add_child(HSeparator.new())
 	for slot in range(1, SLOTS + 1):
 		content.add_child(_slot_row(slot))
@@ -27,10 +31,11 @@ func _slot_row(slot: int) -> HBoxContainer:
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(lbl)
 
-	var save_btn := Button.new()
-	save_btn.text = "Save"
-	save_btn.pressed.connect(_on_save.bind(slot))
-	row.add_child(save_btn)
+	if not _load_only():
+		var save_btn := Button.new()
+		save_btn.text = "Save"
+		save_btn.pressed.connect(_on_save.bind(slot))
+		row.add_child(save_btn)
 
 	var load_btn := Button.new()
 	load_btn.text = "Load"
@@ -64,7 +69,9 @@ func _on_save(slot: int) -> void:
 
 func _on_load(slot: int) -> void:
 	if GameState.load_slot(slot):
-		finished.emit({})  # close and return to the (now reloaded) academy
+		# In-game this just closes; from the main menu, {"loaded": true} tells
+		# the app loop to start the academy on the loaded save.
+		finished.emit({"loaded": true})
 
 func _on_delete(slot: int) -> void:
 	GameState.delete_slot(slot)

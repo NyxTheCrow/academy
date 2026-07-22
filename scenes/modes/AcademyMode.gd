@@ -106,6 +106,11 @@ func _build_ui() -> void:
 	editor_btn.pressed.connect(_open_menu.bind("editor"))
 	sidebar.add_child(editor_btn)
 
+	var menu_btn := Button.new()
+	menu_btn.text = "Return to Main Menu"
+	menu_btn.pressed.connect(func(): finished.emit({"action": "main_menu"}))
+	sidebar.add_child(menu_btn)
+
 	# --- Main column ---
 	var main_v := VBoxContainer.new()
 	main_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL

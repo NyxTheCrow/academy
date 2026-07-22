@@ -93,6 +93,10 @@ func _build_ui() -> void:
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
 	v.add_child(footer)
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.pressed.connect(func(): finished.emit({"started": false}))
+	footer.add_child(cancel_btn)
 	points_label = Label.new()
 	points_label.add_theme_color_override("font_color", Color(0.8, 0.85, 0.7))
 	footer.add_child(points_label)
@@ -218,4 +222,4 @@ func _begin() -> void:
 		GameState.set_location("school_gates")
 
 	Students.reset()
-	finished.emit({})
+	finished.emit({"started": true})

@@ -25,11 +25,13 @@ const FILES := [
 
 var _file := ""   # current filename
 var _key := ""    # current runtime key
+var _standalone := false
 var editor: TextEdit
 var header: Label
 var status: Label
 
-func enter(_context: Dictionary) -> void:
+func enter(context: Dictionary) -> void:
+	_standalone = context.get("standalone", false)
 	_build_ui()
 	_open(FILES[0][1], FILES[0][2])
 
@@ -62,7 +64,7 @@ func _build_ui() -> void:
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(sp)
 	var close_btn := Button.new()
-	close_btn.text = "Close"
+	close_btn.text = "Return to Main Menu" if _standalone else "Close"
 	close_btn.pressed.connect(func(): finished.emit({}))
 	top.add_child(close_btn)
 

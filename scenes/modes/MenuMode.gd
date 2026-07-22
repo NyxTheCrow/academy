@@ -4,8 +4,10 @@ extends "res://scripts/GameMode.gd"
 ## _populate(); call _repopulate() to rebuild after an interactive change.
 
 var content: VBoxContainer
+var mode_context := {}
 
-func enter(_context: Dictionary) -> void:
+func enter(context: Dictionary) -> void:
+	mode_context = context
 	_scaffold(_menu_title())
 	_repopulate()
 

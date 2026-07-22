@@ -1,7 +1,7 @@
 extends Control
-## Root — the main scene. Wires the Director to a host container, runs character
-## creation, then boots the academy as the base mode. The debug overlay is
-## layered on top of everything.
+## Root — the main scene. Wires the Director to a host container and runs the
+## top-level application loop: main menu → (new game / load / editor) → back to
+## menu. The debug overlay is layered above everything.
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -17,6 +17,22 @@ func _ready() -> void:
 	add_child(overlay)
 
 	Director.register_host(host)
-	# Character creation first; it applies the player's choices to GameState.
-	await Director.run_mode("charcreation", {})
-	Director.set_base_mode("academy")
+	await _app_loop()
+
+## The application never leaves this loop except by quitting.
+func _app_loop() -> void:
+	while true:
+		var choice: Dictionary = await Director.run_mode("mainmenu", {})
+		match str(choice.get("action", "")):
+			"new_game":
+				var made: Dictionary = await Director.run_mode("charcreation", {})
+				if made.get("started", false):
+					await Director.run_mode("academy", {})
+			"load_game":
+				var loaded: Dictionary = await Director.run_mode("saves", {"load_only": true})
+				if loaded.get("loaded", false):
+					await Director.run_mode("academy", {})
+			"editor":
+				await Director.run_mode("editor", {"standalone": true})
+			_:
+				pass  # unknown/closed — show the menu again

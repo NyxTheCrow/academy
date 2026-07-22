@@ -326,6 +326,7 @@ func _test_modes_and_director() -> void:
 	print("[modes + director]")
 	_check(Director != null, "Director autoload loaded")
 	for path in [
+		"res://scenes/modes/MainMenuMode.tscn",
 		"res://scenes/modes/CharCreationMode.tscn",
 		"res://scenes/modes/AcademyMode.tscn",
 		"res://scenes/modes/DialogueMode.tscn",

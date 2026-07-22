@@ -17,6 +17,7 @@ extends Node
 ##     GameState.apply_effects(result.get("effects", {}))
 
 const MODE_SCENES := {
+	"mainmenu": "res://scenes/modes/MainMenuMode.tscn",
 	"charcreation": "res://scenes/modes/CharCreationMode.tscn",
 	"academy": "res://scenes/modes/AcademyMode.tscn",
 	"dialogue": "res://scenes/modes/DialogueMode.tscn",
