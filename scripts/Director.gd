@@ -27,6 +27,8 @@ const MODE_SCENES := {
 	"people": "res://scenes/modes/PeopleMode.tscn",
 	"spells": "res://scenes/modes/SpellsMode.tscn",
 	"inventory": "res://scenes/modes/InventoryMode.tscn",
+	"saves": "res://scenes/modes/SaveLoadMode.tscn",
+	"editor": "res://scenes/modes/EditorMode.tscn",
 }
 
 var _host: Node = null

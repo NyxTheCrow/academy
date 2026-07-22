@@ -401,9 +401,47 @@ func _event_triggers(ev: Dictionary) -> bool:
 func _students_node():
 	return get_node_or_null("/root/Students")
 
+const SAVE_DIR := "user://saves/"
+
+func slot_path(slot: int) -> String:
+	return "%sslot_%d.json" % [SAVE_DIR, slot]
+
+func save_slot(slot: int) -> bool:
+	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+	return save_game(slot_path(slot))
+
+func load_slot(slot: int) -> bool:
+	return load_game(slot_path(slot))
+
+func delete_slot(slot: int) -> void:
+	var p := slot_path(slot)
+	if FileAccess.file_exists(p):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+	state_changed.emit()
+
+## Metadata for a save slot without loading it: {exists, name, when, saved_at}.
+func slot_info(slot: int) -> Dictionary:
+	var p := slot_path(slot)
+	if not FileAccess.file_exists(p):
+		return {"exists": false}
+	var f := FileAccess.open(p, FileAccess.READ)
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if not (parsed is Dictionary):
+		return {"exists": true, "name": "(corrupt)", "when": "", "saved_at": 0.0}
+	var d: Dictionary = parsed
+	return {
+		"exists": true,
+		"name": str(d.get("player_name", "?")),
+		"when": str(d.get("save_label", "")),
+		"saved_at": float(d.get("saved_at", 0.0)),
+	}
+
 func save_game(path := "user://savegame.json") -> bool:
 	var data := {
 		"version": SAVE_VERSION,
+		"saved_at": Time.get_unix_time_from_system(),
+		"save_label": "%s · %s" % [player_name, date_string()],
 		"player_name": player_name, "dev_mode": dev_mode,
 		"day_count": day_count, "minutes_of_day": minutes_of_day, "location": location,
 		"stats": stats, "needs": needs, "tags": tags, "energy": energy, "max_energy": max_energy,

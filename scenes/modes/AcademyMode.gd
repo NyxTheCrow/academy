@@ -17,6 +17,7 @@ var place_label: Label
 var place_desc: Label
 var log_box: RichTextLabel
 var action_container: VBoxContainer
+var editor_btn: Button
 
 func _ready() -> void:
 	_build_ui()
@@ -93,24 +94,17 @@ func _build_ui() -> void:
 	sidebar.add_child(HSeparator.new())
 	sidebar.add_child(_title("Menus"))
 	for m in [["Character", "character"], ["Schedule", "schedule"], ["Other People", "people"],
-			["Spells", "spells"], ["Inventory", "inventory"], ["Lexicon", "lexicon"]]:
+			["Spells", "spells"], ["Inventory", "inventory"], ["Lexicon", "lexicon"], ["Saves", "saves"]]:
 		var mb := Button.new()
 		mb.text = m[0]
 		mb.pressed.connect(_open_menu.bind(m[1]))
 		sidebar.add_child(mb)
 
-	sidebar.add_child(HSeparator.new())
-	var save_row := HBoxContainer.new()
-	save_row.add_theme_constant_override("separation", 8)
-	var save_btn := Button.new()
-	save_btn.text = "Save"
-	save_btn.pressed.connect(func(): GameState.save_game())
-	var load_btn := Button.new()
-	load_btn.text = "Load"
-	load_btn.pressed.connect(func(): GameState.load_game())
-	save_row.add_child(save_btn)
-	save_row.add_child(load_btn)
-	sidebar.add_child(save_row)
+	# Dev-only data editor.
+	editor_btn = Button.new()
+	editor_btn.text = "Data Editor (dev)"
+	editor_btn.pressed.connect(_open_menu.bind("editor"))
+	sidebar.add_child(editor_btn)
 
 	# --- Main column ---
 	var main_v := VBoxContainer.new()
@@ -177,6 +171,8 @@ func _refresh() -> void:
 	header_label.text = GameState.player_name + ("   [DEV]" if GameState.dev_mode else "")
 	# The clock/date is legible in both modes (numbers here are fine).
 	date_label.text = GameState.date_string()
+	if editor_btn != null:
+		editor_btn.visible = GameState.dev_mode
 
 	var loc := GameState.current_location()
 	place_label.text = str(loc.get("name", GameState.location))

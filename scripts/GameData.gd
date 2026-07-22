@@ -16,19 +16,60 @@ var spells: Array = []           # spell list
 var items: Dictionary = {}       # item_id -> { name, description, use? }
 var schedule: Array = []         # recurring timetable entries
 
+## Editable data files live in res://data/. The in-game editor writes overrides
+## to user://data_overrides/, which take precedence when present.
+const OVERRIDE_DIR := "user://data_overrides/"
+
 func _ready() -> void:
-	locations = _load_dict("res://data/locations.json")
-	combat_actions = _load_array("res://data/combat_actions.json")
-	events = _load_array("res://data/events.json")
-	dialogue = _load_dict("res://data/dialogue.json")
-	encounters = _load_dict("res://data/encounters.json")
-	students = _load_array("res://data/students.json")
-	backgrounds = _load_dict("res://data/backgrounds.json").get("backgrounds", [])
-	spells = _load_array("res://data/spells.json")
-	items = _load_dict("res://data/items.json")
-	schedule = _load_array("res://data/schedule.json")
+	reload()
+
+## (Re)load every data table (override file wins over the res:// original).
+func reload() -> void:
+	locations = _load_dict(src_path("locations.json"))
+	combat_actions = _load_array(src_path("combat_actions.json"))
+	events = _load_array(src_path("events.json"))
+	dialogue = _load_dict(src_path("dialogue.json"))
+	encounters = _load_dict(src_path("encounters.json"))
+	students = _load_array(src_path("students.json"))
+	backgrounds = _load_dict(src_path("backgrounds.json")).get("backgrounds", [])
+	spells = _load_array(src_path("spells.json"))
+	items = _load_dict(src_path("items.json"))
+	schedule = _load_array(src_path("schedule.json"))
 	print("[GameData] %d locations, %d combat actions, %d spells, %d items, %d schedule, %d students"
 		% [locations.size(), combat_actions.size(), spells.size(), items.size(), schedule.size(), students.size()])
+
+# --- Override files (for the in-game editor) --------------------------------
+## Path a file should load from: the user override if it exists, else res://.
+func src_path(filename: String) -> String:
+	var o := OVERRIDE_DIR + filename
+	return o if FileAccess.file_exists(o) else "res://data/" + filename
+
+func has_override(filename: String) -> bool:
+	return FileAccess.file_exists(OVERRIDE_DIR + filename)
+
+## Read the current on-disk source text for a file (override or original).
+func read_source(filename: String) -> String:
+	var f := FileAccess.open(src_path(filename), FileAccess.READ)
+	if f == null:
+		return ""
+	var t := f.get_as_text()
+	f.close()
+	return t
+
+## Write an override file. Returns "" on success or an error message.
+func write_override(filename: String, text: String) -> String:
+	DirAccess.make_dir_recursive_absolute(OVERRIDE_DIR)
+	var f := FileAccess.open(OVERRIDE_DIR + filename, FileAccess.WRITE)
+	if f == null:
+		return "could not open override for writing"
+	f.store_string(text)
+	f.close()
+	return ""
+
+func clear_override(filename: String) -> void:
+	var p := OVERRIDE_DIR + filename
+	if FileAccess.file_exists(p):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 
 func get_item(id: String) -> Dictionary:
 	return items.get(id, {})

@@ -26,6 +26,8 @@ func _ready() -> void:
 	_test_npc_students()
 	_test_descriptors()
 	_test_lexicon()
+	_test_save_slots()
+	_test_data_overrides()
 	_test_modes_and_director()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
@@ -286,6 +288,34 @@ func _test_lexicon() -> void:
 	_check(Lexicon.search("zzqqxx").is_empty(), "no matches -> empty")
 	_check(Lexicon.define("Morale") != "", "define returns text")
 
+func _test_save_slots() -> void:
+	print("[save slots]")
+	GameState.reset()
+	GameState.player_name = "Slotter"
+	GameState.delete_slot(3)
+	_check(not GameState.slot_info(3).get("exists", false), "slot 3 empty initially")
+	GameState.save_slot(3)
+	var info := GameState.slot_info(3)
+	_check(info.get("exists", false), "slot 3 exists after save")
+	_eq(info.get("name", ""), "Slotter", "slot metadata carries the name")
+	GameState.player_name = "Someone Else"
+	GameState.load_slot(3)
+	_eq(GameState.player_name, "Slotter", "load_slot restores state")
+	GameState.delete_slot(3)
+	_check(not GameState.slot_info(3).get("exists", false), "slot 3 deleted")
+
+func _test_data_overrides() -> void:
+	print("[data overrides]")
+	var orig := GameData.combat_actions.size()
+	GameData.write_override("combat_actions.json", "[]")
+	_check(GameData.has_override("combat_actions.json"), "override written")
+	GameData.reload()
+	_eq(GameData.combat_actions.size(), 0, "override applied on reload")
+	GameData.clear_override("combat_actions.json")
+	_check(not GameData.has_override("combat_actions.json"), "override cleared")
+	GameData.reload()
+	_eq(GameData.combat_actions.size(), orig, "original restored after revert")
+
 func _test_modes_and_director() -> void:
 	print("[modes + director]")
 	_check(Director != null, "Director autoload loaded")
@@ -300,6 +330,8 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/PeopleMode.tscn",
 		"res://scenes/modes/SpellsMode.tscn",
 		"res://scenes/modes/InventoryMode.tscn",
+		"res://scenes/modes/SaveLoadMode.tscn",
+		"res://scenes/modes/EditorMode.tscn",
 	]:
 		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)

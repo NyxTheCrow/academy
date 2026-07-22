@@ -7,7 +7,10 @@ extends Node
 var entries: Array = []
 
 func _ready() -> void:
-	var path := "res://data/lexicon.json"
+	reload()
+
+func reload() -> void:
+	var path := GameData.src_path("lexicon.json")  # override-aware
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		var parsed: Variant = JSON.parse_string(f.get_as_text())
