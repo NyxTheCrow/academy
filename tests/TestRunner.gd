@@ -231,6 +231,11 @@ func _test_data_loaded() -> void:
 	_check(GameData.tags_registry.size() >= 5, "tags registry loaded")
 	_check(GameData.tuning.has("need_decay_per_minute"), "tuning loaded")
 	_check(GameState.start_minutes() == 420, "tuning drives start time")
+	_check(GameState.weeks_per_month() == 4, "tuning drives calendar shape")
+	_check(GameState.school_days_per_week() == 5, "tuning drives school-day count")
+	_eq(GameState.days_per_year(), GameState.DAYS_PER_YEAR, "derived year length matches const")
+	var cmb: Dictionary = GameData.tuning.get("combat", {})
+	_check(cmb.has("grid_w") and cmb.has("player_base_hp"), "combat knobs exposed")
 
 func _test_stats_and_menus() -> void:
 	print("[stats + menus state]")

@@ -47,8 +47,30 @@ var back_btn: Button
 var next_btn: Button
 
 func enter(_context: Dictionary) -> void:
+	_apply_tuning()
 	_build_ui()
 	_render()
+
+## Rebuild the difficulty step's point options from data/tuning.json
+## ("char_creation.difficulty_points"), so the budget tiers are editable.
+func _apply_tuning() -> void:
+	var cc: Dictionary = GameData.tuning.get("char_creation", {}) if GameData.tuning is Dictionary else {}
+	var pts: Array = cc.get("difficulty_points", [])
+	if pts.is_empty():
+		return
+	var opts: Array = []
+	for i in pts.size():
+		var val := int(pts[i])
+		var label := str(val)
+		if i == 0:
+			label += "  — least advantaged"
+		elif i == pts.size() - 1:
+			label += "  — most advantaged"
+		opts.append({"label": label, "value": val})
+	for step in _steps:
+		if step.get("key", "") == "difficulty":
+			step["options"] = opts
+	_points = int(pts[pts.size() / 2])   # default budget = the middle tier
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)

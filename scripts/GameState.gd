@@ -86,8 +86,8 @@ func reset() -> void:
 		"mana": float(sn.get("mana", 100)),
 	}
 	tags = ["student", "enrolled"]
-	max_energy = 100
-	energy = int(start.get("energy", 100))
+	max_energy = int(start.get("max_energy", 100))
+	energy = int(start.get("energy", max_energy))
 	relationships = {}
 	flags = {}
 	fired_events = {}
@@ -96,6 +96,33 @@ func reset() -> void:
 	state_changed.emit()
 
 # --- Calendar helpers (display-derived) -------------------------------------
+## Calendar shape is editable in data/tuning.json ("calendar" block); the
+## constants above are fallbacks. A week is always 7 days (the DAYS array);
+## months/trimesters/years are derived from the weeks-per-month etc. knobs.
+func _cal() -> Dictionary:
+	return _tune().get("calendar", {})
+
+func weeks_per_month() -> int:
+	return maxi(1, int(_cal().get("weeks_per_month", WEEKS_PER_MONTH)))
+
+func months_per_trimester() -> int:
+	return maxi(1, int(_cal().get("months_per_trimester", MONTHS_PER_TRIMESTER)))
+
+func trimesters_per_year() -> int:
+	return maxi(1, int(_cal().get("trimesters_per_year", TRIMESTERS_PER_YEAR)))
+
+func school_days_per_week() -> int:
+	return int(_cal().get("school_days_per_week", 5))
+
+func days_per_month() -> int:
+	return weeks_per_month() * 7
+
+func days_per_trimester() -> int:
+	return days_per_month() * months_per_trimester()
+
+func days_per_year() -> int:
+	return days_per_trimester() * trimesters_per_year()
+
 func weekday_index() -> int:
 	return day_count % 7
 
@@ -103,22 +130,22 @@ func day_name() -> String:
 	return DAYS[weekday_index()]
 
 func is_school_day() -> bool:
-	return weekday_index() < 5
+	return weekday_index() < school_days_per_week()
 
 func week_of_year() -> int:
 	return day_count / 7                       # 0-based
 
 func week_of_month() -> int:
-	return (day_count / 7) % WEEKS_PER_MONTH    # 0-based
+	return (day_count / 7) % weeks_per_month()  # 0-based
 
 func month_of_trimester() -> int:
-	return (day_count / DAYS_PER_MONTH) % MONTHS_PER_TRIMESTER
+	return (day_count / days_per_month()) % months_per_trimester()
 
 func trimester_of_year() -> int:
-	return (day_count / DAYS_PER_TRIMESTER) % TRIMESTERS_PER_YEAR
+	return (day_count / days_per_trimester()) % trimesters_per_year()
 
 func year_index() -> int:
-	return day_count / DAYS_PER_YEAR
+	return day_count / days_per_year()
 
 func time_string() -> String:
 	return "%02d:%02d" % [minutes_of_day / 60, minutes_of_day % 60]

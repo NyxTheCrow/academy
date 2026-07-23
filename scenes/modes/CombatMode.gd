@@ -7,9 +7,14 @@ extends "res://scripts/GameMode.gd"
 ## self. Basic move + strike carry no requirements, so everyone has them; Fire
 ## Wall needs "pyromancer", Brace needs "duelist", etc.
 
+# Fallback grid size; overridden from data/tuning.json ("combat" block) in enter().
 const GRID_W := 6
 const GRID_H := 5
 const CELL := 64
+
+var _grid_w := GRID_W
+var _grid_h := GRID_H
+var _cell := CELL
 
 var _units: Array = []
 var _player: Dictionary = {}
@@ -30,6 +35,10 @@ var end_turn_btn: Button
 var _ability_bar: HBoxContainer
 
 func enter(context: Dictionary) -> void:
+	var cmb: Dictionary = GameData.tuning.get("combat", {}) if GameData.tuning is Dictionary else {}
+	_grid_w = maxi(2, int(cmb.get("grid_w", GRID_W)))
+	_grid_h = maxi(2, int(cmb.get("grid_h", GRID_H)))
+	_cell = maxi(16, int(cmb.get("cell_size", CELL)))
 	var enc := GameData.get_encounter(str(context.get("encounter_id", "")))
 	_reward = enc.get("reward", {"effects": {"needs": {"calm": 5}}})
 	_penalty = enc.get("penalty", {"effects": {"energy": -30}})
@@ -56,7 +65,7 @@ func _spawn_units(enc: Dictionary) -> void:
 			atk += int(atk_bonus[tag])
 	_player = {
 		"name": GameState.player_name, "team": "player", "glyph": "@",
-		"max_hp": hp, "hp": hp, "atk": atk, "pos": Vector2i(0, GRID_H / 2),
+		"max_hp": hp, "hp": hp, "atk": atk, "pos": Vector2i(0, _grid_h / 2),
 	}
 	_units.append(_player)
 	var enemies: Array = enc.get("enemies", [{"name": "Rival", "hp": 22, "atk": 5, "move": 3}])
@@ -66,7 +75,7 @@ func _spawn_units(enc: Dictionary) -> void:
 			"name": e.get("name", "Foe"), "team": "enemy", "glyph": "E",
 			"max_hp": int(e.get("hp", 20)), "hp": int(e.get("hp", 20)),
 			"atk": int(e.get("atk", 5)), "move": int(e.get("move", 3)),
-			"pos": Vector2i(GRID_W - 1, clampi(1 + slot, 0, GRID_H - 1)),
+			"pos": Vector2i(_grid_w - 1, clampi(1 + slot, 0, _grid_h - 1)),
 		})
 		slot += 2
 
@@ -100,14 +109,14 @@ func _build_ui(title: String) -> void:
 	v.add_child(h)
 
 	var grid := GridContainer.new()
-	grid.columns = GRID_W
+	grid.columns = _grid_w
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	h.add_child(grid)
 	_cells.clear()
-	for i in GRID_W * GRID_H:
+	for i in _grid_w * _grid_h:
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(CELL, CELL)
+		b.custom_minimum_size = Vector2(_cell, _cell)
 		b.add_theme_font_size_override("font_size", 28)
 		b.pressed.connect(_on_cell_pressed.bind(i))
 		grid.add_child(b)
@@ -173,9 +182,9 @@ func _reachable(to: Vector2i, rng: int) -> bool:
 # --- Rendering --------------------------------------------------------------
 func _redraw() -> void:
 	var kind := _pending_kind()
-	for y in GRID_H:
-		for x in GRID_W:
-			var b: Button = _cells[y * GRID_W + x]
+	for y in _grid_h:
+		for x in _grid_w:
+			var b: Button = _cells[y * _grid_w + x]
 			var pos := Vector2i(x, y)
 			var u := _unit_at(pos)
 			var hz := _hazard_at(pos)
@@ -266,7 +275,7 @@ func _resolve_self(act: Dictionary) -> void:
 func _on_cell_pressed(index: int) -> void:
 	if not _player_turn or _finished or _pending.is_empty():
 		return
-	var pos := Vector2i(index % GRID_W, index / GRID_W)
+	var pos := Vector2i(index % _grid_w, index / _grid_w)
 	match _pending_kind():
 		"move":
 			if not _has_moved and _reachable(pos, int(_pending.get("range", 3))):
@@ -296,7 +305,7 @@ func _place_wall(center: Vector2i, act: Dictionary) -> void:
 	var placed := 0
 	for dy in range(-half, length - half):
 		var p := Vector2i(center.x, center.y + dy)
-		if p.y >= 0 and p.y < GRID_H and _hazard_at(p).is_empty():
+		if p.y >= 0 and p.y < _grid_h and _hazard_at(p).is_empty():
 			_hazards.append({"pos": p, "dmg": dmg, "ttl": ttl})
 			placed += 1
 	if GameState.dev_mode:

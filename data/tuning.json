@@ -3,9 +3,16 @@
 		"start_minutes": 420,
 		"walk_minutes": 5
 	},
+	"calendar": {
+		"weeks_per_month": 4,
+		"months_per_trimester": 3,
+		"trimesters_per_year": 3,
+		"school_days_per_week": 5
+	},
 	"starting": {
 		"focus": 100,
 		"energy": 100,
+		"max_energy": 100,
 		"needs": { "hunger": 75, "thirst": 75, "bladder": 85, "hygiene": 85, "calm": 50, "mana": 100 }
 	},
 	"daily_focus_refill": 100,
@@ -23,6 +30,12 @@
 	"combat": {
 		"player_base_hp": 22,
 		"player_base_atk": 5,
-		"tag_atk_bonus": { "duelist": 2, "pyromancer": 1 }
+		"tag_atk_bonus": { "duelist": 2, "pyromancer": 1 },
+		"grid_w": 6,
+		"grid_h": 5,
+		"cell_size": 64
+	},
+	"char_creation": {
+		"difficulty_points": [50, 75, 100, 125, 150]
 	}
 }

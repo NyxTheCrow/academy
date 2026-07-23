@@ -34,7 +34,7 @@
 		"actions": [
 			{ "id": "change_clothes", "name": "Change into uniform", "duration": 5, "effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] }, "requires": { "without_tags": ["dressed"] } },
 			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "needs": { "hygiene": 30 } } },
-			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -15 } }, "requires": { "min_stats": { "focus": 10 } } },
+			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } },
 			{ "id": "sleep", "name": "Sleep until morning", "duration": 0, "sleep": true }
 		]
 	},
@@ -52,8 +52,8 @@
 		"description": "Rows of desks beneath a vaulted, rune-carved ceiling.",
 		"connections": ["corridor_a", "corridor_b"],
 		"actions": [
-			{ "id": "attend_lecture", "name": "Attend the lecture", "duration": 60, "effects": { "energy": -10, "stats": { "focus": -20 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "min_stats": { "focus": 10 }, "time_after": "09:00", "time_before": "12:00", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] } },
-			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -15 } }, "requires": { "min_stats": { "focus": 10 } } }
+			{ "id": "attend_lecture", "name": "Attend the lecture", "duration": 60, "effects": { "energy": -10, "stats": { "focus": -12 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "min_stats": { "focus": 8 }, "time_after": "09:00", "time_before": "12:00", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] } },
+			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } }
 		]
 	},
 	"corridor_b": {
