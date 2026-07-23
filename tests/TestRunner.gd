@@ -19,6 +19,7 @@ func _ready() -> void:
 	_test_requirements()
 	_test_locations_and_movement()
 	_test_tag_gated_actions()
+	_test_classes()
 	_test_combat_action_filter()
 	_test_event_firing()
 	_test_save_load_roundtrip()
@@ -132,24 +133,55 @@ func _test_locations_and_movement() -> void:
 	GameState.reset()  # room
 	_check("study_room" in _action_ids(), "room offers study")
 	_check("go_corridor_a" in _action_ids(), "room offers movement to corridor A")
-	_check(not ("attend_lecture" in _action_ids()), "lecture not offered in the room")
+	_check(not ("focus_class" in _action_ids()), "class actions not offered in the room")
 	GameState.set_location("corridor_a")
 	_eq(GameState.location, "corridor_a", "moved to corridor A")
 	_check("go_classroom" in _action_ids(), "corridor A connects to classroom")
 
 func _test_tag_gated_actions() -> void:
 	print("[tag-gated actions]")
-	GameState.reset()
+	GameState.reset()  # Monday 07:00, in the room
 	GameState.set_location("classroom")
-	GameState.advance_time(180)  # 10:00, a weekday
-	_check(not ("attend_lecture" in _action_ids()), "lecture hidden without 'dressed' tag")
+	# Before class you may wait for it; in-class actions are hidden.
+	_check(not ("wait_for_class" in _action_ids()), "waiting needs 'dressed'")
 	GameState.add_tag("dressed")
-	_check("attend_lecture" in _action_ids(), "lecture available once dressed (time+tags met)")
+	_check("wait_for_class" in _action_ids(), "can wait for the day's first class once dressed")
+	_check(not ("focus_class" in _action_ids()), "in-class actions hidden before class")
+	# During class the in-class choices appear and waiting is gone.
+	GameState.advance_time(150)  # 09:30 Monday — Law is in session
+	_check(not GameState.class_now().is_empty(), "a class is in session at 09:30 Monday")
+	_check("focus_class" in _action_ids(), "in-class actions appear during class")
+	_check("daydream" in _action_ids(), "daydream is an in-class option")
+	_check(not ("wait_for_class" in _action_ids()), "cannot wait once class is in session")
 	# Duel gate
 	GameState.set_location("dueling_room")
 	_check(not ("duel_cassius" in _action_ids()), "duel hidden without 'can_duel'")
 	GameState.add_tag("can_duel")
 	_check("duel_cassius" in _action_ids(), "duel available with 'can_duel'")
+
+func _test_classes() -> void:
+	print("[classes + timetable]")
+	GameState.reset()
+	GameState.set_location("classroom")
+	# Six first-year classes, each 5 sessions/week, each with a teacher.
+	var classes := GameData.schedule.filter(func(e): return str(e.get("kind", "")) == "class")
+	_eq(classes.size(), 6, "six first-year classes on the timetable")
+	for c in classes:
+		_check(str(c.get("teacher", "")) != "", "%s has a teacher" % str(c.get("name", "?")))
+		_eq((c.get("days", []) as Array).size(), 5, "%s meets 5x/week" % str(c.get("name", "?")))
+	# Every weekday Mon–Sat runs exactly five classes.
+	for wd in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
+		var n := 0
+		for c in classes:
+			if wd in c.get("days", []):
+				n += 1
+		_eq(n, 5, "%s has five classes" % wd)
+	# next_class_today / class_now / wait_for_class flow.
+	_check(GameState.class_now().is_empty(), "no class at 07:00")
+	_check(not GameState.next_class_today().is_empty(), "there is a class to come today")
+	GameState.wait_for_class()
+	_eq(GameState.time_string(), "09:00", "waiting jumps to the first class")
+	_check(not GameState.class_now().is_empty(), "seated once class begins")
 
 func _test_combat_action_filter() -> void:
 	print("[combat action tag filter]")
@@ -232,6 +264,7 @@ func _test_data_loaded() -> void:
 	_check(GameData.items.size() >= 2, "items loaded")
 	_check(GameData.schedule.size() >= 2, "schedule loaded")
 	_check(GameData.tags_registry.size() >= 5, "tags registry loaded")
+	_check(GameData.stats_registry.size() >= 15, "stats registry loaded (15+)")
 	_check(GameData.tuning.has("need_decay_per_minute"), "tuning loaded")
 	_check(GameState.start_minutes() == 420, "tuning drives start time")
 	_check(GameState.weeks_per_month() == 4, "tuning drives calendar shape")

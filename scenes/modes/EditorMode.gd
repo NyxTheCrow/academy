@@ -21,6 +21,7 @@ const FILES := [
 	["Backgrounds", "backgrounds.json", "backgrounds"],
 	["Characters (NPCs)", "students.json", "students"],
 	["Tags", "tags.json", "tags"],
+	["Stats", "stats.json", "stats"],
 	["Events", "events.json", "events"],
 	["Encounters", "encounters.json", "encounters"],
 	["Dialogue", "dialogue.json", "dialogue"],
@@ -49,6 +50,8 @@ const TEMPLATES := {
 		"tpl": {"term": "New Term", "category": "", "aliases": [], "definition": ""}},
 	"tags": {"kind": "array", "label": "tag",
 		"tpl": {"id": "new_tag", "name": "New Tag", "description": ""}},
+	"stats": {"kind": "array", "label": "stat",
+		"tpl": {"id": "new_stat", "name": "New Stat", "parent": "", "description": ""}},
 	"backgrounds": {"kind": "backgrounds", "label": "background",
 		"tpl": {"id": "new_background", "name": "New Background", "description": "", "effects": {"tags": []}}},
 }
@@ -185,6 +188,7 @@ func _runtime_data(key: String) -> Variant:
 		"items": return GameData.items
 		"schedule": return GameData.schedule
 		"tags": return GameData.tags_registry
+		"stats": return GameData.stats_registry
 		"tuning": return GameData.tuning
 		"tick_actions": return GameData.tick_actions
 		"backgrounds": return {"backgrounds": GameData.backgrounds}
@@ -233,6 +237,7 @@ func _apply_runtime(key: String, parsed: Variant) -> void:
 		"items": GameData.items = parsed
 		"schedule": GameData.schedule = parsed
 		"tags": GameData.tags_registry = parsed
+		"stats": GameData.stats_registry = parsed
 		"tuning": GameData.tuning = parsed
 		"tick_actions": GameData.tick_actions = parsed
 		"backgrounds": GameData.backgrounds = (parsed.get("backgrounds", []) if parsed is Dictionary else parsed)

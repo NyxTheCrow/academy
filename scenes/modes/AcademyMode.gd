@@ -307,6 +307,8 @@ func _on_action_pressed(a: Dictionary) -> void:
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.apply_effects(rest.get("effects", {}))
 		GameState.advance_time(dur)
+	elif a.get("wait_for_class", false):
+		GameState.wait_for_class()
 	elif a.get("sleep", false):
 		GameState.sleep()
 	elif a.has("goto"):

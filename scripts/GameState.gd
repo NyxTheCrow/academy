@@ -189,6 +189,56 @@ func set_location(loc: String) -> void:
 	location = loc
 	state_changed.emit()
 
+# --- Classes (timetable-driven) ---------------------------------------------
+## Schedule entries flagged as classes (kind == "class").
+func _class_entries() -> Array:
+	var out: Array = []
+	for e in GameData.schedule:
+		if str(e.get("kind", "")) == "class":
+			out.append(e)
+	return out
+
+## The class in session right now at the player's current location, or {}.
+func class_now() -> Dictionary:
+	var wd := day_name()
+	for e in _class_entries():
+		if str(e.get("room", "")) != location:
+			continue
+		if not (wd in e.get("days", [])):
+			continue
+		if minutes_of_day >= _hm(e.get("start", "00:00")) and minutes_of_day < _hm(e.get("end", "00:00")):
+			return e
+	return {}
+
+## The next class starting later today at the player's location, or {}.
+func next_class_today() -> Dictionary:
+	var wd := day_name()
+	var best: Dictionary = {}
+	var best_start := 1 << 30
+	for e in _class_entries():
+		if str(e.get("room", "")) != location:
+			continue
+		if not (wd in e.get("days", [])):
+			continue
+		var s := _hm(e.get("start", "00:00"))
+		if s >= minutes_of_day and s < best_start:
+			best_start = s
+			best = e
+	return best
+
+## Skip ahead to the start of the next class here today, and take your seat.
+func wait_for_class() -> void:
+	var e := next_class_today()
+	if e.is_empty():
+		message.emit("[i]No more classes here today.[/i]")
+		return
+	var s := _hm(e.get("start", "00:00"))
+	if minutes_of_day < s:
+		advance_time(s - minutes_of_day)
+	message.emit("[i]%s takes the lectern. %s begins.[/i]" % [
+		str(e.get("teacher", "The professor")), str(e.get("name", "The class"))])
+	state_changed.emit()
+
 # --- Needs drift ------------------------------------------------------------
 ## Needs drift per minute (stored as floats so small steps accumulate).
 ## Rates are tuned so a waking day taxes you but a night's sleep doesn't zero
@@ -254,6 +304,13 @@ func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, ener
 		for f in req["flags"]:
 			if flags.get(f, false) != req["flags"][f]:
 				return false
+	# Class-flow predicates (see the timetable in data/schedule.json).
+	if req.has("in_class") and (not class_now().is_empty()) != bool(req["in_class"]):
+		return false
+	if req.has("before_class"):
+		var can_wait := class_now().is_empty() and not next_class_today().is_empty()
+		if can_wait != bool(req["before_class"]):
+			return false
 	return true
 
 # --- Locations & actions ----------------------------------------------------

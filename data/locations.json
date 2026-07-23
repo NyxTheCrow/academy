@@ -52,7 +52,10 @@
 		"description": "Rows of desks beneath a vaulted, rune-carved ceiling.",
 		"connections": ["corridor_a", "corridor_b"],
 		"actions": [
-			{ "id": "attend_lecture", "name": "Attend the lecture", "duration": 60, "effects": { "energy": -10, "stats": { "focus": -12 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "min_stats": { "focus": 8 }, "time_after": "09:00", "time_before": "12:00", "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] } },
+			{ "id": "wait_for_class", "name": "Wait for class to start", "duration": 0, "wait_for_class": true, "requires": { "tags": ["enrolled", "dressed"], "before_class": true } },
+			{ "id": "focus_class", "name": "Focus on the class", "duration": 20, "effects": { "energy": -6, "stats": { "focus": -6 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
+			{ "id": "socialize", "name": "Socialize", "duration": 20, "effects": { "energy": -3, "needs": { "calm": 4 } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
+			{ "id": "daydream", "name": "Daydream", "duration": 20, "effects": { "energy": 1, "needs": { "calm": 3 } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
 			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } }
 		]
 	},

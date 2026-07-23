@@ -56,6 +56,8 @@ func _view_day() -> void:
 	for e in events:
 		content.add_child(_rich("[b]%s[/b]  ·  %s" % [e.get("name", "?"), e.get("time", "")]))
 		content.add_child(_kv("   Where", str(e.get("location", "—"))))
+		if e.has("teacher"):
+			content.add_child(_kv("   Teacher", str(e["teacher"])))
 		if e.has("note"):
 			content.add_child(_kv("   Note", str(e["note"])))
 		content.add_child(HSeparator.new())
