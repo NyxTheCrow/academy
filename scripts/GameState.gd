@@ -50,18 +50,44 @@ func _ready() -> void:
 	randomize()
 	reset()
 
+# --- Tuning (editable numbers live in data/tuning.json) ---------------------
+## Everything numeric that used to be hardcoded here — decay rates, starting
+## values, the calm baseline — is read from GameData.tuning, so it can be
+## edited live in the Data Editor. The constants above are only fallbacks used
+## when a key is missing from the tuning file.
+func _tune() -> Dictionary:
+	return GameData.tuning if GameData.tuning is Dictionary else {}
+
+func start_minutes() -> int:
+	var clock: Dictionary = _tune().get("clock", {})
+	return int(clock.get("start_minutes", START_MINUTES))
+
+func walk_minutes() -> int:
+	var clock: Dictionary = _tune().get("clock", {})
+	return int(clock.get("walk_minutes", WALK_MINUTES))
+
 func reset() -> void:
+	var t := _tune()
+	var start: Dictionary = t.get("starting", {})
+	var sn: Dictionary = start.get("needs", {})
 	day_count = 0
-	minutes_of_day = START_MINUTES
+	minutes_of_day = start_minutes()
 	location = "room"
 	player_name = "Student"
 	dev_mode = false
 	# focus = the day's mental bandwidth for learning; refills each morning.
-	stats = {"focus": 100}
-	needs = {"hunger": 75.0, "thirst": 75.0, "bladder": 85.0, "hygiene": 85.0, "calm": 50.0, "mana": 100.0}
+	stats = {"focus": int(start.get("focus", 100))}
+	needs = {
+		"hunger": float(sn.get("hunger", 75)),
+		"thirst": float(sn.get("thirst", 75)),
+		"bladder": float(sn.get("bladder", 85)),
+		"hygiene": float(sn.get("hygiene", 85)),
+		"calm": float(sn.get("calm", 50)),
+		"mana": float(sn.get("mana", 100)),
+	}
 	tags = ["student", "enrolled"]
 	max_energy = 100
-	energy = 100
+	energy = int(start.get("energy", 100))
 	relationships = {}
 	flags = {}
 	fired_events = {}
@@ -121,12 +147,12 @@ func advance_time(mins: int) -> void:
 func _advance_day() -> void:
 	day_count += 1
 	energy = max_energy
-	stats["focus"] = 100   # a fresh day's mental bandwidth
+	stats["focus"] = int(_tune().get("daily_focus_refill", 100))   # a fresh day's mental bandwidth
 	day_changed.emit()
 
 ## Sleep until 07:00 the next morning; fully rested.
 func sleep() -> void:
-	var delta := (DAY_MINUTES - minutes_of_day) + START_MINUTES
+	var delta := (DAY_MINUTES - minutes_of_day) + start_minutes()
 	advance_time(delta)
 	energy = max_energy
 	message.emit("[i]You sleep, and wake at %s.[/i]" % time_string())
@@ -143,15 +169,18 @@ func set_location(loc: String) -> void:
 ## baseline from either direction; focus is a stat (daily reset), not a need.
 func _drift_needs(minutes: int) -> void:
 	var m := float(minutes)
-	needs["hunger"] = clampf(float(needs.get("hunger", 0)) - m * 0.08, 0, 100)
-	needs["thirst"] = clampf(float(needs.get("thirst", 0)) - m * 0.12, 0, 100)
-	needs["bladder"] = clampf(float(needs.get("bladder", 0)) - m * 0.10, 0, 100)
-	needs["hygiene"] = clampf(float(needs.get("hygiene", 0)) - m * 0.04, 0, 100)
-	needs["mana"] = clampf(float(needs.get("mana", 0)) + m * 0.08, 0, 100)  # recovers
-	# Calm (stress/fear) settles toward a normal baseline of 50, up or down.
+	var decay: Dictionary = _tune().get("need_decay_per_minute", {})
+	# Rates are signed per minute: negative drains, positive recovers.
+	needs["hunger"] = clampf(float(needs.get("hunger", 0)) + m * float(decay.get("hunger", -0.08)), 0, 100)
+	needs["thirst"] = clampf(float(needs.get("thirst", 0)) + m * float(decay.get("thirst", -0.12)), 0, 100)
+	needs["bladder"] = clampf(float(needs.get("bladder", 0)) + m * float(decay.get("bladder", -0.10)), 0, 100)
+	needs["hygiene"] = clampf(float(needs.get("hygiene", 0)) + m * float(decay.get("hygiene", -0.04)), 0, 100)
+	needs["mana"] = clampf(float(needs.get("mana", 0)) + m * float(decay.get("mana", 0.08)), 0, 100)  # recovers
+	# Calm (stress/fear) settles toward a normal baseline, up or down.
+	var calm_cfg: Dictionary = _tune().get("calm", {})
 	var calm := float(needs.get("calm", 50))
-	var baseline := 50.0
-	var step := m * 0.08
+	var baseline := float(calm_cfg.get("baseline", 50))
+	var step := m * float(calm_cfg.get("drift_per_minute", 0.08))
 	if calm < baseline:
 		needs["calm"] = minf(baseline, calm + step)
 	elif calm > baseline:
@@ -214,7 +243,7 @@ func available_actions() -> Array:
 		var dest: Dictionary = GameData.locations.get(conn, {})
 		out.append({
 			"id": "go_" + str(conn), "name": "Go to " + str(dest.get("name", conn)),
-			"goto": conn, "duration": WALK_MINUTES, "move": true,
+			"goto": conn, "duration": walk_minutes(), "move": true,
 		})
 	return out
 

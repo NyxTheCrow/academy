@@ -46,12 +46,14 @@ func enter(context: Dictionary) -> void:
 func _spawn_units(enc: Dictionary) -> void:
 	_units.clear()
 	# Player toughness/attack: a base plus small bonuses from martial tags.
-	var hp: int = 22
-	var atk: int = 5
-	if GameState.has_tag("duelist"):
-		atk += 2
-	if GameState.has_tag("pyromancer"):
-		atk += 1
+	# Numbers are editable in data/tuning.json (the "combat" block).
+	var cmb: Dictionary = GameData.tuning.get("combat", {}) if GameData.tuning is Dictionary else {}
+	var hp: int = int(cmb.get("player_base_hp", 22))
+	var atk: int = int(cmb.get("player_base_atk", 5))
+	var atk_bonus: Dictionary = cmb.get("tag_atk_bonus", {})
+	for tag in atk_bonus:
+		if GameState.has_tag(str(tag)):
+			atk += int(atk_bonus[tag])
 	_player = {
 		"name": GameState.player_name, "team": "player", "glyph": "@",
 		"max_hp": hp, "hp": hp, "atk": atk, "pos": Vector2i(0, GRID_H / 2),

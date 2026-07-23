@@ -1,0 +1,28 @@
+{
+	"clock": {
+		"start_minutes": 420,
+		"walk_minutes": 5
+	},
+	"starting": {
+		"focus": 100,
+		"energy": 100,
+		"needs": { "hunger": 75, "thirst": 75, "bladder": 85, "hygiene": 85, "calm": 50, "mana": 100 }
+	},
+	"daily_focus_refill": 100,
+	"need_decay_per_minute": {
+		"hunger": -0.08,
+		"thirst": -0.12,
+		"bladder": -0.1,
+		"hygiene": -0.04,
+		"mana": 0.08
+	},
+	"calm": {
+		"baseline": 50,
+		"drift_per_minute": 0.08
+	},
+	"combat": {
+		"player_base_hp": 22,
+		"player_base_atk": 5,
+		"tag_atk_bonus": { "duelist": 2, "pyromancer": 1 }
+	}
+}

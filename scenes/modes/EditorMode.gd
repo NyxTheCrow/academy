@@ -10,6 +10,7 @@ extends "res://scripts/GameMode.gd"
 
 # [label, filename, runtime key]
 const FILES := [
+	["Tuning (balance)", "tuning.json", "tuning"],
 	["Locations", "locations.json", "locations"],
 	["Lexicon", "lexicon.json", "lexicon"],
 	["Items", "items.json", "items"],
@@ -183,6 +184,7 @@ func _runtime_data(key: String) -> Variant:
 		"items": return GameData.items
 		"schedule": return GameData.schedule
 		"tags": return GameData.tags_registry
+		"tuning": return GameData.tuning
 		"backgrounds": return {"backgrounds": GameData.backgrounds}
 		"lexicon": return Lexicon.entries
 	return {}
@@ -229,6 +231,7 @@ func _apply_runtime(key: String, parsed: Variant) -> void:
 		"items": GameData.items = parsed
 		"schedule": GameData.schedule = parsed
 		"tags": GameData.tags_registry = parsed
+		"tuning": GameData.tuning = parsed
 		"backgrounds": GameData.backgrounds = (parsed.get("backgrounds", []) if parsed is Dictionary else parsed)
 		"lexicon": Lexicon.entries = parsed
 	GameState.state_changed.emit()

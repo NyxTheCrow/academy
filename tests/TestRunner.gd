@@ -229,6 +229,8 @@ func _test_data_loaded() -> void:
 	_check(GameData.items.size() >= 2, "items loaded")
 	_check(GameData.schedule.size() >= 2, "schedule loaded")
 	_check(GameData.tags_registry.size() >= 5, "tags registry loaded")
+	_check(GameData.tuning.has("need_decay_per_minute"), "tuning loaded")
+	_check(GameState.start_minutes() == 420, "tuning drives start time")
 
 func _test_stats_and_menus() -> void:
 	print("[stats + menus state]")
