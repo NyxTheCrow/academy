@@ -122,6 +122,16 @@ func can_act(u: Dictionary) -> bool:
 func resolves_at(u: Dictionary) -> int:
 	return int(u["plan"].get("start", tick)) + int(u["plan"].get("startup", 0))
 
+## A unit refills readiness while it is NOT actively winding up or executing an
+## attack: i.e. idle, holding (a "self"/wait action), or in the recovery tail of
+## a finished action. This is the "catch your breath" model.
+func _recovers_readiness(u: Dictionary) -> bool:
+	if is_idle(u):
+		return true
+	if str(u["plan"]["kind"]) == "self":
+		return true
+	return tick > resolves_at(u)   # past the active tick -> recovering
+
 # --- Commands ---------------------------------------------------------------
 ## Queue (or react with) an action. Returns false + sets last_error on failure.
 func queue_action(unit_id: String, action_id: String, target: Vector2i) -> bool:
@@ -164,9 +174,9 @@ func queue_action(unit_id: String, action_id: String, target: Vector2i) -> bool:
 func step() -> Dictionary:
 	tick += 1
 	var ev := {"tick": tick, "resolved": [], "down": false}
-	# Readiness regenerates while idle.
+	# Readiness regenerates while a unit isn't winding up or executing an attack.
 	for u in units:
-		if not u["down"] and is_idle(u) and u["readiness"] < MAX_READINESS:
+		if not u["down"] and u["readiness"] < MAX_READINESS and _recovers_readiness(u):
 			u["readiness"] += 1
 	# Wards decay.
 	for u in units:

@@ -411,6 +411,11 @@ func _test_tick_combat() -> void:
 	e = _tick_engine([{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)}], Vector2i(5, 3))
 	e.queue_action("b", "ray", Vector2i(4, 0))  # costs 2, leaves 1
 	_check(not e.queue_action("b", "ray", Vector2i(3, 0)), "not enough readiness for a second ray")
+	# ...and readiness climbs back over the recovery/idle ticks that follow.
+	_check(e.unit_by_id("b")["readiness"] == 1, "spending a ray drops readiness")
+	for _i in 8:
+		e.step()
+	_check(e.unit_by_id("b")["readiness"] == 3, "readiness regenerates while not attacking")
 
 	# A directional ward absorbs a hit from the warded side...
 	e = _tick_engine([

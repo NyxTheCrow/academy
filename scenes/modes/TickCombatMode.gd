@@ -222,11 +222,17 @@ func _on_hold() -> void:
 	if _reason == "over":
 		return
 	_pending = ""
-	# Holding is an actual (free) "wait" action so the player briefly commits and
-	# the enemy gets to press an idle opponent, rather than stalling the clock.
-	if _engine.actions.has("wait"):
-		_engine.queue_action(_engine.player()["id"], "wait", _engine.player()["pos"])
+	var p = _engine.player()
+	if _engine.is_idle(p):
+		# Idle: a brief free "wait" so time passes and the enemy gets to press,
+		# rather than the player keeping the initiative forever.
+		if _engine.actions.has("wait"):
+			_engine.queue_action(p["id"], "wait", p["pos"])
+		else:
+			_engine.step()
 	else:
+		# Mid-action: just let a tick pass so the CURRENT plan continues — do not
+		# interrupt it.
 		_engine.step()
 	_pump()
 
