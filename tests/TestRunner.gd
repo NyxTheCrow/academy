@@ -375,7 +375,8 @@ func _test_tick_combat() -> void:
 	_check(GameData.tick_actions.has("ray"), "tick actions loaded")
 
 	# A ray downs an unprotected target on its active tick (deterministic).
-	var e := _tick_engine([
+	# (plain '=', not ':=': the engine handle is intentionally untyped)
+	var e = _tick_engine([
 		{"id": "a", "team": "player", "pos": Vector2i(2, 0)},
 		{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)},
 	], Vector2i(5, 3))
