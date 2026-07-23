@@ -22,6 +22,7 @@ const MODE_SCENES := {
 	"academy": "res://scenes/modes/AcademyMode.tscn",
 	"dialogue": "res://scenes/modes/DialogueMode.tscn",
 	"combat": "res://scenes/modes/CombatMode.tscn",
+	"tickcombat": "res://scenes/modes/TickCombatMode.tscn",
 	"lexicon": "res://scenes/modes/LexiconMode.tscn",
 	"character": "res://scenes/modes/CharacterSheetMode.tscn",
 	"schedule": "res://scenes/modes/ScheduleMode.tscn",

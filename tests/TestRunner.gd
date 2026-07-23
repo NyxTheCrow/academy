@@ -3,6 +3,8 @@ extends Node
 ##     godot --headless tests/TestRunner.tscn
 ## Exits 0 if all pass, 1 otherwise — CI gates on it.
 
+const TickEngine := preload("res://scripts/combat/TickEngine.gd")
+
 var _passed := 0
 var _failed := 0
 
@@ -29,6 +31,7 @@ func _ready() -> void:
 	_test_save_slots()
 	_test_data_overrides()
 	_test_modes_and_director()
+	_test_tick_combat()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -339,6 +342,7 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/AcademyMode.tscn",
 		"res://scenes/modes/DialogueMode.tscn",
 		"res://scenes/modes/CombatMode.tscn",
+		"res://scenes/modes/TickCombatMode.tscn",
 		"res://scenes/modes/LexiconMode.tscn",
 		"res://scenes/modes/CharacterSheetMode.tscn",
 		"res://scenes/modes/ScheduleMode.tscn",
@@ -357,3 +361,110 @@ func _test_modes_and_director() -> void:
 		_check(m != null and m.has_method("enter"), "%s script attached" % fname)
 		if m != null:
 			m.free()
+
+# Untyped return so callers dispatch the engine's methods dynamically (a
+# RefCounted-typed handle wouldn't expose them to the static checker).
+func _tick_engine(units: Array, grid: Vector2i):
+	var e = TickEngine.new()
+	e.setup({"units": units, "grid": grid})
+	return e
+
+func _test_tick_combat() -> void:
+	print("[tick combat engine]")
+	# Actions come from data/tick_actions.json (editable).
+	_check(GameData.tick_actions.has("ray"), "tick actions loaded")
+
+	# A ray downs an unprotected target on its active tick (deterministic).
+	var e := _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(2, 0)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)},
+	], Vector2i(5, 3))
+	_check(e.queue_action("b", "ray", Vector2i(2, 0)), "ray queued")
+	for _i in 4:
+		e.step()
+	_check(e.unit_by_id("a")["down"], "ray downs a target left on the tile")
+
+	# The same ray, but the target dodges off the tile in time -> survives.
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(2, 0)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)},
+	], Vector2i(5, 3))
+	e.queue_action("b", "ray", Vector2i(2, 0))
+	e.queue_action("a", "dodge", Vector2i(2, 1))
+	for _i in 4:
+		e.step()
+	_check(not e.unit_by_id("a")["down"], "a dodge before impact avoids the ray")
+
+	# Commitment: before the commit point a plan can be interrupted...
+	e = _tick_engine([{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)}], Vector2i(5, 3))
+	e.queue_action("b", "ray", Vector2i(4, 0))
+	e.step()  # tick 1, still pre-commit
+	_check(e.queue_action("b", "dodge", Vector2i(1, 0)), "pre-commit action can be interrupted")
+	# ...but after it, the action is locked in.
+	e = _tick_engine([{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)}], Vector2i(5, 3))
+	e.queue_action("b", "ray", Vector2i(4, 0))
+	e.step(); e.step()  # tick 2, committed
+	_check(not e.queue_action("b", "dodge", Vector2i(1, 0)), "committed action cannot be changed")
+
+	# Readiness gates reaction spam: a second ray with too little readiness fails.
+	e = _tick_engine([{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)}], Vector2i(5, 3))
+	e.queue_action("b", "ray", Vector2i(4, 0))  # costs 2, leaves 1
+	_check(not e.queue_action("b", "ray", Vector2i(3, 0)), "not enough readiness for a second ray")
+
+	# A directional ward absorbs a hit from the warded side...
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(2, 0)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(0, 0)},
+	], Vector2i(5, 3))
+	e.queue_action("a", "shield", Vector2i(0, 0))  # ward faces the caster
+	e.queue_action("b", "ray", Vector2i(2, 0))
+	for _i in 4:
+		e.step()
+	_check(not e.unit_by_id("a")["down"], "ward toward the attacker absorbs the ray")
+
+	# ...but not from the flank.
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(2, 1)},
+		{"id": "c", "team": "enemy", "pos": Vector2i(2, 4)},
+	], Vector2i(5, 5))
+	e.queue_action("a", "shield", Vector2i(0, 1))  # ward faces left
+	e.queue_action("c", "ray", Vector2i(2, 1))     # attack comes from below
+	for _i in 4:
+		e.step()
+	_check(e.unit_by_id("a")["down"], "a flank attack bypasses the directional ward")
+
+	# The enemy aims at the player's PROJECTED destination, not their current tile.
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(0, 1)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(5, 1)},
+	], Vector2i(6, 3))
+	e.queue_action("a", "stride", Vector2i(5, 1))  # a 2-tile move -> dest (2,1)
+	_check(e._projected_dest(e.unit_by_id("a")) == Vector2i(2, 1), "projects the move destination")
+	e._enemy_intents()
+	_check(e.unit_by_id("b")["plan"].get("target", Vector2i.ZERO) == Vector2i(2, 1),
+		"enemy targets the projected destination")
+
+	# A rune punishes a unit that steps onto it.
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(0, 0)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(4, 0)},
+	], Vector2i(6, 3))
+	e.queue_action("b", "rune", Vector2i(1, 0))
+	e.step(); e.step()  # rune placed at tick 2
+	e.queue_action("a", "dodge", Vector2i(1, 0))
+	e.step()  # a steps onto the rune
+	_check(e.unit_by_id("a")["down"], "stepping onto a rune triggers it")
+
+	# End-to-end: a passive player who only ever Holds eventually loses.
+	e = TickEngine.new()
+	e.setup({})  # default duel
+	var guard := 0
+	while guard < 500 and not e.is_over():
+		guard += 1
+		var res: Dictionary = e.advance()
+		if res.get("reason", "") == "over":
+			break
+		# The player just holds (a free wait), letting the enemy press.
+		e.queue_action(e.player()["id"], "wait", e.player()["pos"])
+	_check(e.is_over(), "a full AI duel terminates")
+	_eq(e.winner(), "enemy", "a passive player is defeated")

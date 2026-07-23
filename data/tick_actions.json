@@ -1,0 +1,74 @@
+{
+	"ray": {
+		"name": "Light Ray",
+		"kind": "ray",
+		"startup": 4,
+		"commit": 2,
+		"recovery": 2,
+		"readiness_cost": 2,
+		"damage": 1,
+		"range": 6,
+		"telegraph": "A narrow luminous ray begins to form.",
+		"description": "A fast, near-guaranteed bolt. Deadly to anything left on the targeted tile — but it commits early, so a read can be dodged."
+	},
+	"dodge": {
+		"name": "Dodge",
+		"kind": "move",
+		"startup": 1,
+		"commit": 1,
+		"recovery": 1,
+		"readiness_cost": 1,
+		"distance": 1,
+		"description": "A quick one-tile reposition. Cheap and fast — your bread-and-butter reaction to a telegraphed attack."
+	},
+	"stride": {
+		"name": "Stride",
+		"kind": "move",
+		"startup": 1,
+		"commit": 1,
+		"recovery": 1,
+		"readiness_cost": 1,
+		"distance": 2,
+		"description": "Cover more ground, but a longer path is easier for an opponent to predict and cut off."
+	},
+	"shield": {
+		"name": "Ward",
+		"kind": "shield",
+		"startup": 1,
+		"commit": 1,
+		"recovery": 1,
+		"readiness_cost": 1,
+		"ward": 1,
+		"description": "Raise a directional ward toward a chosen tile. Absorbs one hit from that side — useless against an attack from your flank."
+	},
+	"rune": {
+		"name": "Snare Rune",
+		"kind": "trap",
+		"startup": 2,
+		"commit": 1,
+		"recovery": 1,
+		"readiness_cost": 2,
+		"damage": 1,
+		"description": "Set a rune on a tile. It triggers on whoever steps onto it — punishing a predictable dodge."
+	},
+	"burst": {
+		"name": "Flame Burst",
+		"kind": "area",
+		"startup": 5,
+		"commit": 3,
+		"recovery": 3,
+		"readiness_cost": 3,
+		"radius": 1,
+		"damage": 1,
+		"description": "A slow area blast. Covers several escape tiles at once, so a simple dodge may not be enough — but it is expensive and easy to see coming."
+	},
+	"wait": {
+		"name": "Hold",
+		"kind": "self",
+		"startup": 1,
+		"commit": 1,
+		"recovery": 0,
+		"readiness_cost": 0,
+		"description": "Bide a tick, watching. Costs nothing and lets readiness recover while you wait for the enemy to commit."
+	}
+}

@@ -302,6 +302,11 @@ func _on_action_pressed(a: Dictionary) -> void:
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.apply_effects(res2.get("effects", {}))
 		GameState.advance_time(dur)
+	elif a.has("tactical"):
+		var rest: Dictionary = await Director.run_mode("tickcombat", {"config": a.get("tactical", {})})
+		GameState.apply_effects(a.get("effects", {}))
+		GameState.apply_effects(rest.get("effects", {}))
+		GameState.advance_time(dur)
 	elif a.get("sleep", false):
 		GameState.sleep()
 	elif a.has("goto"):

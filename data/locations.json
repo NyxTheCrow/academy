@@ -70,7 +70,8 @@
 		"connections": ["corridor_b"],
 		"actions": [
 			{ "id": "spar", "name": "Spar with a training dummy", "duration": 30, "effects": { "energy": -15 }, "combat": "training_dummy" },
-			{ "id": "duel_cassius", "name": "Duel Cassius", "duration": 20, "combat": "duel_rival", "requires": { "tags": ["can_duel"] } }
+			{ "id": "duel_cassius", "name": "Duel Cassius", "duration": 20, "combat": "duel_rival", "requires": { "tags": ["can_duel"] } },
+			{ "id": "timeline_spar", "name": "Timeline spar (prototype)", "duration": 15, "effects": { "energy": -10 }, "tactical": {} }
 		]
 	}
 }

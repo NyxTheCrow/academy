@@ -17,6 +17,7 @@ const FILES := [
 	["Spells", "spells.json", "spells"],
 	["Schedule", "schedule.json", "schedule"],
 	["Combat Actions", "combat_actions.json", "combat_actions"],
+	["Timeline Actions (proto)", "tick_actions.json", "tick_actions"],
 	["Backgrounds", "backgrounds.json", "backgrounds"],
 	["Characters (NPCs)", "students.json", "students"],
 	["Tags", "tags.json", "tags"],
@@ -185,6 +186,7 @@ func _runtime_data(key: String) -> Variant:
 		"schedule": return GameData.schedule
 		"tags": return GameData.tags_registry
 		"tuning": return GameData.tuning
+		"tick_actions": return GameData.tick_actions
 		"backgrounds": return {"backgrounds": GameData.backgrounds}
 		"lexicon": return Lexicon.entries
 	return {}
@@ -232,6 +234,7 @@ func _apply_runtime(key: String, parsed: Variant) -> void:
 		"schedule": GameData.schedule = parsed
 		"tags": GameData.tags_registry = parsed
 		"tuning": GameData.tuning = parsed
+		"tick_actions": GameData.tick_actions = parsed
 		"backgrounds": GameData.backgrounds = (parsed.get("backgrounds", []) if parsed is Dictionary else parsed)
 		"lexicon": Lexicon.entries = parsed
 	GameState.state_changed.emit()
