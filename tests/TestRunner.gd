@@ -280,6 +280,10 @@ func _test_stats_and_menus() -> void:
 	_check(GameState.stats.size() >= 16, "every character carries the full stat sheet (focus + 15)")
 	_check(GameState.stats.has("shaping") and GameState.stats.has("insight"), "detailed stats present on the player")
 	_eq(int(GameState.stats.get("history", -1)), 0, "detailed stats start at 0")
+	# Aptitude stats are hidden from the player; focus and needs are not aptitudes.
+	_check(GameState.is_aptitude("shaping") and GameState.is_aptitude("insight"), "aptitudes classified as hidden")
+	_check(not GameState.is_aptitude("focus"), "focus is not a hidden aptitude")
+	_check(not GameState.is_aptitude("calm"), "needs are not aptitudes")
 	_eq(GameState.focus_descriptor(100), "Sharp", "focus 100 -> Sharp")
 	_eq(GameState.focus_descriptor(10), "Burnt out", "focus 10 -> Burnt out")
 	# Favourites

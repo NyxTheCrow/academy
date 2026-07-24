@@ -20,16 +20,8 @@ func _populate() -> void:
 		var label: String = "Mana Reserves" if nk == "mana" else str(nk).capitalize()
 		content.add_child(_kv(label, str(nv) if g.dev_mode else g.need_descriptor(nk, nv)))
 	content.add_child(HSeparator.new())
-	# The full stat sheet. Dev-only for now — player-facing descriptors and
-	# progression aren't defined yet.
-	if g.dev_mode and not GameData.stats_registry.is_empty():
-		content.add_child(_h("Aptitudes (dev)"))
-		for entry in GameData.stats_registry:
-			var id := str(entry.get("id", ""))
-			var nm := str(entry.get("name", id))
-			var indent: String = "      " if str(entry.get("parent", "")) != "" else ""
-			content.add_child(_kv(indent + nm, str(int(g.stats.get(id, 0)))))
-		content.add_child(HSeparator.new())
+	# Aptitude stats (data/stats.json) are deliberately NOT shown anywhere — the
+	# player never sees them, and neither does the character sheet.
 	# Tags are hidden from the player; dev only.
 	if g.dev_mode:
 		content.add_child(_kv("Tags", ", ".join(PackedStringArray(g.tags)) if not g.tags.is_empty() else "none"))

@@ -196,6 +196,8 @@ func _rebuild_stats() -> void:
 	stats_box.add_child(_stat_row("Energy", "Energy",
 		GameState.energy_descriptor(), "%d / %d" % [GameState.energy, GameState.max_energy]))
 	for k in GameState.stats:
+		if GameState.is_aptitude(str(k)):
+			continue  # aptitude stats are hidden from the player (and the UI) entirely
 		var v := int(GameState.stats[k])
 		stats_box.add_child(_stat_row(str(k), str(k).capitalize(),
 			GameState.stat_word(str(k)), str(v)))

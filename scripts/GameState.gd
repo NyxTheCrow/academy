@@ -116,6 +116,15 @@ func _merge_missing_stats() -> void:
 		if id != "" and not stats.has(id):
 			stats[id] = 0
 
+## True if a stat key is an "aptitude" (defined in data/stats.json). Aptitude
+## stats are hidden from the player entirely — never shown in the UI. Only the
+## needs, mana, energy and focus are surfaced.
+func is_aptitude(key: String) -> bool:
+	for entry in GameData.stats_registry:
+		if str(entry.get("id", "")) == key:
+			return true
+	return false
+
 # --- Calendar helpers (display-derived) -------------------------------------
 ## Calendar shape is editable in data/tuning.json ("calendar" block); the
 ## constants above are fallbacks. A week is always 7 days (the DAYS array);
