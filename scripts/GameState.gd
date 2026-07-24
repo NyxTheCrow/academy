@@ -76,7 +76,8 @@ func reset() -> void:
 	player_name = "Student"
 	dev_mode = false
 	# focus = the day's mental bandwidth for learning; refills each morning.
-	stats = {"focus": int(start.get("focus", 100))}
+	stats = default_stats()
+	stats["focus"] = int(start.get("focus", 100))
 	needs = {
 		"hunger": float(sn.get("hunger", 75)),
 		"thirst": float(sn.get("thirst", 75)),
@@ -94,6 +95,26 @@ func reset() -> void:
 	inventory = ["textbook", "bread"]
 	favorites = []
 	state_changed.emit()
+
+## Every character carries the full stat sheet. Values start at 0 — how they
+## rise and fall isn't wired up yet. Built from the editable registry
+## (data/stats.json) so adding a stat there gives it to everyone automatically.
+## focus (the daily mental-bandwidth stat) is separate and set by the caller.
+func default_stats() -> Dictionary:
+	var s: Dictionary = {"focus": 0}
+	for entry in GameData.stats_registry:
+		var id := str(entry.get("id", ""))
+		if id != "" and not s.has(id):
+			s[id] = 0
+	return s
+
+## Fill in any registry stats a dictionary is missing (e.g. from an old save),
+## without touching values that are already present.
+func _merge_missing_stats() -> void:
+	for entry in GameData.stats_registry:
+		var id := str(entry.get("id", ""))
+		if id != "" and not stats.has(id):
+			stats[id] = 0
 
 # --- Calendar helpers (display-derived) -------------------------------------
 ## Calendar shape is editable in data/tuning.json ("calendar" block); the
@@ -599,6 +620,7 @@ func load_game(path := "user://savegame.json") -> bool:
 	minutes_of_day = int(d.get("minutes_of_day", START_MINUTES))
 	location = str(d.get("location", "room"))
 	stats = d.get("stats", stats)
+	_merge_missing_stats()   # old saves predate the full stat sheet
 	needs = d.get("needs", needs)
 	tags = d.get("tags", [])
 	energy = int(d.get("energy", 100))

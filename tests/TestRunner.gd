@@ -276,8 +276,10 @@ func _test_data_loaded() -> void:
 func _test_stats_and_menus() -> void:
 	print("[stats + menus state]")
 	GameState.reset()
-	_eq(GameState.stats.keys().size(), 1, "only one stat now")
-	_check(GameState.stats.has("focus"), "the stat is focus")
+	_check(GameState.stats.has("focus"), "focus is present")
+	_check(GameState.stats.size() >= 16, "every character carries the full stat sheet (focus + 15)")
+	_check(GameState.stats.has("shaping") and GameState.stats.has("insight"), "detailed stats present on the player")
+	_eq(int(GameState.stats.get("history", -1)), 0, "detailed stats start at 0")
 	_eq(GameState.focus_descriptor(100), "Sharp", "focus 100 -> Sharp")
 	_eq(GameState.focus_descriptor(10), "Burnt out", "focus 10 -> Burnt out")
 	# Favourites
@@ -298,6 +300,7 @@ func _test_npc_students() -> void:
 	Students.reset()
 	_eq(Students.npcs.size(), 4, "four NPCs")
 	_check(Students.npcs[0].has("location") and Students.npcs[0].has("tags"), "NPCs have location + tags")
+	_check(Students.npcs[0]["stats"].has("shaping") and Students.npcs[0]["stats"].has("insight"), "NPCs carry the full stat sheet too")
 	GameState.advance_time(30)
 	var acted := false
 	for npc in Students.npcs:

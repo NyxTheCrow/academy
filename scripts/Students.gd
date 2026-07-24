@@ -16,7 +16,8 @@ func _ready() -> void:
 func reset() -> void:
 	npcs.clear()
 	for data in GameData.students:
-		var stats := {"focus": 0}
+		# Every NPC carries the full stat sheet too; json values overlay it.
+		var stats: Dictionary = GameState.default_stats()
 		for k in data.get("stats", {}):
 			stats[k] = int(data["stats"][k])
 		npcs.append({
