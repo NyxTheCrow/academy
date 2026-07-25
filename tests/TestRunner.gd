@@ -241,7 +241,7 @@ func _test_save_load_roundtrip() -> void:
 	_eq(GameState.day_count, snap_day, "loaded day_count")
 	_check(GameState.is_favorite("elara"), "loaded favourite")
 	_check(GameState.has_item("charm"), "loaded inventory item")
-	_eq(Students.npcs.size(), 4, "loaded NPCs")
+	_eq(Students.npcs.size(), GameData.students.size() + GameData.faculty.size(), "loaded NPCs")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 func _test_needs() -> void:
@@ -264,7 +264,7 @@ func _test_data_loaded() -> void:
 	_check(GameData.faculty.size() >= 6, "faculty registry loaded")
 	_check(not GameData.get_activity("study_room").is_empty(), "activities resolve by id")
 	_check(GameData.combat_actions.size() >= 3, "combat actions loaded")
-	_eq(GameData.students.size(), 4, "4 students")
+	_check(GameData.students.size() >= 30, "student roster loaded")
 	_check(GameData.backgrounds.size() >= 3, "backgrounds loaded")
 	_check(GameData.spells.size() >= 3, "spells loaded")
 	_check(GameData.items.size() >= 2, "items loaded")
