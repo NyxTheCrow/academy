@@ -44,9 +44,12 @@ func location_name(loc: String) -> String:
 func _npc_act(npc: Dictionary) -> void:
 	var loc := GameData.get_location(npc["location"])
 	var options: Array = []
-	for a in loc.get("actions", []):
-		if a.has("dialogue") or a.has("combat") or a.get("sleep", false):
-			continue  # player-only actions
+	for aid in loc.get("activities", []):
+		var a := GameData.get_activity(str(aid))
+		if a.is_empty():
+			continue
+		if a.has("dialogue") or a.has("combat") or a.has("tactical") or a.get("sleep", false) or a.get("wait_for_class", false) or a.has("goto"):
+			continue  # player-only or navigation actions
 		if GameState.requirement_met(a.get("requires", {}), npc["tags"], npc["stats"], npc["energy"]):
 			options.append(a)
 	# Movement options (NPCs wander).

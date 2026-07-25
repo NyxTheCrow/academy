@@ -1,0 +1,8 @@
+{
+	"adler": { "name": "Magister Corvane Adler", "title": "Magister", "teaches": "Introduction to Law" },
+	"fenn": { "name": "Doctor Ysolde Fenn", "title": "Doctor", "teaches": "Introduction to Aetherics" },
+	"vale": { "name": "Lector Ambrose Vale", "title": "Lector", "teaches": "History" },
+	"stonewell": { "name": "Coach Bertha Stonewell", "title": "Coach", "teaches": "Physical Education" },
+	"brey": { "name": "Artificer Lucan Brey", "title": "Artificer", "teaches": "Practical Shaping" },
+	"duskbane": { "name": "Magistra Ophelia Duskbane", "title": "Magistra", "teaches": "Introduction to Sorcerous Theory" }
+}

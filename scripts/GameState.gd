@@ -265,8 +265,11 @@ func wait_for_class() -> void:
 	var s := _hm(e.get("start", "00:00"))
 	if minutes_of_day < s:
 		advance_time(s - minutes_of_day)
-	message.emit("[i]%s takes the lectern. %s begins.[/i]" % [
-		str(e.get("teacher", "The professor")), str(e.get("name", "The class"))])
+	var tname := str(e.get("teacher", "The professor"))
+	var teacher := GameData.get_teacher(str(e.get("teacher_id", "")))
+	if not teacher.is_empty():
+		tname = str(teacher.get("name", tname))
+	message.emit("[i]%s takes the lectern. %s begins.[/i]" % [tname, str(e.get("name", "The class"))])
 	state_changed.emit()
 
 # --- Needs drift ------------------------------------------------------------
@@ -350,8 +353,10 @@ func current_location() -> Dictionary:
 func available_actions() -> Array:
 	var loc := current_location()
 	var out: Array = []
-	for a in loc.get("actions", []):
-		if requirement_met(a.get("requires", {}), tags, stats, energy):
+	# Activities live in their own registry; a location just lists which it offers.
+	for aid in loc.get("activities", []):
+		var a := GameData.get_activity(str(aid))
+		if not a.is_empty() and requirement_met(a.get("requires", {}), tags, stats, energy):
 			out.append(a)
 	for conn in loc.get("connections", []):
 		var dest: Dictionary = GameData.locations.get(conn, {})

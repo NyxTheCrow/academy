@@ -5,7 +5,9 @@ extends Node
 ## here is game logic. To add content — activities, events, dialogue scenes,
 ## combat encounters — you edit the JSON, not this file.
 
-var locations: Dictionary = {}   # location_id -> { name, connections, actions }
+var locations: Dictionary = {}   # location_id -> { name, connections, activities: [ids] }
+var activities: Dictionary = {}  # activity_id -> { name, duration, effects, requires, ... }
+var faculty: Dictionary = {}     # teacher_id -> { name, title, teaches }
 var combat_actions: Array = []   # shared combat action list (tag-gated)
 var events: Array = []
 var dialogue: Dictionary = {}    # scene_id -> { "lines": [...] }
@@ -30,6 +32,8 @@ func _ready() -> void:
 ## (Re)load every data table (override file wins over the res:// original).
 func reload() -> void:
 	locations = _load_dict(src_path("locations.json"))
+	activities = _load_dict(src_path("activities.json"))
+	faculty = _load_dict(src_path("faculty.json"))
 	combat_actions = _load_array(src_path("combat_actions.json"))
 	events = _load_array(src_path("events.json"))
 	dialogue = _load_dict(src_path("dialogue.json"))
@@ -115,6 +119,20 @@ func _parse(path: String) -> Variant:
 
 func get_location(id: String) -> Dictionary:
 	return locations.get(id, {})
+
+## An activity definition by id, with its id injected so callers can read it.
+## Activities are defined once (data/activities.json) and referenced by
+## locations, so the same activity can be offered in several places.
+func get_activity(id: String) -> Dictionary:
+	var a: Dictionary = activities.get(id, {})
+	if a.is_empty():
+		return {}
+	var out := a.duplicate(true)
+	out["id"] = id
+	return out
+
+func get_teacher(id: String) -> Dictionary:
+	return faculty.get(id, {})
 
 func get_dialogue(id: String) -> Dictionary:
 	return dialogue.get(id, {})

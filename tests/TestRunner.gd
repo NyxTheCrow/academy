@@ -163,19 +163,22 @@ func _test_classes() -> void:
 	print("[classes + timetable]")
 	GameState.reset()
 	GameState.set_location("classroom")
-	# Six first-year classes, each 5 sessions/week, each with a teacher.
+	# Six first-year classes, each a 2-hour slot, each with a teacher.
 	var classes := GameData.schedule.filter(func(e): return str(e.get("kind", "")) == "class")
 	_eq(classes.size(), 6, "six first-year classes on the timetable")
 	for c in classes:
-		_check(str(c.get("teacher", "")) != "", "%s has a teacher" % str(c.get("name", "?")))
-		_eq((c.get("days", []) as Array).size(), 5, "%s meets 5x/week" % str(c.get("name", "?")))
-	# Every weekday Mon–Sat runs exactly five classes.
+		var tid := str(c.get("teacher_id", ""))
+		_check(tid != "" and not GameData.get_teacher(tid).is_empty(), "%s has a teacher" % str(c.get("name", "?")))
+		_eq(str(c.get("room", "")), "classroom", "%s is held in the classroom" % str(c.get("name", "?")))
+		var span := GameState._hm(c.get("end", "00:00")) - GameState._hm(c.get("start", "00:00"))
+		_eq(span, 120, "%s is a 2-hour slot" % str(c.get("name", "?")))
+	# Every weekday Mon–Sat runs three classes.
 	for wd in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
 		var n := 0
 		for c in classes:
 			if wd in c.get("days", []):
 				n += 1
-		_eq(n, 5, "%s has five classes" % wd)
+		_eq(n, 3, "%s has three classes" % wd)
 	# next_class_today / class_now / wait_for_class flow.
 	_check(GameState.class_now().is_empty(), "no class at 07:00")
 	_check(not GameState.next_class_today().is_empty(), "there is a class to come today")
@@ -257,6 +260,9 @@ func _test_needs() -> void:
 func _test_data_loaded() -> void:
 	print("[data]")
 	_eq(GameData.locations.size(), 8, "8 locations")
+	_check(GameData.activities.size() >= 15, "activities registry loaded")
+	_check(GameData.faculty.size() >= 6, "faculty registry loaded")
+	_check(not GameData.get_activity("study_room").is_empty(), "activities resolve by id")
 	_check(GameData.combat_actions.size() >= 3, "combat actions loaded")
 	_eq(GameData.students.size(), 4, "4 students")
 	_check(GameData.backgrounds.size() >= 3, "backgrounds loaded")

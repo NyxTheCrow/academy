@@ -12,6 +12,8 @@ extends "res://scripts/GameMode.gd"
 const FILES := [
 	["Tuning (balance)", "tuning.json", "tuning"],
 	["Locations", "locations.json", "locations"],
+	["Activities", "activities.json", "activities"],
+	["Faculty", "faculty.json", "faculty"],
 	["Lexicon", "lexicon.json", "lexicon"],
 	["Items", "items.json", "items"],
 	["Spells", "spells.json", "spells"],
@@ -31,7 +33,11 @@ const FILES := [
 # insert: array append / dict new-key / backgrounds-array append.
 const TEMPLATES := {
 	"locations": {"kind": "dict", "label": "location", "prefix": "new_location",
-		"tpl": {"name": "New Location", "description": "", "connections": [], "actions": []}},
+		"tpl": {"name": "New Location", "description": "", "connections": [], "activities": []}},
+	"activities": {"kind": "dict", "label": "activity", "prefix": "new_activity",
+		"tpl": {"name": "New Activity", "duration": 10, "effects": {}, "requires": {}}},
+	"faculty": {"kind": "dict", "label": "teacher", "prefix": "new_teacher",
+		"tpl": {"name": "New Teacher", "title": "", "teaches": ""}},
 	"items": {"kind": "dict", "label": "item", "prefix": "new_item",
 		"tpl": {"name": "New Item", "description": "", "use": {}, "consumable": false}},
 	"encounters": {"kind": "dict", "label": "encounter", "prefix": "new_encounter",
@@ -179,6 +185,8 @@ func _update_header() -> void:
 func _runtime_data(key: String) -> Variant:
 	match key:
 		"locations": return GameData.locations
+		"activities": return GameData.activities
+		"faculty": return GameData.faculty
 		"combat_actions": return GameData.combat_actions
 		"events": return GameData.events
 		"dialogue": return GameData.dialogue
@@ -228,6 +236,8 @@ func _free_key(d: Dictionary, prefix: String) -> String:
 func _apply_runtime(key: String, parsed: Variant) -> void:
 	match key:
 		"locations": GameData.locations = parsed
+		"activities": GameData.activities = parsed
+		"faculty": GameData.faculty = parsed
 		"combat_actions": GameData.combat_actions = parsed
 		"events": GameData.events = parsed
 		"dialogue": GameData.dialogue = parsed

@@ -3,78 +3,48 @@
 		"name": "School Gates",
 		"description": "Wrought-iron gates at dusk. A queue of new students shuffles toward a brass automaton that checks each in turn.",
 		"connections": [],
-		"actions": [
-			{ "id": "wait_in_line", "name": "Wait in line to be identified", "duration": 30, "effects": { "tags": ["id_checked"] }, "requires": { "without_tags": ["id_checked"] } },
-			{ "id": "enter_courtyard", "name": "Enter the courtyard", "duration": 5, "goto": "courtyard", "requires": { "tags": ["id_checked"] } }
-		]
+		"activities": ["wait_in_line", "enter_courtyard"]
 	},
 	"courtyard": {
 		"name": "Courtyard",
 		"description": "A broad flagstoned courtyard between the two great halls. Building A holds the dormitories; Building B, the amphitheatre.",
 		"connections": [],
-		"actions": [
-			{ "id": "to_gates", "name": "Return to the gates", "duration": 5, "goto": "school_gates" },
-			{ "id": "enter_building_a", "name": "Enter Building A (dormitories)", "duration": 5, "goto": "corridor_b" },
-			{ "id": "enter_building_b", "name": "Enter Building B (amphitheatre)", "duration": 5, "goto": "amphitheater" }
-		]
+		"activities": ["to_gates", "enter_building_a", "enter_building_b"]
 	},
 	"amphitheater": {
 		"name": "Amphitheatre (Building B)",
 		"description": "A steep bowl of seats around a speaker's dais. First-years file in for the welcoming ceremony.",
 		"connections": [],
-		"actions": [
-			{ "id": "welcome_ceremony", "name": "Attend the welcoming ceremony", "duration": 60, "dialogue": "ceremony_welcome", "effects": { "tags": ["oriented"] }, "requires": { "without_tags": ["oriented"] } },
-			{ "id": "leave_amph", "name": "Leave the amphitheatre", "duration": 5, "goto": "courtyard" }
-		]
+		"activities": ["welcome_ceremony", "leave_amph"]
 	},
 	"room": {
 		"name": "Your Room",
 		"description": "A small dormitory room. A bed, a desk, and a wardrobe.",
 		"connections": ["corridor_a"],
-		"actions": [
-			{ "id": "change_clothes", "name": "Change into uniform", "duration": 5, "effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] }, "requires": { "without_tags": ["dressed"] } },
-			{ "id": "wash_up", "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "needs": { "hygiene": 30 } } },
-			{ "id": "study_room", "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } },
-			{ "id": "sleep", "name": "Sleep until morning", "duration": 0, "sleep": true }
-		]
+		"activities": ["change_clothes", "wash_up", "study_room", "sleep"]
 	},
 	"corridor_a": {
 		"name": "Corridor A",
 		"description": "A drafty stone corridor linking the dorms to the classrooms.",
 		"connections": ["room", "classroom"],
-		"actions": [
-			{ "id": "stretch", "name": "Stretch your legs", "duration": 5, "effects": { "energy": 3 } },
-			{ "id": "chat_elara", "name": "Talk with Elara", "duration": 20, "dialogue": "elara_evening", "requires": { "time_after": "17:00" } }
-		]
+		"activities": ["stretch", "chat_elara"]
 	},
 	"classroom": {
 		"name": "Classroom",
 		"description": "Rows of desks beneath a vaulted, rune-carved ceiling.",
 		"connections": ["corridor_a", "corridor_b"],
-		"actions": [
-			{ "id": "wait_for_class", "name": "Wait for class to start", "duration": 0, "wait_for_class": true, "requires": { "tags": ["enrolled", "dressed"], "before_class": true } },
-			{ "id": "focus_class", "name": "Focus on the class", "duration": 20, "effects": { "energy": -6, "stats": { "focus": -6 }, "flags": { "attended_lecture": true } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
-			{ "id": "socialize", "name": "Socialize", "duration": 20, "effects": { "energy": -3, "needs": { "calm": 4 } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
-			{ "id": "daydream", "name": "Daydream", "duration": 20, "effects": { "energy": 1, "needs": { "calm": 3 } }, "requires": { "tags": ["enrolled", "dressed"], "in_class": true } },
-			{ "id": "study_class", "name": "Study quietly", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } }
-		]
+		"activities": ["wait_for_class", "focus_class", "socialize", "daydream", "study_class"]
 	},
 	"corridor_b": {
 		"name": "Corridor B",
 		"description": "A shorter hall in Building A, hung with duelling trophies.",
 		"connections": ["classroom", "dueling_room"],
-		"actions": [
-			{ "id": "watch_trophies", "name": "Admire the trophies", "duration": 5, "effects": { "stats": { "focus": 5 }, "needs": { "calm": 3 } } }
-		]
+		"activities": ["watch_trophies"]
 	},
 	"dueling_room": {
 		"name": "Dueling Room",
 		"description": "A sand-floored ring warded for magical combat.",
 		"connections": ["corridor_b"],
-		"actions": [
-			{ "id": "spar", "name": "Spar with a training dummy", "duration": 30, "effects": { "energy": -15 }, "combat": "training_dummy" },
-			{ "id": "duel_cassius", "name": "Duel Cassius", "duration": 20, "combat": "duel_rival", "requires": { "tags": ["can_duel"] } },
-			{ "id": "timeline_spar", "name": "Timeline spar (prototype)", "duration": 15, "effects": { "energy": -10 }, "tactical": {} }
-		]
+		"activities": ["spar", "duel_cassius", "timeline_spar"]
 	}
 }
