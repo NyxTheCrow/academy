@@ -16,19 +16,32 @@ func _ready() -> void:
 func reset() -> void:
 	npcs.clear()
 	for data in GameData.students:
-		# Every NPC carries the full stat sheet too; json values overlay it.
-		var stats: Dictionary = GameState.default_stats()
-		for k in data.get("stats", {}):
-			stats[k] = int(data["stats"][k])
-		npcs.append({
-			"id": data.get("id", ""),
-			"name": data.get("name", "Student"),
-			"location": str(data.get("location", "room")),
-			"tags": (data.get("tags", []) as Array).duplicate(),
-			"stats": stats,
-			"energy": 100,
-			"current_action": "Waiting",
-		})
+		npcs.append(_make_npc(data))
+	# Teachers are full NPCs too (promoted from the faculty registry).
+	for tid in GameData.faculty:
+		var f: Dictionary = (GameData.faculty[tid] as Dictionary).duplicate(true)
+		f["id"] = tid
+		if not f.has("tags"):
+			f["tags"] = ["faculty"]
+		if not f.has("location"):
+			f["location"] = "classroom"
+		npcs.append(_make_npc(f))
+
+## Build a runtime NPC from a character definition (student or teacher). Every
+## NPC carries the full stat sheet; any json stat values overlay it.
+func _make_npc(data: Dictionary) -> Dictionary:
+	var stats: Dictionary = GameState.default_stats()
+	for k in data.get("stats", {}):
+		stats[k] = int(data["stats"][k])
+	return {
+		"id": data.get("id", ""),
+		"name": data.get("name", "Student"),
+		"location": str(data.get("location", "room")),
+		"tags": (data.get("tags", []) as Array).duplicate(),
+		"stats": stats,
+		"energy": 100,
+		"current_action": "Waiting",
+	}
 
 func _on_day_changed() -> void:
 	for npc in npcs:

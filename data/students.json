@@ -3,28 +3,430 @@
 		"id": "elara",
 		"name": "Elara",
 		"location": "classroom",
-		"tags": ["student", "enrolled", "dressed", "scholar"],
-		"stats": { "focus": 7 }
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 7
+		}
 	},
 	{
 		"id": "cassius",
 		"name": "Cassius",
 		"location": "dueling_room",
-		"tags": ["student", "enrolled", "dressed", "duelist", "can_duel"],
-		"stats": { "focus": 6 }
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"duelist",
+			"can_duel"
+		],
+		"stats": {
+			"focus": 6
+		}
 	},
 	{
 		"id": "bram",
 		"name": "Bram",
 		"location": "room",
-		"tags": ["student", "enrolled"],
-		"stats": { "focus": 4 }
+		"tags": [
+			"student",
+			"enrolled"
+		],
+		"stats": {
+			"focus": 4
+		}
 	},
 	{
 		"id": "nyx",
 		"name": "Nyx",
 		"location": "corridor_a",
-		"tags": ["student", "enrolled", "dressed", "mage", "pyromancer"],
-		"stats": { "focus": 5 }
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage",
+			"pyromancer"
+		],
+		"stats": {
+			"focus": 5
+		}
+	},
+	{
+		"id": "corin",
+		"name": "Corin",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled"
+		],
+		"stats": {
+			"focus": 3
+		}
+	},
+	{
+		"id": "isolde",
+		"name": "Isolde",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 4
+		}
+	},
+	{
+		"id": "feld",
+		"name": "Feld",
+		"location": "classroom",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage"
+		],
+		"stats": {
+			"focus": 5
+		}
+	},
+	{
+		"id": "marguerite",
+		"name": "Marguerite",
+		"location": "corridor_b",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"duelist",
+			"can_duel"
+		],
+		"stats": {
+			"focus": 6
+		}
+	},
+	{
+		"id": "tobias",
+		"name": "Tobias",
+		"location": "dueling_room",
+		"tags": [
+			"student",
+			"enrolled",
+			"mage",
+			"pyromancer"
+		],
+		"stats": {
+			"focus": 7
+		}
+	},
+	{
+		"id": "wren",
+		"name": "Wren",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"socialite"
+		],
+		"stats": {
+			"focus": 8
+		}
+	},
+	{
+		"id": "alaric",
+		"name": "Alaric",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed"
+		],
+		"stats": {
+			"focus": 3
+		}
+	},
+	{
+		"id": "beatrix",
+		"name": "Beatrix",
+		"location": "classroom",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 4
+		}
+	},
+	{
+		"id": "emeric",
+		"name": "Emeric",
+		"location": "corridor_b",
+		"tags": [
+			"student",
+			"enrolled",
+			"mage"
+		],
+		"stats": {
+			"focus": 5
+		}
+	},
+	{
+		"id": "sabine",
+		"name": "Sabine",
+		"location": "dueling_room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"duelist",
+			"can_duel"
+		],
+		"stats": {
+			"focus": 6
+		}
+	},
+	{
+		"id": "rowan",
+		"name": "Rowan",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage",
+			"pyromancer"
+		],
+		"stats": {
+			"focus": 7
+		}
+	},
+	{
+		"id": "cordelia",
+		"name": "Cordelia",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"socialite"
+		],
+		"stats": {
+			"focus": 8
+		}
+	},
+	{
+		"id": "gideon",
+		"name": "Gideon",
+		"location": "classroom",
+		"tags": [
+			"student",
+			"enrolled"
+		],
+		"stats": {
+			"focus": 3
+		}
+	},
+	{
+		"id": "odette",
+		"name": "Odette",
+		"location": "corridor_b",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 4
+		}
+	},
+	{
+		"id": "casimir",
+		"name": "Casimir",
+		"location": "dueling_room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage"
+		],
+		"stats": {
+			"focus": 5
+		}
+	},
+	{
+		"id": "lucinda",
+		"name": "Lucinda",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"duelist",
+			"can_duel"
+		],
+		"stats": {
+			"focus": 6
+		}
+	},
+	{
+		"id": "percival",
+		"name": "Percival",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"mage",
+			"pyromancer"
+		],
+		"stats": {
+			"focus": 7
+		}
+	},
+	{
+		"id": "mirabel",
+		"name": "Mirabel",
+		"location": "classroom",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"socialite"
+		],
+		"stats": {
+			"focus": 8
+		}
+	},
+	{
+		"id": "anselm",
+		"name": "Anselm",
+		"location": "corridor_b",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed"
+		],
+		"stats": {
+			"focus": 3
+		}
+	},
+	{
+		"id": "delphine",
+		"name": "Delphine",
+		"location": "dueling_room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 4
+		}
+	},
+	{
+		"id": "roderick",
+		"name": "Roderick",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled",
+			"mage"
+		],
+		"stats": {
+			"focus": 5
+		}
+	},
+	{
+		"id": "fenella",
+		"name": "Fenella",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"duelist",
+			"can_duel"
+		],
+		"stats": {
+			"focus": 6
+		}
+	},
+	{
+		"id": "thaddeus",
+		"name": "Thaddeus",
+		"location": "classroom",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage",
+			"pyromancer"
+		],
+		"stats": {
+			"focus": 7
+		}
+	},
+	{
+		"id": "clemence",
+		"name": "Clemence",
+		"location": "corridor_b",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"socialite"
+		],
+		"stats": {
+			"focus": 8
+		}
+	},
+	{
+		"id": "silas",
+		"name": "Silas",
+		"location": "dueling_room",
+		"tags": [
+			"student",
+			"enrolled"
+		],
+		"stats": {
+			"focus": 3
+		}
+	},
+	{
+		"id": "rosalind",
+		"name": "Rosalind",
+		"location": "room",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"scholar"
+		],
+		"stats": {
+			"focus": 4
+		}
+	},
+	{
+		"id": "ysanne",
+		"name": "Ysanne",
+		"location": "corridor_a",
+		"tags": [
+			"student",
+			"enrolled",
+			"dressed",
+			"mage"
+		],
+		"stats": {
+			"focus": 5
+		}
 	}
 ]

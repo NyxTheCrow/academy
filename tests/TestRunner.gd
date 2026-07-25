@@ -308,9 +308,13 @@ func _test_npc_students() -> void:
 	print("[npc students]")
 	GameState.reset()
 	Students.reset()
-	_eq(Students.npcs.size(), 4, "four NPCs")
+	# Every student and every teacher is a full NPC.
+	_eq(Students.npcs.size(), GameData.students.size() + GameData.faculty.size(), "students + faculty are all NPCs")
+	_check(Students.npcs.size() >= 30, "a large roster for stress testing")
 	_check(Students.npcs[0].has("location") and Students.npcs[0].has("tags"), "NPCs have location + tags")
 	_check(Students.npcs[0]["stats"].has("shaping") and Students.npcs[0]["stats"].has("insight"), "NPCs carry the full stat sheet too")
+	var teacher_npc: Variant = Students.npcs.filter(func(n): return "teacher" in n["tags"])
+	_check(not (teacher_npc as Array).is_empty(), "teachers are promoted to full NPCs")
 	GameState.advance_time(30)
 	var acted := false
 	for npc in Students.npcs:
