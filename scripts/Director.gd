@@ -27,6 +27,7 @@ const MODE_SCENES := {
 	"character": "res://scenes/modes/CharacterSheetMode.tscn",
 	"schedule": "res://scenes/modes/ScheduleMode.tscn",
 	"people": "res://scenes/modes/PeopleMode.tscn",
+	"character_detail": "res://scenes/modes/CharacterDetailMode.tscn",
 	"spells": "res://scenes/modes/SpellsMode.tscn",
 	"inventory": "res://scenes/modes/InventoryMode.tscn",
 	"saves": "res://scenes/modes/SaveLoadMode.tscn",

@@ -142,10 +142,9 @@ func _test_tag_gated_actions() -> void:
 	print("[tag-gated actions]")
 	GameState.reset()  # Monday 07:00, in the room
 	GameState.set_location("classroom")
-	# Before class you may wait for it; in-class actions are hidden.
-	_check(not ("wait_for_class" in _action_ids()), "waiting needs 'dressed'")
-	GameState.add_tag("dressed")
-	_check("wait_for_class" in _action_ids(), "can wait for the day's first class once dressed")
+	# An enrolled student in the classroom can wait for the day's first class;
+	# in-class actions stay hidden until it is in session.
+	_check("wait_for_class" in _action_ids(), "can wait for the day's first class")
 	_check(not ("focus_class" in _action_ids()), "in-class actions hidden before class")
 	# During class the in-class choices appear and waiting is gone.
 	GameState.advance_time(150)  # 09:30 Monday — Law is in session
@@ -397,6 +396,7 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/CharacterSheetMode.tscn",
 		"res://scenes/modes/ScheduleMode.tscn",
 		"res://scenes/modes/PeopleMode.tscn",
+		"res://scenes/modes/CharacterDetailMode.tscn",
 		"res://scenes/modes/SpellsMode.tscn",
 		"res://scenes/modes/InventoryMode.tscn",
 		"res://scenes/modes/SaveLoadMode.tscn",

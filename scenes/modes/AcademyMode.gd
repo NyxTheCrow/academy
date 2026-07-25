@@ -11,10 +11,11 @@ var date_label: Label
 var stats_box: VBoxContainer
 var tags_title: Label
 var tags_flow: HFlowContainer
-var relations_label: Label
-var students_label: RichTextLabel
-var place_label: Label
+var relations_box: VBoxContainer
+var place_label: Button
 var place_desc: Label
+var class_label: Label
+var people_here_btn: Button
 var log_box: RichTextLabel
 var action_container: VBoxContainer
 var editor_btn: Button
@@ -80,20 +81,13 @@ func _build_ui() -> void:
 
 	sidebar.add_child(HSeparator.new())
 	sidebar.add_child(_title("Relationships"))
-	relations_label = Label.new()
-	sidebar.add_child(relations_label)
-
-	sidebar.add_child(HSeparator.new())
-	sidebar.add_child(_title("Other Students"))
-	students_label = RichTextLabel.new()
-	students_label.bbcode_enabled = true
-	students_label.fit_content = true
-	students_label.custom_minimum_size = Vector2(0, 40)
-	sidebar.add_child(students_label)
+	relations_box = VBoxContainer.new()
+	relations_box.add_theme_constant_override("separation", 2)
+	sidebar.add_child(relations_box)
 
 	sidebar.add_child(HSeparator.new())
 	sidebar.add_child(_title("Menus"))
-	for m in [["Character", "character"], ["Schedule", "schedule"], ["Other People", "people"],
+	for m in [["Character", "character"], ["Schedule", "schedule"], ["Characters", "people"],
 			["Spells", "spells"], ["Inventory", "inventory"], ["Lexicon", "lexicon"], ["Saves", "saves"]]:
 		var mb := Button.new()
 		mb.text = m[0]
@@ -117,14 +111,26 @@ func _build_ui() -> void:
 	main_v.add_theme_constant_override("separation", 10)
 	root_h.add_child(main_v)
 
-	place_label = Label.new()
+	place_label = Button.new()
+	place_label.flat = true
+	place_label.focus_mode = Control.FOCUS_NONE
+	place_label.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	place_label.add_theme_font_size_override("font_size", 24)
-	place_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	place_label.pressed.connect(func(): _open_lexicon(str(GameState.current_location().get("name", ""))))
 	main_v.add_child(place_label)
 	place_desc = Label.new()
 	place_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	place_desc.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85))
 	main_v.add_child(place_desc)
+
+	class_label = Label.new()
+	class_label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
+	main_v.add_child(class_label)
+
+	people_here_btn = Button.new()
+	people_here_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	people_here_btn.pressed.connect(_open_people_here)
+	main_v.add_child(people_here_btn)
 
 	main_v.add_child(_title("Journal"))
 	log_box = RichTextLabel.new()
@@ -183,12 +189,37 @@ func _refresh() -> void:
 	place_label.text = str(loc.get("name", GameState.location))
 	place_label.tooltip_text = Lexicon.define(str(loc.get("name", "")))
 	place_desc.text = str(loc.get("description", ""))
+	_refresh_class_line()
+	_refresh_people_here()
 
 	_rebuild_stats()
 	_rebuild_tags()
 	_rebuild_relations()
-	_refresh_students()
 	_rebuild_actions()
+
+## Show what class is in session / coming up here (only meaningful in a classroom).
+func _refresh_class_line() -> void:
+	var cn := GameState.class_now()
+	if not cn.is_empty():
+		var teach := GameData.get_teacher(str(cn.get("teacher_id", "")))
+		var who := ("  ·  " + str(teach.get("name", ""))) if not teach.is_empty() else ""
+		class_label.text = "In session: %s%s" % [str(cn.get("name", "")), who]
+		class_label.visible = true
+		return
+	var nx := GameState.next_class_today()
+	if not nx.is_empty():
+		class_label.text = "Next class here: %s at %s" % [str(nx.get("name", "")), str(nx.get("start", ""))]
+		class_label.visible = true
+	else:
+		class_label.visible = false
+
+func _refresh_people_here() -> void:
+	var n := 0
+	for npc in Students.npcs:
+		if str(npc["location"]) == GameState.location:
+			n += 1
+	people_here_btn.text = "People here: %d  ▸" % n
+	people_here_btn.disabled = (n == 0)
 
 func _rebuild_stats() -> void:
 	for c in stats_box.get_children():
@@ -236,27 +267,31 @@ func _rebuild_tags() -> void:
 		tags_flow.add_child(_hover_chip(str(t), str(t)))
 
 func _rebuild_relations() -> void:
+	for c in relations_box.get_children():
+		c.queue_free()
 	if GameState.relationships.is_empty():
-		relations_label.text = "(no bonds yet)"
+		var l := Label.new()
+		l.text = "(no bonds yet)"
+		l.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
+		relations_box.add_child(l)
 		return
-	var r := ""
-	for npc in GameState.relationships:
-		var v := int(GameState.relationships[npc])
+	for npc_id in GameState.relationships:
+		var v := int(GameState.relationships[npc_id])
 		var shown := str(v) if GameState.dev_mode else GameState.relationship_descriptor(v)
-		r += "%s:  %s\n" % [str(npc).capitalize(), shown]
-	relations_label.text = r
+		var b := Button.new()
+		b.flat = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.text = "%s:  %s" % [str(npc_id).capitalize(), shown]
+		b.pressed.connect(_open_character.bind(str(npc_id)))
+		relations_box.add_child(b)
 
-func _refresh_students() -> void:
-	var out := ""
-	for npc in Students.npcs:
-		var here := "  [color=lightgreen](here)[/color]" if npc["location"] == GameState.location else ""
-		out += "[b]%s[/b] @ %s%s\n    [color=gray]%s[/color]\n" % [
-			npc["name"], Students.location_name(npc["location"]), here, npc["current_action"]]
-		if GameState.dev_mode:
-			var st: Dictionary = npc["stats"]
-			out += "    [color=dimgray]focus %d · tags: %s[/color]\n" % [
-				int(st.get("focus", 0)), ", ".join(PackedStringArray(npc["tags"]))]
-	students_label.text = out
+func _open_people_here() -> void:
+	await Director.run_mode("people", {"here": true})
+
+func _open_character(id: String) -> void:
+	await Director.run_mode("character_detail", {"npc_id": id})
 
 func _rebuild_actions() -> void:
 	for c in action_container.get_children():

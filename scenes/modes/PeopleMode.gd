@@ -1,17 +1,29 @@
 extends "res://scenes/modes/MenuMode.gd"
-## Other People — the roster of students, with a favourite (★) toggle.
-## Favourites are pinned to the top and saved with the game.
+## People — a roster of characters, each clickable to open their page. Opens in
+## two scopes: the global "Characters" list, or "People Here" (context.here)
+## filtered to the player's current location. Favourites pin to the top.
 
 func _menu_title() -> String:
-	return "Other People"
+	return "People Here" if mode_context.get("here", false) else "Characters"
 
 func _populate() -> void:
+	var here: bool = mode_context.get("here", false)
+	var roster: Array = []
+	for npc in Students.npcs:
+		if here and str(npc["location"]) != GameState.location:
+			continue
+		roster.append(npc)
+
+	if roster.is_empty():
+		content.add_child(_h("No one else is here." if here else "No one to show."))
+		return
+
 	# Favourites first, then the rest.
 	var ordered: Array = []
-	for npc in Students.npcs:
+	for npc in roster:
 		if GameState.is_favorite(str(npc["id"])):
 			ordered.append(npc)
-	for npc in Students.npcs:
+	for npc in roster:
 		if not GameState.is_favorite(str(npc["id"])):
 			ordered.append(npc)
 
@@ -28,14 +40,23 @@ func _populate() -> void:
 
 		var v := int(GameState.relationships.get(id, 0))
 		var bond := str(v) if GameState.dev_mode else GameState.relationship_descriptor(v)
-		var line := "[b]%s[/b]  —  %s\n[color=gray]At %s · %s[/color]" % [
-			npc["name"], bond, Students.location_name(npc["location"]), npc["current_action"]]
-		if GameState.dev_mode:
-			line += "\n[color=dimgray]focus %d · tags: %s[/color]" % [
-				int(npc["stats"].get("focus", 0)), ", ".join(PackedStringArray(npc["tags"]))]
-		row.add_child(_rich(line))
+		var label := "%s  —  %s   ·   %s" % [npc["name"], bond, npc["current_action"]]
+		if not here:
+			label += "   @ " + Students.location_name(str(npc["location"]))
+		var btn := Button.new()
+		btn.text = label
+		btn.tooltip_text = "Open %s's page" % str(npc["name"])
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.clip_text = true
+		btn.pressed.connect(_open_detail.bind(id))
+		row.add_child(btn)
+
 		content.add_child(row)
-		content.add_child(HSeparator.new())
+
+func _open_detail(id: String) -> void:
+	await Director.run_mode("character_detail", {"npc_id": id})
+	_repopulate()
 
 func _toggle(id: String) -> void:
 	GameState.toggle_favorite(id)
