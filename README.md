@@ -36,9 +36,14 @@ apply effects and are consumed). Favourites and inventory persist in the save.
 - **Time** is minute-resolution (starts 07:00). Every action costs minutes;
   the clock rolls day → week → semester. `sleep()` jumps to the next 07:00.
   The clock only moves through `GameState.advance_time(minutes)`.
-- **Location** is a first-class state. `data/locations.json` defines 5 rooms —
-  **room, corridor A, classroom, corridor B, dueling room** — with
-  `connections`. Moving between adjacent rooms is just a timed action.
+- **Location** is a first-class state. `data/locations.json` defines the campus
+  as a graph of plazas and buildings — the **school gates → entrance plaza**
+  (off which sit the **Headmaster's tower** and **faculty offices**) →
+  **main plaza** (with the **Dueling Palace** and the **main academic
+  building**), branching to the **left plaza** (**secondary academic building**)
+  and the **right plaza** (the **dormitories**, with a road to the **gardens**)
+  — wired with `connections`. Moving between adjacent locations is a timed
+  action.
 - **Tags / requirements** — every character (you and the 4 NPCs) has a set of
   **tags**. A single evaluator, `GameState.requirement_met(req, tags, stats,
   energy)`, gates **every** action — location actions *and* combat actions — on

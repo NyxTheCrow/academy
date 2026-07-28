@@ -47,7 +47,7 @@ const TEMPLATES := {
 	"spells": {"kind": "array", "label": "spell",
 		"tpl": {"id": "new_spell", "name": "New Spell", "element": "", "requires": {}, "description": ""}},
 	"students": {"kind": "array", "label": "character",
-		"tpl": {"id": "new_student", "name": "New Student", "location": "room", "tags": ["student", "enrolled"], "stats": {"focus": 5}}},
+		"tpl": {"id": "new_student", "name": "New Student", "location": "dormitories", "tags": ["student", "enrolled"], "stats": {"focus": 5}}},
 	"combat_actions": {"kind": "array", "label": "combat action",
 		"tpl": {"id": "new_action", "name": "New Action", "kind": "self", "requires": {}, "description": ""}},
 	"events": {"kind": "array", "label": "event",

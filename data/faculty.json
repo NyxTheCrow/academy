@@ -1,8 +1,8 @@
 {
-	"adler": { "name": "Magister Corvane Adler", "title": "Magister", "teaches": "Introduction to Law", "location": "classroom", "tags": ["faculty", "dressed", "teacher"] },
-	"fenn": { "name": "Doctor Ysolde Fenn", "title": "Doctor", "teaches": "Introduction to Aetherics", "location": "classroom", "tags": ["faculty", "dressed", "teacher", "mage"] },
-	"vale": { "name": "Lector Ambrose Vale", "title": "Lector", "teaches": "History", "location": "corridor_a", "tags": ["faculty", "dressed", "teacher", "scholar"] },
-	"stonewell": { "name": "Coach Bertha Stonewell", "title": "Coach", "teaches": "Physical Education", "location": "dueling_room", "tags": ["faculty", "dressed", "teacher", "duelist"] },
-	"brey": { "name": "Artificer Lucan Brey", "title": "Artificer", "teaches": "Practical Shaping", "location": "corridor_b", "tags": ["faculty", "dressed", "teacher", "mage"] },
-	"duskbane": { "name": "Magistra Ophelia Duskbane", "title": "Magistra", "teaches": "Introduction to Sorcerous Theory", "location": "classroom", "tags": ["faculty", "dressed", "teacher", "mage"] }
+	"adler": { "name": "Magister Corvane Adler", "title": "Magister", "teaches": "Introduction to Law", "location": "main_academic_building", "tags": ["faculty", "dressed", "teacher"] },
+	"fenn": { "name": "Doctor Ysolde Fenn", "title": "Doctor", "teaches": "Introduction to Aetherics", "location": "main_academic_building", "tags": ["faculty", "dressed", "teacher", "mage"] },
+	"vale": { "name": "Lector Ambrose Vale", "title": "Lector", "teaches": "History", "location": "main_academic_building", "tags": ["faculty", "dressed", "teacher", "scholar"] },
+	"stonewell": { "name": "Coach Bertha Stonewell", "title": "Coach", "teaches": "Physical Education", "location": "secondary_academic_building", "tags": ["faculty", "dressed", "teacher", "duelist"] },
+	"brey": { "name": "Artificer Lucan Brey", "title": "Artificer", "teaches": "Practical Shaping", "location": "secondary_academic_building", "tags": ["faculty", "dressed", "teacher", "mage"] },
+	"duskbane": { "name": "Magistra Ophelia Duskbane", "title": "Magistra", "teaches": "Introduction to Sorcerous Theory", "location": "main_academic_building", "tags": ["faculty", "dressed", "teacher", "mage"] }
 }

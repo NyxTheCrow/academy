@@ -62,7 +62,7 @@ func _test_time_minutes() -> void:
 	GameState.reset()
 	_eq(GameState.minutes_of_day, GameState.START_MINUTES, "starts at 07:00")
 	_eq(GameState.time_string(), "07:00", "time string")
-	_eq(GameState.location, "room", "starts in room")
+	_eq(GameState.location, "dormitories", "starts in the dormitories")
 	GameState.advance_time(30)
 	_eq(GameState.time_string(), "07:30", "30 min later")
 	GameState.reset()
@@ -132,18 +132,19 @@ func _test_requirements() -> void:
 
 func _test_locations_and_movement() -> void:
 	print("[locations + movement]")
-	GameState.reset()  # room
-	_check("study_room" in _action_ids(), "room offers study")
-	_check("go_corridor_a" in _action_ids(), "room offers movement to corridor A")
-	_check(not ("focus_class" in _action_ids()), "class actions not offered in the room")
-	GameState.set_location("corridor_a")
-	_eq(GameState.location, "corridor_a", "moved to corridor A")
-	_check("go_classroom" in _action_ids(), "corridor A connects to classroom")
+	GameState.reset()  # dormitories
+	_check("study_room" in _action_ids(), "dormitories offer study")
+	_check("go_right_plaza" in _action_ids(), "dormitories offer movement to the right plaza")
+	_check(not ("focus_class" in _action_ids()), "class actions not offered in the dormitories")
+	GameState.set_location("right_plaza")
+	_eq(GameState.location, "right_plaza", "moved to the right plaza")
+	_check("go_main_plaza" in _action_ids(), "the right plaza connects to the main plaza")
+	_check("go_gardens" in _action_ids(), "the right plaza connects to the gardens")
 
 func _test_tag_gated_actions() -> void:
 	print("[tag-gated actions]")
-	GameState.reset()  # Monday 07:00, in the room
-	GameState.set_location("classroom")
+	GameState.reset()  # Monday 07:00, in the dormitories
+	GameState.set_location("main_academic_building")
 	# An enrolled student in the classroom can wait for the day's first class;
 	# in-class actions stay hidden until it is in session.
 	_check("wait_for_class" in _action_ids(), "can wait for the day's first class")
@@ -155,7 +156,7 @@ func _test_tag_gated_actions() -> void:
 	_check("daydream" in _action_ids(), "daydream is an in-class option")
 	_check(not ("wait_for_class" in _action_ids()), "cannot wait once class is in session")
 	# Duel gate
-	GameState.set_location("dueling_room")
+	GameState.set_location("dueling_palace")
 	_check(not ("duel_cassius" in _action_ids()), "duel hidden without 'can_duel'")
 	GameState.add_tag("can_duel")
 	_check("duel_cassius" in _action_ids(), "duel available with 'can_duel'")
@@ -163,14 +164,16 @@ func _test_tag_gated_actions() -> void:
 func _test_classes() -> void:
 	print("[classes + timetable]")
 	GameState.reset()
-	GameState.set_location("classroom")
+	GameState.set_location("main_academic_building")
 	# Six first-year classes, each a 2-hour slot, each with a teacher.
 	var classes := GameData.schedule.filter(func(e): return str(e.get("kind", "")) == "class")
 	_eq(classes.size(), 6, "six first-year classes on the timetable")
 	for c in classes:
 		var tid := str(c.get("teacher_id", ""))
 		_check(tid != "" and not GameData.get_teacher(tid).is_empty(), "%s has a teacher" % str(c.get("name", "?")))
-		_eq(str(c.get("room", "")), "classroom", "%s is held in the classroom" % str(c.get("name", "?")))
+		var room := str(c.get("room", ""))
+		_check(room == "main_academic_building" or room == "secondary_academic_building",
+			"%s is held in an academic building" % str(c.get("name", "?")))
 		var span := GameState._hm(c.get("end", "00:00")) - GameState._hm(c.get("start", "00:00"))
 		_eq(span, 120, "%s is a 2-hour slot" % str(c.get("name", "?")))
 	# Every weekday Mon–Sat runs three classes.
@@ -202,7 +205,7 @@ func _test_learning() -> void:
 	_check(abs(focus * 18.0 - 0.5) < 0.0001, "a week of focusing -> 0.5 in the class stat")
 	_check(focus > attend, "focusing beats merely attending")
 	# player_learn moves the mapped stat while a class is in session.
-	GameState.set_location("classroom")
+	GameState.set_location("main_academic_building")
 	GameState.advance_time(120)  # 09:00 Monday — Law is in session
 	var before := float(GameState.stats.get(str(law["stat"]), 0))
 	GameState.player_learn({"class_learn": "focus", "duration": 20})
@@ -223,7 +226,7 @@ func _test_npc_attendance() -> void:
 		for k in npc["stats"]:
 			if GameState.is_aptitude(str(k)):
 				best = maxf(best, float(npc["stats"][k]))
-		if "class" in str(npc["current_action"]) or npc["location"] == "classroom":
+		if "class" in str(npc["current_action"]) or npc["location"] == "main_academic_building":
 			any_in_class = true
 	_check(best > 0.1, "students attend and accrue real class levels (best %.2f)" % best)
 	_check(any_in_class, "students are found in class during the day")
@@ -258,7 +261,7 @@ func _test_save_load_roundtrip() -> void:
 	Students.reset()
 	GameState.player_name = "Tester"
 	GameState.dev_mode = true
-	GameState.set_location("classroom")
+	GameState.set_location("main_academic_building")
 	GameState.add_tag("pyromancer")
 	GameState.toggle_favorite("elara")
 	GameState.add_item("charm")
@@ -275,7 +278,7 @@ func _test_save_load_roundtrip() -> void:
 	GameState.player_name = "Wiped"
 	GameState.load_game(path)
 	_eq(GameState.player_name, "Tester", "loaded name")
-	_eq(GameState.location, "classroom", "loaded location")
+	_eq(GameState.location, "main_academic_building", "loaded location")
 	_check(GameState.has_tag("pyromancer"), "loaded tag")
 	_eq(int(GameState.stats["focus"]), snap_focus, "loaded focus")
 	_eq(int(GameState.needs["hunger"]), snap_hunger, "loaded need")
@@ -301,7 +304,7 @@ func _test_needs() -> void:
 
 func _test_data_loaded() -> void:
 	print("[data]")
-	_eq(GameData.locations.size(), 8, "8 locations")
+	_eq(GameData.locations.size(), 12, "12 locations")
 	_check(GameData.activities.size() >= 15, "activities registry loaded")
 	_check(GameData.faculty.size() >= 6, "faculty registry loaded")
 	_check(not GameData.get_activity("study_room").is_empty(), "activities resolve by id")

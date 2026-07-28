@@ -24,7 +24,7 @@ func reset() -> void:
 		if not f.has("tags"):
 			f["tags"] = ["faculty"]
 		if not f.has("location"):
-			f["location"] = "classroom"
+			f["location"] = "main_academic_building"
 		npcs.append(_make_npc(f))
 
 ## Build a runtime NPC from a character definition (student or teacher). Every
@@ -36,7 +36,7 @@ func _make_npc(data: Dictionary) -> Dictionary:
 	return {
 		"id": data.get("id", ""),
 		"name": data.get("name", "Student"),
-		"location": str(data.get("location", "room")),
+		"location": str(data.get("location", "dormitories")),
 		"tags": (data.get("tags", []) as Array).duplicate(),
 		"stats": stats,
 		"weights": (data.get("weights", {}) as Dictionary).duplicate(),
@@ -55,7 +55,7 @@ func _on_time_advanced(_minutes: int) -> void:
 func location_name(loc: String) -> String:
 	return str(GameData.get_location(loc).get("name", loc))
 
-const CLASSROOM := "classroom"
+const CLASSROOM := "main_academic_building"
 
 func _npc_act(npc: Dictionary) -> void:
 	# Attend the timetable: when a class this NPC belongs in is running, head to
@@ -129,9 +129,10 @@ func _pick_weighted(options: Array, npc: Dictionary) -> Dictionary:
 	return options.back()
 
 ## Minutes before a class starts that students set off for it, so they can
-## commute across the passing period and be seated in time (covers the map's
-## worst-case two-hop walk).
-const COMMUTE_LEAD := 40
+## commute across the passing period and be seated in time. At one hop per world
+## tick (TIME_STEP), 60 covers the map's worst-case three-hop walk
+## (dormitories/gardens -> right plaza -> main plaza -> main academic building).
+const COMMUTE_LEAD := 60
 
 ## Should this NPC be heading to / in class right now? Enrolled students attend
 ## any class in session on the shared timetable — and leave a little early for

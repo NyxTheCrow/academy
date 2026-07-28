@@ -10,7 +10,7 @@
 		"id": "curfew_warning",
 		"trigger": { "time_after": "22:00" },
 		"once": true,
-		"text": "It is past curfew. You should return to your room and sleep.",
+		"text": "It is past curfew. You should return to the dormitories and sleep.",
 		"effects": {}
 	}
 ]

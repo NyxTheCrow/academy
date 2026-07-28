@@ -1,50 +1,74 @@
 {
 	"school_gates": {
 		"name": "School Gates",
-		"description": "Wrought-iron gates at dusk. A queue of new students shuffles toward a brass automaton that checks each in turn.",
+		"description": "Wrought-iron gates at dusk. A brass automaton checks each new student in turn before the gates swing open onto the entrance plaza.",
 		"connections": [],
-		"activities": ["wait_in_line", "enter_courtyard"]
+		"activities": ["wait_in_line", "enter_entrance_plaza"]
 	},
-	"courtyard": {
-		"name": "Courtyard",
-		"description": "A broad flagstoned courtyard between the two great halls. Building A holds the dormitories; Building B, the amphitheatre.",
-		"connections": [],
-		"activities": ["to_gates", "enter_building_a", "enter_building_b"]
+	"entrance_plaza": {
+		"name": "Entrance Plaza",
+		"description": "A wide flagstoned plaza just inside the gates. The Headmaster's tower rises to one side and the faculty offices line the other; a broad avenue runs deeper in toward the main plaza.",
+		"connections": ["headmasters_tower", "faculty_offices", "main_plaza"],
+		"activities": ["to_gates"]
 	},
-	"amphitheater": {
-		"name": "Amphitheatre (Building B)",
-		"description": "A steep bowl of seats around a speaker's dais. First-years file in for the welcoming ceremony.",
-		"connections": [],
-		"activities": ["welcome_ceremony", "leave_amph"]
+	"headmasters_tower": {
+		"name": "Headmaster's Tower",
+		"description": "A slender spire of dark stone at the edge of the entrance plaza. The Headmistress receives new students at its foot.",
+		"connections": ["entrance_plaza"],
+		"activities": ["welcome_ceremony"]
 	},
-	"room": {
-		"name": "Your Room",
-		"description": "A small dormitory room. A bed, a desk, and a wardrobe.",
-		"connections": ["corridor_a"],
-		"activities": ["change_clothes", "wash_up", "study_room", "sleep"]
+	"faculty_offices": {
+		"name": "Faculty Offices",
+		"description": "A low range of buildings off the entrance plaza, its quiet corridors lined with the offices of the teaching staff.",
+		"connections": ["entrance_plaza"],
+		"activities": ["read_notices"]
 	},
-	"corridor_a": {
-		"name": "Corridor A",
-		"description": "A drafty stone corridor linking the dorms to the classrooms.",
-		"connections": ["room", "classroom"],
-		"activities": ["stretch", "chat_elara"]
+	"main_plaza": {
+		"name": "Main Plaza",
+		"description": "The heart of the academy. The Dueling Palace and the main academic building face each other across the square, and paved roads branch off to the left and right plazas.",
+		"connections": ["entrance_plaza", "dueling_palace", "main_academic_building", "left_plaza", "right_plaza"],
+		"activities": []
 	},
-	"classroom": {
-		"name": "Classroom",
-		"description": "Rows of desks beneath a vaulted, rune-carved ceiling.",
-		"connections": ["corridor_a", "corridor_b"],
+	"dueling_palace": {
+		"name": "Dueling Palace",
+		"description": "A sand-floored arena warded for magical combat, its galleries hung with duelling trophies.",
+		"connections": ["main_plaza"],
+		"activities": ["watch_trophies", "spar", "duel_cassius", "timeline_spar"]
+	},
+	"main_academic_building": {
+		"name": "Main Academic Building",
+		"description": "Rows of desks beneath a vaulted, rune-carved ceiling. The academy's core lectures are held here.",
+		"connections": ["main_plaza"],
 		"activities": ["wait_for_class", "focus_class", "socialize", "daydream", "study_class"]
 	},
-	"corridor_b": {
-		"name": "Corridor B",
-		"description": "A shorter hall in Building A, hung with duelling trophies.",
-		"connections": ["classroom", "dueling_room"],
-		"activities": ["watch_trophies"]
+	"left_plaza": {
+		"name": "Left Plaza",
+		"description": "A quieter square reached by a small paved road, fronting the secondary academic building.",
+		"connections": ["main_plaza", "secondary_academic_building"],
+		"activities": []
 	},
-	"dueling_room": {
-		"name": "Dueling Room",
-		"description": "A sand-floored ring warded for magical combat.",
-		"connections": ["corridor_b"],
-		"activities": ["spar", "duel_cassius", "timeline_spar"]
+	"secondary_academic_building": {
+		"name": "Secondary Academic Building",
+		"description": "An annexe of smaller halls and workshops off the left plaza, where the practical courses meet.",
+		"connections": ["left_plaza"],
+		"activities": ["wait_for_class", "focus_class", "socialize", "daydream", "study_class"]
+	},
+	"right_plaza": {
+		"name": "Right Plaza",
+		"description": "The dormitories' plaza. The residence halls stand along one side, and a garden road leads off beneath a stone arch.",
+		"connections": ["main_plaza", "dormitories", "gardens"],
+		"activities": []
+	},
+	"dormitories": {
+		"name": "Dormitories",
+		"description": "Your small dormitory room off the right plaza: a bed, a desk, and a wardrobe.",
+		"connections": ["right_plaza"],
+		"activities": ["change_clothes", "wash_up", "study_room", "sleep"]
+	},
+	"gardens": {
+		"name": "Gardens",
+		"description": "Terraced gardens beyond the dormitories' plaza, quiet and green under the dusk.",
+		"connections": ["right_plaza"],
+		"activities": ["stretch", "chat_elara"]
 	}
 }

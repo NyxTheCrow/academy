@@ -30,7 +30,7 @@ var day_count: int = 0              # absolute days since the game began
 var minutes_of_day: int = START_MINUTES
 
 # --- Location ---------------------------------------------------------------
-var location: String = "room"
+var location: String = "dormitories"
 
 # --- Player -----------------------------------------------------------------
 var player_name: String = "Student"
@@ -72,7 +72,7 @@ func reset() -> void:
 	var sn: Dictionary = start.get("needs", {})
 	day_count = 0
 	minutes_of_day = start_minutes()
-	location = "room"
+	location = "dormitories"
 	player_name = "Student"
 	dev_mode = false
 	# focus = the day's mental bandwidth for learning; refills each morning.
@@ -699,7 +699,7 @@ func load_game(path := "user://savegame.json") -> bool:
 	dev_mode = bool(d.get("dev_mode", false))
 	day_count = int(d.get("day_count", 0))
 	minutes_of_day = int(d.get("minutes_of_day", START_MINUTES))
-	location = str(d.get("location", "room"))
+	location = str(d.get("location", "dormitories"))
 	stats = d.get("stats", stats)
 	_merge_missing_stats()   # old saves predate the full stat sheet
 	needs = d.get("needs", needs)

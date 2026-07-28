@@ -236,7 +236,7 @@ func _begin() -> void:
 
 	if bool(_final["skip"]):
 		# Straight into your room on Monday morning (reset defaults already do this).
-		GameState.set_location("room")
+		GameState.set_location("dormitories")
 	else:
 		# Sunday, 17:00, at the gates — the full introduction.
 		GameState.day_count = 6          # Sunday

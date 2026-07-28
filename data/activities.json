@@ -1,11 +1,9 @@
 {
 	"wait_in_line": { "name": "Wait in line to be identified", "duration": 30, "effects": { "tags": ["id_checked"] }, "requires": { "without_tags": ["id_checked"] } },
-	"enter_courtyard": { "name": "Enter the courtyard", "duration": 5, "goto": "courtyard", "requires": { "tags": ["id_checked"] } },
+	"enter_entrance_plaza": { "name": "Enter the entrance plaza", "duration": 5, "goto": "entrance_plaza", "requires": { "tags": ["id_checked"] } },
 	"to_gates": { "name": "Return to the gates", "duration": 5, "goto": "school_gates" },
-	"enter_building_a": { "name": "Enter Building A (dormitories)", "duration": 5, "goto": "corridor_b" },
-	"enter_building_b": { "name": "Enter Building B (amphitheatre)", "duration": 5, "goto": "amphitheater" },
 	"welcome_ceremony": { "name": "Attend the welcoming ceremony", "duration": 60, "dialogue": "ceremony_welcome", "effects": { "tags": ["oriented"] }, "requires": { "without_tags": ["oriented"] } },
-	"leave_amph": { "name": "Leave the amphitheatre", "duration": 5, "goto": "courtyard" },
+	"read_notices": { "name": "Read the faculty notice board", "duration": 5, "effects": { "needs": { "calm": 2 } } },
 	"change_clothes": { "name": "Change into uniform", "duration": 5, "effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] }, "requires": { "without_tags": ["dressed"] } },
 	"wash_up": { "name": "Wash up", "duration": 10, "effects": { "energy": 5, "tags": ["fresh"], "needs": { "hygiene": 30 } } },
 	"study_room": { "name": "Study at your desk", "duration": 30, "effects": { "energy": -10, "stats": { "focus": -8 } }, "requires": { "min_stats": { "focus": 8 } } },

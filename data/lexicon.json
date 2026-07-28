@@ -20,9 +20,13 @@
 	{ "term": "Fire Wall", "category": "Combat Action", "aliases": ["firewall"], "definition": "Raise a 3-tile wall of flame. Any unit that moves onto it or ends its turn on it is burned. Lasts a few rounds. Requires the Pyromancer tag." },
 	{ "term": "Brace", "category": "Combat Action", "definition": "Steady yourself, recovering a little health and ending your turn. Requires the Duelist tag." },
 	{ "term": "Strike", "category": "Combat Action", "definition": "A basic melee attack against an adjacent foe. Available to everyone." },
-	{ "term": "Room", "category": "Location", "definition": "Your dormitory. Where you dress, wash up, study privately, and sleep." },
-	{ "term": "Classroom", "category": "Location", "definition": "Where lectures are held on weekday mornings. You must be enrolled and dressed to attend." },
-	{ "term": "Dueling Room", "category": "Location", "aliases": ["dueling room", "duelling room"], "definition": "A warded ring for magical combat. Spar with a dummy, or duel a rival if you may." },
-	{ "term": "Elara", "category": "Character", "definition": "A scholarly classmate, often found in the classroom. Warm, and easy to confide in." },
-	{ "term": "Cassius", "category": "Character", "definition": "A gifted duelist who haunts the dueling room. Beating him earns real respect." }
+	{ "term": "Entrance Plaza", "category": "Location", "aliases": ["entrance plaza"], "definition": "The plaza just inside the school gates. The Headmaster's tower and the faculty offices open off it, and an avenue leads on to the main plaza." },
+	{ "term": "Main Plaza", "category": "Location", "aliases": ["main plaza"], "definition": "The heart of the academy. The Dueling Palace and the main academic building face each other here, with roads to the left and right plazas." },
+	{ "term": "Dormitories", "category": "Location", "aliases": ["dorm", "dorms", "room", "your room"], "definition": "Your residence hall off the right plaza. Where you dress, wash up, study privately, and sleep." },
+	{ "term": "Main Academic Building", "category": "Location", "aliases": ["classroom", "main academic building"], "definition": "Where the core lectures are held on weekday mornings. You must be enrolled and dressed to attend." },
+	{ "term": "Secondary Academic Building", "category": "Location", "aliases": ["secondary academic building", "annexe"], "definition": "The annexe off the left plaza, home to the practical courses — Physical Education and Practical Shaping." },
+	{ "term": "Dueling Palace", "category": "Location", "aliases": ["dueling palace", "duelling palace", "dueling room"], "definition": "A warded arena for magical combat, off the main plaza. Spar with a dummy, or duel a rival if you may." },
+	{ "term": "Gardens", "category": "Location", "aliases": ["gardens", "garden"], "definition": "Quiet terraced gardens beyond the dormitories' plaza — a place to stretch and steady your nerves." },
+	{ "term": "Elara", "category": "Character", "definition": "A scholarly classmate, often found around the academic buildings. Warm, and easy to confide in." },
+	{ "term": "Cassius", "category": "Character", "definition": "A gifted duelist who haunts the Dueling Palace. Beating him earns real respect." }
 ]

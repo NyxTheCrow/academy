@@ -2,7 +2,7 @@
 	{
 		"id": "elara",
 		"name": "Elara",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled",
@@ -21,7 +21,7 @@
 	{
 		"id": "cassius",
 		"name": "Cassius",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled",
@@ -41,7 +41,7 @@
 	{
 		"id": "bram",
 		"name": "Bram",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled"
@@ -58,7 +58,7 @@
 	{
 		"id": "nyx",
 		"name": "Nyx",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -78,7 +78,7 @@
 	{
 		"id": "corin",
 		"name": "Corin",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled"
@@ -95,7 +95,7 @@
 	{
 		"id": "isolde",
 		"name": "Isolde",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -114,7 +114,7 @@
 	{
 		"id": "feld",
 		"name": "Feld",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled",
@@ -133,7 +133,7 @@
 	{
 		"id": "marguerite",
 		"name": "Marguerite",
-		"location": "corridor_b",
+		"location": "left_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -153,7 +153,7 @@
 	{
 		"id": "tobias",
 		"name": "Tobias",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled",
@@ -172,7 +172,7 @@
 	{
 		"id": "wren",
 		"name": "Wren",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled",
@@ -191,7 +191,7 @@
 	{
 		"id": "alaric",
 		"name": "Alaric",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -209,7 +209,7 @@
 	{
 		"id": "beatrix",
 		"name": "Beatrix",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled",
@@ -228,7 +228,7 @@
 	{
 		"id": "emeric",
 		"name": "Emeric",
-		"location": "corridor_b",
+		"location": "left_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -246,7 +246,7 @@
 	{
 		"id": "sabine",
 		"name": "Sabine",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled",
@@ -266,7 +266,7 @@
 	{
 		"id": "rowan",
 		"name": "Rowan",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled",
@@ -286,7 +286,7 @@
 	{
 		"id": "cordelia",
 		"name": "Cordelia",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -305,7 +305,7 @@
 	{
 		"id": "gideon",
 		"name": "Gideon",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled"
@@ -322,7 +322,7 @@
 	{
 		"id": "odette",
 		"name": "Odette",
-		"location": "corridor_b",
+		"location": "left_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -341,7 +341,7 @@
 	{
 		"id": "casimir",
 		"name": "Casimir",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled",
@@ -360,7 +360,7 @@
 	{
 		"id": "lucinda",
 		"name": "Lucinda",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled",
@@ -380,7 +380,7 @@
 	{
 		"id": "percival",
 		"name": "Percival",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -399,7 +399,7 @@
 	{
 		"id": "mirabel",
 		"name": "Mirabel",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled",
@@ -418,7 +418,7 @@
 	{
 		"id": "anselm",
 		"name": "Anselm",
-		"location": "corridor_b",
+		"location": "left_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -436,7 +436,7 @@
 	{
 		"id": "delphine",
 		"name": "Delphine",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled",
@@ -455,7 +455,7 @@
 	{
 		"id": "roderick",
 		"name": "Roderick",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled",
@@ -473,7 +473,7 @@
 	{
 		"id": "fenella",
 		"name": "Fenella",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -493,7 +493,7 @@
 	{
 		"id": "thaddeus",
 		"name": "Thaddeus",
-		"location": "classroom",
+		"location": "main_academic_building",
 		"tags": [
 			"student",
 			"enrolled",
@@ -513,7 +513,7 @@
 	{
 		"id": "clemence",
 		"name": "Clemence",
-		"location": "corridor_b",
+		"location": "left_plaza",
 		"tags": [
 			"student",
 			"enrolled",
@@ -532,7 +532,7 @@
 	{
 		"id": "silas",
 		"name": "Silas",
-		"location": "dueling_room",
+		"location": "dueling_palace",
 		"tags": [
 			"student",
 			"enrolled"
@@ -549,7 +549,7 @@
 	{
 		"id": "rosalind",
 		"name": "Rosalind",
-		"location": "room",
+		"location": "dormitories",
 		"tags": [
 			"student",
 			"enrolled",
@@ -568,7 +568,7 @@
 	{
 		"id": "ysanne",
 		"name": "Ysanne",
-		"location": "corridor_a",
+		"location": "main_plaza",
 		"tags": [
 			"student",
 			"enrolled",

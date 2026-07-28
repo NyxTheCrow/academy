@@ -46,7 +46,7 @@ committing, interrupting and forcing movement fun with full information?*
 - Editable action kit: `data/tick_actions.json` (ray, dodge, stride, ward, rune,
   burst, hold) — every number editable in the in-game Data Editor.
 - Playable front-end: `scenes/modes/TickCombatMode.gd` (numbers visible; a bare
-  grid + timeline log). Reachable from the Dueling Room -> "Timeline spar".
+  grid + timeline log). Reachable from the Dueling Palace -> "Timeline spar".
 - Tests: `_test_tick_combat()` in `tests/TestRunner.gd` pin the framework rules
   deterministically (ray lethality, dodge, commit lock, readiness gate,
   directional ward, projected-destination aim, rune trigger, full AI duel).
