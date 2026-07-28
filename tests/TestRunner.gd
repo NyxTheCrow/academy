@@ -566,6 +566,23 @@ func _test_tick_combat() -> void:
 	e.step()  # a steps onto the rune
 	_check(e.unit_by_id("a")["down"], "stepping onto a rune triggers it")
 
+	# Hold passes exactly ONE tick — it no longer fast-forwards to a resolution.
+	e = _tick_engine([
+		{"id": "a", "team": "player", "pos": Vector2i(0, 1)},
+		{"id": "b", "team": "enemy", "pos": Vector2i(5, 1)},
+	], Vector2i(6, 3))
+	var t0: int = e.tick
+	e.hold()
+	_eq(e.tick, t0 + 1, "Hold advances exactly one tick")
+	# The idle player isn't locked into anything by holding.
+	_check(e.can_act(e.player()), "player can still act after a Hold")
+
+	# peek() reports a decision point without moving time.
+	var t1: int = e.tick
+	var pk: Dictionary = e.peek()
+	_eq(e.tick, t1, "peek does not advance time")
+	_check(pk.has("reason"), "peek returns a decision reason")
+
 	# End-to-end: a passive player who only ever Holds eventually loses.
 	e = TickEngine.new()
 	e.setup({})  # default duel

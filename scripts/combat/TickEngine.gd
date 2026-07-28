@@ -224,6 +224,31 @@ func advance() -> Dictionary:
 			return {"reason": "hit", "event": ev}
 	return {"reason": "over", "winner": winner()}
 
+## Read the current decision state WITHOUT advancing time. Mirrors advance()'s
+## branching, but takes no step, so a caller can pass a single tick with hold()
+## and then re-read the situation instead of fast-forwarding to a resolution.
+func peek() -> Dictionary:
+	if is_over():
+		return {"reason": "over", "winner": winner()}
+	if is_idle(player()) and not player()["down"]:
+		return {"reason": "plan"}
+	# Idle enemies form an intent; a fresh telegraph the player can still answer
+	# is a reaction window.
+	var telegraphed := _enemy_intents()
+	if telegraphed and can_act(player()) and not player()["down"]:
+		return {"reason": "reaction", "threat": _incoming_threat()}
+	# Mid-action with nothing new to react to: the player watches it out a tick
+	# at a time rather than skipping to the resolution.
+	return {"reason": "watch", "threat": _incoming_threat()}
+
+## Pass exactly one tick on the player's behalf. Idle enemies get to press first
+## (so a stand-off isn't the player keeping initiative forever), then time moves
+## forward by a single tick — unlike advance(), which fast-forwards through
+## resolutions. The player is left free to plan/react on the next tick.
+func hold() -> Dictionary:
+	_enemy_intents()
+	return step()
+
 # --- Resolution -------------------------------------------------------------
 func _resolve(u: Dictionary) -> void:
 	var plan: Dictionary = u["plan"]

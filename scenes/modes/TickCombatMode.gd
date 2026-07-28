@@ -11,6 +11,61 @@ extends "res://scripts/GameMode.gd"
 
 const TickEngine := preload("res://scripts/combat/TickEngine.gd")
 
+## A single pointy-top hexagon cell. It draws itself as a real hexagon (filled +
+## outlined) and only registers clicks that land INSIDE the hex, so the board
+## reads and behaves as a hex grid rather than a sheared grid of squares.
+class HexCell extends Control:
+	signal clicked
+	var _poly: PackedVector2Array   # hexagon centred on the control's origin
+	var _center: Vector2
+	var glyph := "·"
+	var fill := Color(0.13, 0.12, 0.18)
+	var edge := Color(0.30, 0.30, 0.40)
+	var ink := Color(0.55, 0.58, 0.68)
+	var disabled := true
+	var _hover := false
+
+	func _init(radius: float) -> void:
+		var hw := sqrt(3.0) / 2.0 * radius       # half of a pointy-top hex's width
+		_poly = PackedVector2Array([
+			Vector2(0, -radius), Vector2(hw, -radius / 2.0), Vector2(hw, radius / 2.0),
+			Vector2(0, radius), Vector2(-hw, radius / 2.0), Vector2(-hw, -radius / 2.0),
+		])
+		_center = Vector2(hw, radius)
+		custom_minimum_size = Vector2(hw * 2.0, radius * 2.0)
+		size = custom_minimum_size
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		mouse_entered.connect(func(): _hover = true; queue_redraw())
+		mouse_exited.connect(func(): _hover = false; queue_redraw())
+
+	# Restrict input (and hover) to the actual hexagon, not its bounding box, so
+	# neighbouring hexes never both claim a click in the shared corner region.
+	func _has_point(point: Vector2) -> bool:
+		return Geometry2D.is_point_in_polygon(point - _center, _poly)
+
+	func _gui_input(event: InputEvent) -> void:
+		if disabled:
+			return
+		if event is InputEventMouseButton and event.pressed \
+				and event.button_index == MOUSE_BUTTON_LEFT:
+			clicked.emit()
+			accept_event()
+
+	func _draw() -> void:
+		var pts := PackedVector2Array()
+		for p in _poly:
+			pts.append(p + _center)
+		var f := fill.lightened(0.18) if (not disabled and _hover) else fill
+		draw_colored_polygon(pts, f)
+		var outline := pts
+		outline.append(pts[0])
+		draw_polyline(outline, edge, 1.5, true)
+		var font := ThemeDB.fallback_font
+		var fs := 20
+		var ts := font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+		draw_string(font, _center + Vector2(-ts.x / 2.0, fs * 0.34), glyph,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
+
 # Untyped on purpose: the engine's own methods aren't visible through a
 # RefCounted-typed handle, so we call them dynamically (as Director does modes).
 var _engine
@@ -107,26 +162,27 @@ func _build_ui() -> void:
 	v.add_child(action_bar)
 	_build_action_bar()
 
-## Lay the axial hex board out as a sheared grid: each row r is nudged right by
-## half a cell, so cells interlock like a hex map. Index order (r outer, q
-## inner) matches _redraw's flat indexing.
+## Lay the axial hex board out with interlocking pointy-top hexagons: each row r
+## is nudged right by half a cell and packed vertically by 3/4 of a hex height,
+## so the cells tessellate like a real hex map. Index order (r outer, q inner)
+## matches _redraw's flat indexing.
 func _build_grid() -> void:
 	var g: Vector2i = _engine.grid
 	_cells.clear()
 	for c in grid_box.get_children():
 		c.queue_free()
-	var cw := CELL - 6
-	grid_box.custom_minimum_size = Vector2((g.x + g.y * 0.5) * CELL + 8, g.y * CELL + 8)
+	var radius := CELL / sqrt(3.0)     # circumradius of a pointy-top hex of width CELL
+	var row_h := 1.5 * radius          # vertical step so rows interlock
+	var full_w := (g.x + g.y * 0.5) * CELL + CELL
+	var full_h := (g.y - 1) * row_h + radius * 2.0 + 4.0
+	grid_box.custom_minimum_size = Vector2(full_w, full_h)
 	for r in g.y:
 		for q in g.x:
-			var b := Button.new()
-			b.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			b.position = Vector2((q + r * 0.5) * CELL, r * CELL)
-			b.size = Vector2(cw, cw)
-			b.custom_minimum_size = Vector2(cw, cw)
-			b.pressed.connect(_on_cell.bind(Vector2i(q, r)))
-			grid_box.add_child(b)
-			_cells.append(b)
+			var cell := HexCell.new(radius)
+			cell.position = Vector2((q + r * 0.5) * CELL, r * row_h)
+			cell.clicked.connect(_on_cell.bind(Vector2i(q, r)))
+			grid_box.add_child(cell)
+			_cells.append(cell)
 
 func _build_action_bar() -> void:
 	for child in action_bar.get_children():
@@ -137,6 +193,10 @@ func _build_action_bar() -> void:
 	var ids: Array = _engine.actions.keys()
 	ids.sort()
 	for id in ids:
+		# "wait" is offered through the dedicated single-tick Hold button below;
+		# don't also list it as an action (queuing it would fast-forward).
+		if str(id) == "wait":
+			continue
 		var a: Dictionary = _engine.actions[id]
 		var b := Button.new()
 		b.text = "%s  (%dr)" % [str(a.get("name", id)), int(a.get("readiness_cost", 1))]
@@ -151,11 +211,16 @@ func _build_action_bar() -> void:
 	action_bar.add_child(hold)
 
 # --- Engine driving ---------------------------------------------------------
-## Advance the engine to the next decision point and render it.
+## Advance the engine to the next decision point and render it. Used after the
+## player commits a real action (WEGO: fine time internally, coarse control).
 func _pump() -> void:
 	var res: Dictionary = _engine.advance()
 	while res.get("reason", "") == "hit":
 		res = _engine.advance()
+	_apply(res)
+
+## Render a decision state (from advance() or peek()) and set the banner.
+func _apply(res: Dictionary) -> void:
 	_reason = str(res.get("reason", ""))
 	_redraw()
 	match _reason:
@@ -166,16 +231,21 @@ func _pump() -> void:
 			banner.text = "REACT — %s casts %s at %s (resolves in %d). Interrupt, or Hold." % [
 				str(t.get("by", "?")), str(t.get("action", "?")),
 				str(t.get("target", "")), int(t.get("resolves_in", 0))]
+		"watch":
+			var tw: Dictionary = res.get("threat", {})
+			if tw.is_empty():
+				banner.text = "Your action is underway. Hold to let a tick pass."
+			else:
+				banner.text = "Committed — %s's %s resolves in %d. Hold to watch it out." % [
+					str(tw.get("by", "?")), str(tw.get("action", "?")),
+					int(tw.get("resolves_in", 0))]
 		"plan":
 			banner.text = "Your move. Pick an action, then a target tile."
 
 func _redraw() -> void:
 	var g: Vector2i = _engine.grid
 	for i in _cells.size():
-		var pos := Vector2i(i % g.x, i / g.x)
-		var b: Button = _cells[i]
-		b.text = _glyph(pos)
-		b.disabled = _pending == ""   # tiles are only pickable while targeting
+		_style_cell(_cells[i], Vector2i(i % g.x, i / g.x))
 	# Log tail.
 	var lines: Array = _engine.log
 	var tail: Array = lines.slice(maxi(0, lines.size() - 14), lines.size())
@@ -190,23 +260,44 @@ func _redraw() -> void:
 	status.text = "   |   ".join(parts)
 	hint.text = ("Targeting %s — click a tile." % _pending) if _pending != "" else str(_engine.last_error)
 
-func _glyph(pos: Vector2i) -> String:
+## Paint one hex cell for the tile at `pos`: base look, then any trap, then any
+## occupant (player/enemy/downed) on top.
+func _style_cell(cell, pos: Vector2i) -> void:
+	cell.glyph = "·"
+	cell.fill = Color(0.13, 0.12, 0.18)
+	cell.edge = Color(0.30, 0.30, 0.40)
+	cell.ink = Color(0.42, 0.45, 0.55)
+	for t in _engine.traps:
+		if t["pos"] == pos:
+			cell.glyph = "^"
+			cell.ink = Color(0.90, 0.60, 0.35)
 	for u in _engine.units:
 		if u["pos"] == pos:
 			if u["down"]:
-				return "x"
-			var mark := "@" if u["team"] == "player" else "E"
-			if int(u["ward"]) > 0:
-				mark += "+"
-			return mark
-	for t in _engine.traps:
-		if t["pos"] == pos:
-			return "^"
-	return "."
+				cell.glyph = "x"
+				cell.fill = Color(0.16, 0.13, 0.15)
+				cell.ink = Color(0.55, 0.45, 0.47)
+			elif u["team"] == "player":
+				cell.glyph = "@" + ("+" if int(u["ward"]) > 0 else "")
+				cell.fill = Color(0.12, 0.20, 0.30)
+				cell.edge = Color(0.40, 0.62, 0.85)
+				cell.ink = Color(0.72, 0.86, 1.0)
+			else:
+				cell.glyph = "E" + ("+" if int(u["ward"]) > 0 else "")
+				cell.fill = Color(0.28, 0.13, 0.15)
+				cell.edge = Color(0.85, 0.42, 0.42)
+				cell.ink = Color(1.0, 0.74, 0.72)
+	# Tiles are only pickable while targeting; highlight them when they are.
+	cell.disabled = _pending == ""
+	if not cell.disabled:
+		cell.edge = cell.edge.lightened(0.20)
+	cell.queue_redraw()
 
 # --- Input ------------------------------------------------------------------
 func _on_action(id: String) -> void:
-	if _reason != "plan" and _reason != "reaction":
+	# Act whenever the engine would allow it (plan, react, or interrupt a
+	# still-preparing action) — queue_action does the real gating.
+	if _reason == "over":
 		return
 	var a: Dictionary = _engine.actions.get(id, {})
 	# Self actions need no target tile — queue them immediately.
@@ -233,25 +324,18 @@ func _on_hold() -> void:
 	if _reason == "over":
 		return
 	_pending = ""
-	var p = _engine.player()
-	if _engine.is_idle(p):
-		# Idle: a brief free "wait" so time passes and the enemy gets to press,
-		# rather than the player keeping the initiative forever.
-		if _engine.actions.has("wait"):
-			_engine.queue_action(p["id"], "wait", p["pos"])
-		else:
-			_engine.step()
-	else:
-		# Mid-action: just let a tick pass so the CURRENT plan continues — do not
-		# interrupt it.
-		_engine.step()
-	_pump()
+	# Pass exactly ONE tick, then hand control straight back — never fast-forward
+	# to a resolution. hold() lets an idle enemy press first, then advances a
+	# single tick; peek() reports the resulting decision without moving time.
+	_engine.hold()
+	_apply(_engine.peek())
 
 # --- End --------------------------------------------------------------------
 func _on_over(win: String) -> void:
 	_pending = ""
-	for i in _cells.size():
-		(_cells[i] as Button).disabled = true
+	for cell in _cells:
+		cell.disabled = true
+		cell.queue_redraw()
 	if win == "player":
 		banner.text = "You win the duel."
 	else:
