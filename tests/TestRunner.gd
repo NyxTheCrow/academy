@@ -21,6 +21,7 @@ func _ready() -> void:
 	_test_tag_gated_actions()
 	_test_classes()
 	_test_learning()
+	_test_npc_attendance()
 	_test_combat_action_filter()
 	_test_event_firing()
 	_test_save_load_roundtrip()
@@ -206,6 +207,26 @@ func _test_learning() -> void:
 	var before := float(GameState.stats.get(str(law["stat"]), 0))
 	GameState.player_learn({"class_learn": "focus", "duration": 20})
 	_check(float(GameState.stats.get(str(law["stat"]), 0)) > before, "focusing raises the class's stat")
+
+func _test_npc_attendance() -> void:
+	print("[npc attendance + learning]")
+	GameState.reset()
+	Students.reset()
+	# Two days of ticks, ending mid-morning (a class in session): enrolled
+	# students attend the shared timetable and learn along the way.
+	GameState.advance_time(2 * 1440 + 150)  # Wednesday ~09:30, Law in session
+	var best := 0.0
+	var any_in_class := false
+	for npc in Students.npcs:
+		if not ("enrolled" in npc["tags"]):
+			continue
+		for k in npc["stats"]:
+			if GameState.is_aptitude(str(k)):
+				best = maxf(best, float(npc["stats"][k]))
+		if "class" in str(npc["current_action"]) or npc["location"] == "classroom":
+			any_in_class = true
+	_check(best > 0.1, "students attend and accrue real class levels (best %.2f)" % best)
+	_check(any_in_class, "students are found in class during the day")
 
 func _test_combat_action_filter() -> void:
 	print("[combat action tag filter]")

@@ -190,16 +190,42 @@ func _hm(s) -> int:
 	var m := int(parts[1]) if parts.size() > 1 else 0
 	return h * 60 + m
 
-## Advance the clock by `mins`. The ONLY place the clock moves.
+## Advance the clock by `mins`. The ONLY place the clock moves. Time flows in
+## fixed slots so the world (NPC decisions, needs, events) updates at a steady
+## granularity with the correct intermediate clock — a student attends a class
+## slot by slot rather than in one leap. Huge jumps (e.g. a test skipping a
+## month) fast-forward the remainder past a cap so this stays cheap.
+const TIME_STEP := 20    # minutes per world tick
+const MAX_STEPS := 200   # ~66h of per-slot processing before fast-forwarding
+
 func advance_time(mins: int) -> void:
-	minutes_of_day += maxi(0, mins)
+	var remaining := maxi(0, mins)
+	if remaining == 0:
+		time_advanced.emit(0)
+		_check_events()
+		state_changed.emit()
+		return
+	var steps := 0
+	while remaining > 0 and steps < MAX_STEPS:
+		steps += 1
+		var step := mini(remaining, TIME_STEP)
+		remaining -= step
+		_add_minutes(step)
+		_drift_needs(step)
+		time_advanced.emit(step)
+		_check_events()
+	if remaining > 0:
+		_add_minutes(remaining)
+		_drift_needs(remaining)
+		time_advanced.emit(remaining)
+		_check_events()
+	state_changed.emit()
+
+func _add_minutes(m: int) -> void:
+	minutes_of_day += m
 	while minutes_of_day >= DAY_MINUTES:
 		minutes_of_day -= DAY_MINUTES
 		_advance_day()
-	_drift_needs(maxi(0, mins))
-	time_advanced.emit(mins)
-	_check_events()
-	state_changed.emit()
 
 func _advance_day() -> void:
 	day_count += 1

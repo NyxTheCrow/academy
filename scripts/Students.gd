@@ -55,7 +55,32 @@ func _on_time_advanced(_minutes: int) -> void:
 func location_name(loc: String) -> String:
 	return str(GameData.get_location(loc).get("name", loc))
 
+const CLASSROOM := "classroom"
+
 func _npc_act(npc: Dictionary) -> void:
+	# Attend the timetable: when a class this NPC belongs in is running, head to
+	# the classroom and stay, doing a (weighted) in-class action. For now every
+	# enrolled student shares the same schedule — all first-year classes.
+	if _should_attend(npc):
+		if str(npc["location"]) != CLASSROOM:
+			var hop := _next_hop(str(npc["location"]), CLASSROOM)
+			if hop != "":
+				npc["location"] = hop
+				npc["current_action"] = "heading to class"
+				return
+		else:
+			var seated := _class_options(npc)
+			if not seated.is_empty():
+				var pick: Dictionary = _pick_weighted(seated, npc)
+				npc["current_action"] = str(pick.get("name", "in class"))
+				_apply(npc, pick.get("effects", {}))
+				# Same shared learning path as the player.
+				GameState.apply_class_learning(npc["stats"], str(npc["location"]), pick)
+				return
+			if "teacher" in npc["tags"]:
+				npc["current_action"] = "teaching the class"
+				return
+
 	var loc := GameData.get_location(npc["location"])
 	var options: Array = []
 	for aid in loc.get("activities", []):
@@ -98,6 +123,46 @@ func _pick_weighted(options: Array, npc: Dictionary) -> Dictionary:
 		if r <= 0.0:
 			return o
 	return options.back()
+
+## Should this NPC be in class right now? Enrolled students attend any class in
+## session (shared timetable); the day's teacher attends the class they teach.
+func _should_attend(npc: Dictionary) -> bool:
+	var cls := GameState.class_in_session(CLASSROOM)
+	if cls.is_empty():
+		return false
+	if "enrolled" in npc["tags"]:
+		return true
+	return str(npc["id"]) == str(cls.get("teacher_id", ""))
+
+## Just the in-class learning actions available to this NPC (no wandering off).
+func _class_options(npc: Dictionary) -> Array:
+	var out: Array = []
+	for aid in GameData.get_location(CLASSROOM).get("activities", []):
+		var a := GameData.get_activity(str(aid))
+		if a.is_empty() or str(a.get("class_learn", "")) == "":
+			continue
+		if GameState.requirement_met(a.get("requires", {}), npc["tags"], npc["stats"], npc["energy"], str(npc["location"])):
+			out.append(a)
+	return out
+
+## First step from `here` toward `goal` across the location graph (BFS).
+func _next_hop(here: String, goal: String) -> String:
+	if here == goal:
+		return ""
+	var visited: Dictionary = {here: true}
+	var queue: Array = [[here]]
+	while not queue.is_empty():
+		var path: Array = queue.pop_front()
+		for conn in GameData.get_location(str(path.back())).get("connections", []):
+			var c := str(conn)
+			if visited.has(c):
+				continue
+			visited[c] = true
+			var np: Array = path + [c]
+			if c == goal:
+				return str(np[1])
+			queue.append(np)
+	return ""
 
 func _apply(npc: Dictionary, effects: Dictionary) -> void:
 	if effects.has("stats"):
