@@ -19,7 +19,10 @@ var _pending := ""          # action id awaiting a target tile
 var _cells: Array = []      # grid cell buttons
 var _finished_flag := false
 
-var grid_box: GridContainer
+# Hex board: cells are manually placed (sheared axial layout), so the board is
+# a plain Control, not a GridContainer.
+const CELL := 56
+var grid_box: Control
 var log_box: RichTextLabel
 var banner: Label
 var status: Label
@@ -77,9 +80,8 @@ func _build_ui() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(body)
 
-	grid_box = GridContainer.new()
-	grid_box.add_theme_constant_override("h_separation", 4)
-	grid_box.add_theme_constant_override("v_separation", 4)
+	grid_box = Control.new()
+	grid_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	body.add_child(grid_box)
 	_build_grid()
 
@@ -105,17 +107,26 @@ func _build_ui() -> void:
 	v.add_child(action_bar)
 	_build_action_bar()
 
+## Lay the axial hex board out as a sheared grid: each row r is nudged right by
+## half a cell, so cells interlock like a hex map. Index order (r outer, q
+## inner) matches _redraw's flat indexing.
 func _build_grid() -> void:
 	var g: Vector2i = _engine.grid
-	grid_box.columns = g.x
 	_cells.clear()
-	for i in g.x * g.y:
-		var b := Button.new()
-		b.custom_minimum_size = Vector2(52, 52)
-		var pos := Vector2i(i % g.x, i / g.x)
-		b.pressed.connect(_on_cell.bind(pos))
-		grid_box.add_child(b)
-		_cells.append(b)
+	for c in grid_box.get_children():
+		c.queue_free()
+	var cw := CELL - 6
+	grid_box.custom_minimum_size = Vector2((g.x + g.y * 0.5) * CELL + 8, g.y * CELL + 8)
+	for r in g.y:
+		for q in g.x:
+			var b := Button.new()
+			b.set_anchors_preset(Control.PRESET_TOP_LEFT)
+			b.position = Vector2((q + r * 0.5) * CELL, r * CELL)
+			b.size = Vector2(cw, cw)
+			b.custom_minimum_size = Vector2(cw, cw)
+			b.pressed.connect(_on_cell.bind(Vector2i(q, r)))
+			grid_box.add_child(b)
+			_cells.append(b)
 
 func _build_action_bar() -> void:
 	for child in action_bar.get_children():

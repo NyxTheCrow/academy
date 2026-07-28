@@ -15,7 +15,8 @@ extends RefCounted
 ##     stops a unit from reacting perfectly to everything;
 ##   * attacks resolve DETERMINISTICALLY. Survivability is layered: a directional
 ##     ward absorbs one hit, otherwise the unit goes down (high lethality);
-##   * the GRID decides which attacks and escapes are geometrically possible;
+##   * the HEX GRID (axial coords, six neighbours) decides which attacks and
+##     escapes are geometrically possible;
 ##   * a simple deterministic enemy can aim at your PROJECTED destination, so
 ##     "it predicted my move and put a ray there" actually happens.
 ##
@@ -267,8 +268,7 @@ func _do_area(u: Dictionary, target: Vector2i, radius: int, dmg: int) -> void:
 	for other in units:
 		if other["down"]:
 			continue
-		var d: Vector2i = other["pos"] - target
-		if abs(d.x) <= radius and abs(d.y) <= radius:
+		if _hex_distance(other["pos"], target) <= radius:
 			_apply_hit(other, dmg, u["pos"])
 
 func _do_shield(u: Dictionary, target: Vector2i, amount: int) -> void:
@@ -365,11 +365,34 @@ func _first_of_kind(kind: String) -> String:
 			return str(id)
 	return ""
 
+# --- Hex geometry (axial coords: pos = Vector2i(q, r)) ----------------------
+## The board is a hex grid in axial coordinates. Six neighbours, no diagonals;
+## the board is a rhombus of grid.x columns by grid.y rows.
+const HEX_DIRS := [
+	Vector2i(1, 0), Vector2i(1, -1), Vector2i(0, -1),
+	Vector2i(-1, 0), Vector2i(-1, 1), Vector2i(0, 1),
+]
+
 func _in_bounds(p: Vector2i) -> bool:
 	return p.x >= 0 and p.x < grid.x and p.y >= 0 and p.y < grid.y
 
+## Axial (cube) hex distance.
+func _hex_distance(a: Vector2i, b: Vector2i) -> int:
+	return (abs(a.x - b.x) + abs(a.x + a.y - b.x - b.y) + abs(a.y - b.y)) / 2
+
+## The single hex-neighbour step from `from` that gets closest to `to` (or ZERO
+## if already there). Used for movement, facing, and threat projection.
 func _step_dir(from: Vector2i, to: Vector2i) -> Vector2i:
-	return Vector2i(signi(to.x - from.x), signi(to.y - from.y))
+	if from == to:
+		return Vector2i.ZERO
+	var best := Vector2i.ZERO
+	var best_d := 1 << 30
+	for d in HEX_DIRS:
+		var nd := _hex_distance(from + d, to)
+		if nd < best_d:
+			best_d = nd
+			best = d
+	return best
 
 func _say(msg: String) -> void:
 	log.append("[t%d] %s" % [tick, msg])

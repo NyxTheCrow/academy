@@ -25,9 +25,10 @@ Core pieces (all implemented in `scripts/combat/TickEngine.gd`):
 - **Deterministic, lethal.** Attacks that connect resolve for known effect — no
   accuracy roll. Survivability is layered: a **directional ward** absorbs one
   hit from the side it faces; otherwise the unit goes down.
-- **Grid geometry decides what's possible.** Which dodges, flanks and escapes
-  exist is a function of position. A ray is dangerous because of the geometry you
-  are trapped in, not a hit chance.
+- **Hex geometry decides what's possible.** The board is a hex grid (axial
+  coordinates, six neighbours). Which dodges, flanks and escapes exist is a
+  function of position. A ray is dangerous because of the geometry you are
+  trapped in, not a hit chance.
 - **A simple, honest enemy.** It can aim at your **projected destination** (where
   your queued move is taking you), so "it predicted my move and put a ray there"
   actually happens — no cheating, just reading your committed plan.

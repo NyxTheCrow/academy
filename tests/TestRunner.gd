@@ -469,6 +469,16 @@ func _test_tick_combat() -> void:
 	# Actions come from data/tick_actions.json (editable).
 	_check(GameData.tick_actions.has("ray"), "tick actions loaded")
 
+	# Hex geometry: axial distance, six neighbours.
+	var hex = TickEngine.new()
+	hex.setup({})
+	_eq(hex._hex_distance(Vector2i(0, 0), Vector2i(3, 0)), 3, "hex distance along q")
+	_eq(hex._hex_distance(Vector2i(0, 0), Vector2i(0, 3)), 3, "hex distance along r")
+	_eq(hex._hex_distance(Vector2i(0, 0), Vector2i(-1, 1)), 1, "opposite-diagonal neighbour is distance 1")
+	_eq(hex._hex_distance(Vector2i(0, 0), Vector2i(1, 1)), 2, "square-diagonal is two hexes away")
+	var sd: Vector2i = hex._step_dir(Vector2i(0, 0), Vector2i(3, -3))
+	_eq(hex._hex_distance(Vector2i(0, 0), sd), 1, "a step toward a target is exactly one hex")
+
 	# A ray downs an unprotected target on its active tick (deterministic).
 	# (plain '=', not ':=': the engine handle is intentionally untyped)
 	var e = _tick_engine([
