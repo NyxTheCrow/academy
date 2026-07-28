@@ -39,6 +39,7 @@ func _make_npc(data: Dictionary) -> Dictionary:
 		"location": str(data.get("location", "room")),
 		"tags": (data.get("tags", []) as Array).duplicate(),
 		"stats": stats,
+		"weights": (data.get("weights", {}) as Dictionary).duplicate(),
 		"energy": 100,
 		"current_action": "Waiting",
 	}
@@ -63,7 +64,7 @@ func _npc_act(npc: Dictionary) -> void:
 			continue
 		if a.has("dialogue") or a.has("combat") or a.has("tactical") or a.get("sleep", false) or a.get("wait_for_class", false) or a.has("goto"):
 			continue  # player-only or navigation actions
-		if GameState.requirement_met(a.get("requires", {}), npc["tags"], npc["stats"], npc["energy"]):
+		if GameState.requirement_met(a.get("requires", {}), npc["tags"], npc["stats"], npc["energy"], str(npc["location"])):
 			options.append(a)
 	# Movement options (NPCs wander).
 	for conn in loc.get("connections", []):
@@ -71,13 +72,42 @@ func _npc_act(npc: Dictionary) -> void:
 	if options.is_empty():
 		npc["current_action"] = "idling in " + location_name(npc["location"])
 		return
-	var chosen: Dictionary = options[randi() % options.size()]
+	var chosen: Dictionary = _pick_weighted(options, npc)
 	if chosen.has("goto"):
 		npc["location"] = str(chosen["goto"])
 		npc["current_action"] = str(chosen["name"])
 	else:
 		npc["current_action"] = str(chosen.get("name", "…"))
 		_apply(npc, chosen.get("effects", {}))
+		_npc_learn(npc, chosen)
+
+## Weighted random choice among available options. A student's per-activity
+## weights (data) bias which class action they lean toward; anything unlisted
+## has weight 1. Movement options (no id) also default to 1.
+func _pick_weighted(options: Array, npc: Dictionary) -> Dictionary:
+	var weights: Dictionary = npc.get("weights", {})
+	var total := 0.0
+	for o in options:
+		total += maxf(0.0, float(weights.get(str(o.get("id", "")), 1.0)))
+	if total <= 0.0:
+		return options[randi() % options.size()]
+	var r := randf() * total
+	for o in options:
+		r -= maxf(0.0, float(weights.get(str(o.get("id", "")), 1.0)))
+		if r <= 0.0:
+			return o
+	return options.back()
+
+## Class stat gain for an NPC doing an in-class action in their own classroom.
+func _npc_learn(npc: Dictionary, activity: Dictionary) -> void:
+	var mode := str(activity.get("class_learn", ""))
+	if mode == "":
+		return
+	var cls := GameState.class_in_session(str(npc["location"]))
+	var stat := str(cls.get("stat", ""))
+	if stat == "":
+		return
+	npc["stats"][stat] = float(npc["stats"].get(stat, 0)) + GameState.class_learn_amount(cls, mode, int(activity.get("duration", 20)))
 
 func _apply(npc: Dictionary, effects: Dictionary) -> void:
 	if effects.has("stats"):

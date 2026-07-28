@@ -20,6 +20,7 @@ func _ready() -> void:
 	_test_locations_and_movement()
 	_test_tag_gated_actions()
 	_test_classes()
+	_test_learning()
 	_test_combat_action_filter()
 	_test_event_firing()
 	_test_save_load_roundtrip()
@@ -185,6 +186,27 @@ func _test_classes() -> void:
 	_eq(GameState.time_string(), "09:00", "waiting jumps to the first class")
 	_check(not GameState.class_now().is_empty(), "seated once class begins")
 
+func _test_learning() -> void:
+	print("[class learning]")
+	GameState.reset()
+	var law: Dictionary = {}
+	for e in GameData.schedule:
+		if str(e.get("class_id", "")) == "law":
+			law = e
+	_check(not law.is_empty() and str(law.get("stat", "")) != "", "the law class maps to a stat")
+	# 3 sessions/week x (2h / 20min = 6 slots) = 18 in-class actions per week.
+	var attend := GameState.class_learn_amount(law, "attend", 20)
+	var focus := GameState.class_learn_amount(law, "focus", 20)
+	_check(abs(attend * 18.0 - 0.25) < 0.0001, "a week of attending -> 0.25 in the class stat")
+	_check(abs(focus * 18.0 - 0.5) < 0.0001, "a week of focusing -> 0.5 in the class stat")
+	_check(focus > attend, "focusing beats merely attending")
+	# player_learn moves the mapped stat while a class is in session.
+	GameState.set_location("classroom")
+	GameState.advance_time(120)  # 09:00 Monday — Law is in session
+	var before := float(GameState.stats.get(str(law["stat"]), 0))
+	GameState.player_learn({"class_learn": "focus", "duration": 20})
+	_check(float(GameState.stats.get(str(law["stat"]), 0)) > before, "focusing raises the class's stat")
+
 func _test_combat_action_filter() -> void:
 	print("[combat action tag filter]")
 	var basic := _combat_ids([])
@@ -314,6 +336,8 @@ func _test_npc_students() -> void:
 	_check(Students.npcs[0]["stats"].has("shaping") and Students.npcs[0]["stats"].has("insight"), "NPCs carry the full stat sheet too")
 	var teacher_npc: Variant = Students.npcs.filter(func(n): return "teacher" in n["tags"])
 	_check(not (teacher_npc as Array).is_empty(), "teachers are promoted to full NPCs")
+	var studenty: Variant = Students.npcs.filter(func(n): return not (n.get("weights", {}) as Dictionary).is_empty())
+	_check(not (studenty as Array).is_empty(), "students carry class-action weights")
 	GameState.advance_time(30)
 	var acted := false
 	for npc in Students.npcs:
@@ -401,6 +425,7 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/InventoryMode.tscn",
 		"res://scenes/modes/SaveLoadMode.tscn",
 		"res://scenes/modes/EditorMode.tscn",
+		"res://scenes/modes/SimulationMode.tscn",
 	]:
 		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)

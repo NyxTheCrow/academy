@@ -32,6 +32,7 @@ const MODE_SCENES := {
 	"inventory": "res://scenes/modes/InventoryMode.tscn",
 	"saves": "res://scenes/modes/SaveLoadMode.tscn",
 	"editor": "res://scenes/modes/EditorMode.tscn",
+	"simulation": "res://scenes/modes/SimulationMode.tscn",
 }
 
 var _host: Node = null

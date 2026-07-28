@@ -228,11 +228,11 @@ func _class_entries() -> Array:
 			out.append(e)
 	return out
 
-## The class in session right now at the player's current location, or {}.
-func class_now() -> Dictionary:
+## The class in session right now at a given location, or {}.
+func class_in_session(loc: String) -> Dictionary:
 	var wd := day_name()
 	for e in _class_entries():
-		if str(e.get("room", "")) != location:
+		if str(e.get("room", "")) != loc:
 			continue
 		if not (wd in e.get("days", [])):
 			continue
@@ -240,13 +240,13 @@ func class_now() -> Dictionary:
 			return e
 	return {}
 
-## The next class starting later today at the player's location, or {}.
-func next_class_today() -> Dictionary:
+## The next class starting later today at a given location, or {}.
+func next_class_at(loc: String) -> Dictionary:
 	var wd := day_name()
 	var best: Dictionary = {}
 	var best_start := 1 << 30
 	for e in _class_entries():
-		if str(e.get("room", "")) != location:
+		if str(e.get("room", "")) != loc:
 			continue
 		if not (wd in e.get("days", [])):
 			continue
@@ -255,6 +255,40 @@ func next_class_today() -> Dictionary:
 			best_start = s
 			best = e
 	return best
+
+# Player-location convenience wrappers.
+func class_now() -> Dictionary:
+	return class_in_session(location)
+
+func next_class_today() -> Dictionary:
+	return next_class_at(location)
+
+## How much of a class's stat a single in-class action grants. Tuned (via
+## data/tuning.json "learning") so a full week of a class yields the target
+## level: attending gives attend_per_week, focusing gives focus_per_week. The
+## per-action amount self-adjusts to the class's sessions/week and length.
+func class_learn_amount(cls: Dictionary, mode: String, minutes: int) -> float:
+	if cls.is_empty() or str(cls.get("stat", "")) == "":
+		return 0.0
+	var learn: Dictionary = _tune().get("learning", {})
+	var target := float(learn.get("focus_per_week", 0.5)) if mode == "focus" else float(learn.get("attend_per_week", 0.25))
+	var sessions := (cls.get("days", []) as Array).size()
+	var slots := int((_hm(cls.get("end", "00:00")) - _hm(cls.get("start", "00:00"))) / maxi(1, minutes))
+	if sessions <= 0 or slots <= 0:
+		return 0.0
+	return target / float(sessions * slots)
+
+## Apply the player's learning from an in-class activity (before time advances,
+## while the class is still in session).
+func player_learn(activity: Dictionary) -> void:
+	var mode := str(activity.get("class_learn", ""))
+	if mode == "":
+		return
+	var cls := class_now()
+	var stat := str(cls.get("stat", ""))
+	if stat == "":
+		return
+	stats[stat] = float(stats.get(stat, 0)) + class_learn_amount(cls, mode, int(activity.get("duration", 20)))
 
 ## Skip ahead to the start of the next class here today, and take your seat.
 func wait_for_class() -> void:
@@ -310,7 +344,7 @@ func remove_tag(t: String) -> void:
 	state_changed.emit()
 
 # --- Requirements -----------------------------------------------------------
-func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, energy_in: int) -> bool:
+func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, energy_in: int, actor_loc := "") -> bool:
 	if req.is_empty():
 		return true
 	if req.has("tags"):
@@ -337,11 +371,12 @@ func requirement_met(req: Dictionary, tags_in: Array, stats_in: Dictionary, ener
 		for f in req["flags"]:
 			if flags.get(f, false) != req["flags"][f]:
 				return false
-	# Class-flow predicates (see the timetable in data/schedule.json).
-	if req.has("in_class") and (not class_now().is_empty()) != bool(req["in_class"]):
+	# Class-flow predicates evaluated at the actor's location (player by default).
+	var loc := actor_loc if actor_loc != "" else location
+	if req.has("in_class") and (not class_in_session(loc).is_empty()) != bool(req["in_class"]):
 		return false
 	if req.has("before_class"):
-		var can_wait := class_now().is_empty() and not next_class_today().is_empty()
+		var can_wait := class_in_session(loc).is_empty() and not next_class_at(loc).is_empty()
 		if can_wait != bool(req["before_class"]):
 			return false
 	return true

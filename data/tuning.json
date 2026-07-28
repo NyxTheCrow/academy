@@ -27,6 +27,10 @@
 		"baseline": 50,
 		"drift_per_minute": 0.08
 	},
+	"learning": {
+		"attend_per_week": 0.25,
+		"focus_per_week": 0.5
+	},
 	"combat": {
 		"player_base_hp": 22,
 		"player_base_atk": 5,

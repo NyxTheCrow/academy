@@ -11,6 +11,11 @@
 		],
 		"stats": {
 			"focus": 7
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -26,6 +31,11 @@
 		],
 		"stats": {
 			"focus": 6
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -38,6 +48,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -53,6 +68,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -65,6 +85,11 @@
 		],
 		"stats": {
 			"focus": 3
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -79,6 +104,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -93,6 +123,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -108,6 +143,11 @@
 		],
 		"stats": {
 			"focus": 6
+		},
+		"weights": {
+			"focus_class": 2,
+			"socialize": 2,
+			"daydream": 1
 		}
 	},
 	{
@@ -122,6 +162,11 @@
 		],
 		"stats": {
 			"focus": 7
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -136,6 +181,11 @@
 		],
 		"stats": {
 			"focus": 8
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -149,6 +199,11 @@
 		],
 		"stats": {
 			"focus": 3
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -163,6 +218,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -176,6 +236,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -191,6 +256,11 @@
 		],
 		"stats": {
 			"focus": 6
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -206,6 +276,11 @@
 		],
 		"stats": {
 			"focus": 7
+		},
+		"weights": {
+			"focus_class": 2,
+			"socialize": 2,
+			"daydream": 1
 		}
 	},
 	{
@@ -220,6 +295,11 @@
 		],
 		"stats": {
 			"focus": 8
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -232,6 +312,11 @@
 		],
 		"stats": {
 			"focus": 3
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -246,6 +331,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -260,6 +350,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -275,6 +370,11 @@
 		],
 		"stats": {
 			"focus": 6
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -289,6 +389,11 @@
 		],
 		"stats": {
 			"focus": 7
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -303,6 +408,11 @@
 		],
 		"stats": {
 			"focus": 8
+		},
+		"weights": {
+			"focus_class": 2,
+			"socialize": 2,
+			"daydream": 1
 		}
 	},
 	{
@@ -316,6 +426,11 @@
 		],
 		"stats": {
 			"focus": 3
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -330,6 +445,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -343,6 +463,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -358,6 +483,11 @@
 		],
 		"stats": {
 			"focus": 6
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -373,6 +503,11 @@
 		],
 		"stats": {
 			"focus": 7
+		},
+		"weights": {
+			"focus_class": 1,
+			"socialize": 4,
+			"daydream": 1
 		}
 	},
 	{
@@ -387,6 +522,11 @@
 		],
 		"stats": {
 			"focus": 8
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	},
 	{
@@ -399,6 +539,11 @@
 		],
 		"stats": {
 			"focus": 3
+		},
+		"weights": {
+			"focus_class": 2,
+			"socialize": 2,
+			"daydream": 1
 		}
 	},
 	{
@@ -413,6 +558,11 @@
 		],
 		"stats": {
 			"focus": 4
+		},
+		"weights": {
+			"focus_class": 4,
+			"socialize": 1,
+			"daydream": 0.5
 		}
 	},
 	{
@@ -427,6 +577,11 @@
 		],
 		"stats": {
 			"focus": 5
+		},
+		"weights": {
+			"focus_class": 0.5,
+			"socialize": 1,
+			"daydream": 4
 		}
 	}
 ]

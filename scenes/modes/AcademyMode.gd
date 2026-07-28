@@ -353,6 +353,7 @@ func _on_action_pressed(a: Dictionary) -> void:
 		GameState.advance_time(dur)
 	else:
 		GameState.apply_effects(a.get("effects", {}))
+		GameState.player_learn(a)   # class stat gain, if this is an in-class action
 		GameState.advance_time(dur)
 		GameState.message.emit("You spend a while: %s." % a.get("name", "…"))
 

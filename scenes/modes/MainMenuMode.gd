@@ -37,6 +37,7 @@ func _build_ui() -> void:
 	v.add_child(_menu_button("New Game", func(): finished.emit({"action": "new_game"})))
 	v.add_child(_menu_button("Load Game", func(): finished.emit({"action": "load_game"})))
 	v.add_child(_menu_button("Editor (data)", func(): finished.emit({"action": "editor"})))
+	v.add_child(_menu_button("Simulation (ghost)", func(): finished.emit({"action": "simulation"})))
 	v.add_child(_menu_button("Quit", func(): get_tree().quit()))
 
 func _menu_button(text: String, cb: Callable) -> Button:
