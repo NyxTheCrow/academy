@@ -425,7 +425,6 @@ func _test_modes_and_director() -> void:
 		"res://scenes/modes/InventoryMode.tscn",
 		"res://scenes/modes/SaveLoadMode.tscn",
 		"res://scenes/modes/EditorMode.tscn",
-		"res://scenes/modes/SimulationMode.tscn",
 	]:
 		var fname: String = str(path).get_file()
 		var packed: PackedScene = load(path)

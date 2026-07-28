@@ -34,10 +34,5 @@ func _app_loop() -> void:
 					await Director.run_mode("academy", {})
 			"editor":
 				await Director.run_mode("editor", {"standalone": true})
-			"simulation":
-				# Ghost mode: a fresh clock and roster to watch, no player character.
-				GameState.reset()
-				Students.reset()
-				await Director.run_mode("simulation", {})
 			_:
 				pass  # unknown/closed — show the menu again

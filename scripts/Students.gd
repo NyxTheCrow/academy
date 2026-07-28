@@ -79,7 +79,8 @@ func _npc_act(npc: Dictionary) -> void:
 	else:
 		npc["current_action"] = str(chosen.get("name", "…"))
 		_apply(npc, chosen.get("effects", {}))
-		_npc_learn(npc, chosen)
+		# Class learning goes through the exact same path as the player.
+		GameState.apply_class_learning(npc["stats"], str(npc["location"]), chosen)
 
 ## Weighted random choice among available options. A student's per-activity
 ## weights (data) bias which class action they lean toward; anything unlisted
@@ -97,17 +98,6 @@ func _pick_weighted(options: Array, npc: Dictionary) -> Dictionary:
 		if r <= 0.0:
 			return o
 	return options.back()
-
-## Class stat gain for an NPC doing an in-class action in their own classroom.
-func _npc_learn(npc: Dictionary, activity: Dictionary) -> void:
-	var mode := str(activity.get("class_learn", ""))
-	if mode == "":
-		return
-	var cls := GameState.class_in_session(str(npc["location"]))
-	var stat := str(cls.get("stat", ""))
-	if stat == "":
-		return
-	npc["stats"][stat] = float(npc["stats"].get(stat, 0)) + GameState.class_learn_amount(cls, mode, int(activity.get("duration", 20)))
 
 func _apply(npc: Dictionary, effects: Dictionary) -> void:
 	if effects.has("stats"):

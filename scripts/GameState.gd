@@ -278,17 +278,23 @@ func class_learn_amount(cls: Dictionary, mode: String, minutes: int) -> float:
 		return 0.0
 	return target / float(sessions * slots)
 
-## Apply the player's learning from an in-class activity (before time advances,
-## while the class is still in session).
-func player_learn(activity: Dictionary) -> void:
+## Apply an in-class activity's stat gain to a character's stat sheet, for the
+## class in session at `loc`. THE single learning path — identical for the
+## player and every NPC (same class, same mode, same amount).
+func apply_class_learning(target_stats: Dictionary, loc: String, activity: Dictionary) -> void:
 	var mode := str(activity.get("class_learn", ""))
 	if mode == "":
 		return
-	var cls := class_now()
+	var cls := class_in_session(loc)
 	var stat := str(cls.get("stat", ""))
 	if stat == "":
 		return
-	stats[stat] = float(stats.get(stat, 0)) + class_learn_amount(cls, mode, int(activity.get("duration", 20)))
+	target_stats[stat] = float(target_stats.get(stat, 0)) + class_learn_amount(cls, mode, int(activity.get("duration", 20)))
+
+## The player learning from an in-class activity (before time advances, while
+## the class is still in session).
+func player_learn(activity: Dictionary) -> void:
+	apply_class_learning(stats, location, activity)
 
 ## Skip ahead to the start of the next class here today, and take your seat.
 func wait_for_class() -> void:
