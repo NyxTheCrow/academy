@@ -20,10 +20,13 @@ func _populate() -> void:
 		var label: String = "Mana Reserves" if nk == "mana" else str(nk).capitalize()
 		content.add_child(_kv(label, str(nv) if g.dev_mode else g.need_descriptor(nk, nv)))
 	content.add_child(HSeparator.new())
-	# Aptitude stats (data/stats.json) are deliberately NOT shown anywhere — the
-	# player never sees them, and neither does the character sheet.
-	# Tags are hidden from the player; dev only.
+	# The MC carries the same aptitude stat sheet as every NPC and grows it
+	# through the same class-learning path; dev sees the full sheet (class levels
+	# included) here, exactly as on an NPC's page. Hidden from normal players.
 	if g.dev_mode:
+		content.add_child(_h("Stats (dev)"))
+		_stat_sheet(g.stats)
+		content.add_child(HSeparator.new())
 		content.add_child(_kv("Tags", ", ".join(PackedStringArray(g.tags)) if not g.tags.is_empty() else "none"))
 	content.add_child(_kv("Items carried", str(g.inventory.size())))
 	content.add_child(_kv("Favourites", str(g.favorites.size())))

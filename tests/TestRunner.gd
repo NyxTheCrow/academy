@@ -146,15 +146,19 @@ func _test_tag_gated_actions() -> void:
 	GameState.reset()  # Monday 07:00, in the dormitories
 	GameState.set_location("main_academic_building")
 	# An enrolled student in the classroom can wait for the day's first class;
-	# in-class actions stay hidden until it is in session.
+	# in-class actions stay hidden until it is in session. Quiet self-study is a
+	# before/after-class thing — it's available now.
 	_check("wait_for_class" in _action_ids(), "can wait for the day's first class")
 	_check(not ("focus_class" in _action_ids()), "in-class actions hidden before class")
-	# During class the in-class choices appear and waiting is gone.
+	_check("study_class" in _action_ids(), "can study quietly before class")
+	# During class the in-class choices appear, waiting is gone, and you can no
+	# longer quietly self-study through the lecture.
 	GameState.advance_time(150)  # 09:30 Monday — Law is in session
 	_check(not GameState.class_now().is_empty(), "a class is in session at 09:30 Monday")
 	_check("focus_class" in _action_ids(), "in-class actions appear during class")
 	_check("daydream" in _action_ids(), "daydream is an in-class option")
 	_check(not ("wait_for_class" in _action_ids()), "cannot wait once class is in session")
+	_check(not ("study_class" in _action_ids()), "cannot study quietly during class")
 	# Duel gate
 	GameState.set_location("dueling_palace")
 	_check(not ("duel_cassius" in _action_ids()), "duel hidden without 'can_duel'")
@@ -210,6 +214,24 @@ func _test_learning() -> void:
 	var before := float(GameState.stats.get(str(law["stat"]), 0))
 	GameState.player_learn({"class_learn": "focus", "duration": 20})
 	_check(float(GameState.stats.get(str(law["stat"]), 0)) > before, "focusing raises the class's stat")
+
+	# The MC and the NPCs share one stat sheet and one growth path: an NPC built
+	# from the registry carries the very same aptitude keys (shaping etc.) as the
+	# player, and the same in-class action moves the same stat by the same amount.
+	Students.reset()
+	var mc_keys := GameState.default_stats().keys()
+	mc_keys.sort()
+	var npc_keys: Array = Students.npcs[0]["stats"].keys()
+	npc_keys.sort()
+	_eq(npc_keys, mc_keys, "MC and NPCs carry the identical stat sheet")
+	_check("shaping" in mc_keys and "shaping" in npc_keys, "shaping is on both sheets")
+	var act := {"class_learn": "focus", "duration": 20}
+	var mc_stats := GameState.default_stats()
+	var np_stats := GameState.default_stats()
+	GameState.apply_class_learning(mc_stats, "main_academic_building", act)
+	GameState.apply_class_learning(np_stats, "main_academic_building", act)
+	_eq(float(np_stats[str(law["stat"])]), float(mc_stats[str(law["stat"])]),
+		"MC and NPC grow the class stat by the same amount")
 
 func _test_npc_attendance() -> void:
 	print("[npc attendance + learning]")

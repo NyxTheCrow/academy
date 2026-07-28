@@ -86,6 +86,20 @@ func _kv(key: String, value: String) -> HBoxContainer:
 	h.add_child(val)
 	return h
 
+## Render a character's full aptitude stat sheet into `content`: Focus, then
+## every registry stat indented by its parent/substat hierarchy (class levels
+## included). Shared by the player's character sheet and the NPC detail page so
+## the MC and the NPCs carry — and grow — on exactly the same sheet.
+func _stat_sheet(stats: Dictionary) -> void:
+	content.add_child(_kv("Focus", str(int(stats.get("focus", 0)))))
+	for entry in GameData.stats_registry:
+		var sid := str(entry.get("id", ""))
+		if sid == "":
+			continue
+		var nm := str(entry.get("name", sid))
+		var indent: String = "      " if str(entry.get("parent", "")) != "" else ""
+		content.add_child(_kv(indent + nm, "%.2f" % float(stats.get(sid, 0))))
+
 func _rich(bbcode: String) -> RichTextLabel:
 	var r := RichTextLabel.new()
 	r.bbcode_enabled = true

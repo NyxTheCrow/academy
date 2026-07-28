@@ -39,15 +39,10 @@ func _populate() -> void:
 		content.add_child(_rich(def))
 
 	# Aptitude stats stay hidden from players; dev sees the full sheet (class
-	# levels included), indented by the parent/substat hierarchy.
+	# levels included). Same renderer as the player's own character sheet.
 	if GameState.dev_mode:
 		content.add_child(HSeparator.new())
 		content.add_child(_h("Stats (dev)"))
-		content.add_child(_kv("Focus", str(int(npc["stats"].get("focus", 0)))))
-		for entry in GameData.stats_registry:
-			var sid := str(entry.get("id", ""))
-			var nm := str(entry.get("name", sid))
-			var indent: String = "      " if str(entry.get("parent", "")) != "" else ""
-			content.add_child(_kv(indent + nm, "%.2f" % float(npc["stats"].get(sid, 0))))
+		_stat_sheet(npc["stats"])
 		content.add_child(HSeparator.new())
 		content.add_child(_kv("Tags", ", ".join(PackedStringArray(npc["tags"]))))
