@@ -69,6 +69,9 @@ func _npc_act(npc: Dictionary) -> void:
 				npc["current_action"] = "heading to class"
 				return
 		else:
+			# In the classroom: do a weighted in-class action if class is running,
+			# otherwise wait for it to start (arrived early during the break) —
+			# either way, stay put rather than wandering off.
 			var seated := _class_options(npc)
 			if not seated.is_empty():
 				var pick: Dictionary = _pick_weighted(seated, npc)
@@ -76,10 +79,11 @@ func _npc_act(npc: Dictionary) -> void:
 				_apply(npc, pick.get("effects", {}))
 				# Same shared learning path as the player.
 				GameState.apply_class_learning(npc["stats"], str(npc["location"]), pick)
-				return
-			if "teacher" in npc["tags"]:
+			elif not GameState.class_in_session(CLASSROOM).is_empty() and "teacher" in npc["tags"]:
 				npc["current_action"] = "teaching the class"
-				return
+			else:
+				npc["current_action"] = "waiting for class"
+			return
 
 	var loc := GameData.get_location(npc["location"])
 	var options: Array = []
@@ -124,12 +128,23 @@ func _pick_weighted(options: Array, npc: Dictionary) -> Dictionary:
 			return o
 	return options.back()
 
-## Should this NPC be in class right now? Enrolled students attend any class in
-## session (shared timetable); the day's teacher attends the class they teach.
+## Minutes before a class starts that students set off for it, so they can
+## commute across the passing period and be seated in time (covers the map's
+## worst-case two-hop walk).
+const COMMUTE_LEAD := 40
+
+## Should this NPC be heading to / in class right now? Enrolled students attend
+## any class in session on the shared timetable — and leave a little early for
+## the next one; the day's teacher attends the class they teach.
 func _should_attend(npc: Dictionary) -> bool:
 	var cls := GameState.class_in_session(CLASSROOM)
 	if cls.is_empty():
-		return false
+		var nxt := GameState.next_class_at(CLASSROOM)
+		if nxt.is_empty():
+			return false
+		if GameState._hm(nxt.get("start", "00:00")) - GameState.minutes_of_day > COMMUTE_LEAD:
+			return false
+		cls = nxt   # a class is imminent — head over during the break
 	if "enrolled" in npc["tags"]:
 		return true
 	return str(npc["id"]) == str(cls.get("teacher_id", ""))
