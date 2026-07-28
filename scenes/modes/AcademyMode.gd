@@ -227,11 +227,18 @@ func _rebuild_stats() -> void:
 	stats_box.add_child(_stat_row("Energy", "Energy",
 		GameState.energy_descriptor(), "%d / %d" % [GameState.energy, GameState.max_energy]))
 	for k in GameState.stats:
-		if GameState.is_aptitude(str(k)):
-			continue  # aptitude stats are hidden from the player (and the UI) entirely
+		var key := str(k)
+		if GameState.is_aptitude(key):
+			# Aptitude stats stay hidden from the normal player; dev mode sees the
+			# whole sheet (raw class-level values).
+			if not GameState.dev_mode:
+				continue
+			stats_box.add_child(_stat_row(key, key.capitalize(),
+				"", "%.2f" % float(GameState.stats[k])))
+			continue
 		var v := int(GameState.stats[k])
-		stats_box.add_child(_stat_row(str(k), str(k).capitalize(),
-			GameState.stat_word(str(k)), str(v)))
+		stats_box.add_child(_stat_row(key, key.capitalize(),
+			GameState.stat_word(key), str(v)))
 	# Visible self-assessed needs (words in player mode, numbers in dev).
 	for nk in ["hunger", "thirst", "bladder", "hygiene", "calm", "mana"]:
 		var nv := int(GameState.needs.get(nk, 0))
