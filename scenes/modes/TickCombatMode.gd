@@ -10,19 +10,18 @@ extends "res://scripts/GameMode.gd"
 ## target tile; "Hold" lets a tick pass so the enemy commits.
 
 const TickEngine := preload("res://scripts/combat/TickEngine.gd")
+const HexGrid := preload("res://scenes/modes/HexGrid.gd")
 
 # Untyped on purpose: the engine's own methods aren't visible through a
 # RefCounted-typed handle, so we call them dynamically (as Director does modes).
 var _engine
 var _reason := ""
 var _pending := ""          # action id awaiting a target tile
-var _cells: Array = []      # grid cell buttons
 var _finished_flag := false
 
-# Hex board: cells are manually placed (sheared axial layout), so the board is
-# a plain Control, not a GridContainer.
-const CELL := 56
-var grid_box: Control
+# The board is drawn as real pointy-top hexagons by HexGrid, which also reports
+# clicks back in axial coordinates.
+var hex: HexGrid
 var log_box: RichTextLabel
 var banner: Label
 var status: Label
@@ -80,9 +79,12 @@ func _build_ui() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(body)
 
-	grid_box = Control.new()
-	grid_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	body.add_child(grid_box)
+	hex = HexGrid.new()
+	hex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hex.glyph_provider = Callable(self, "_glyph")
+	hex.color_provider = Callable(self, "_cell_color")
+	hex.cell_clicked.connect(_on_cell)
+	body.add_child(hex)
 	_build_grid()
 
 	var side := VBoxContainer.new()
@@ -107,26 +109,10 @@ func _build_ui() -> void:
 	v.add_child(action_bar)
 	_build_action_bar()
 
-## Lay the axial hex board out as a sheared grid: each row r is nudged right by
-## half a cell, so cells interlock like a hex map. Index order (r outer, q
-## inner) matches _redraw's flat indexing.
+## Size the hex board to the engine's grid.
 func _build_grid() -> void:
 	var g: Vector2i = _engine.grid
-	_cells.clear()
-	for c in grid_box.get_children():
-		c.queue_free()
-	var cw := CELL - 6
-	grid_box.custom_minimum_size = Vector2((g.x + g.y * 0.5) * CELL + 8, g.y * CELL + 8)
-	for r in g.y:
-		for q in g.x:
-			var b := Button.new()
-			b.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			b.position = Vector2((q + r * 0.5) * CELL, r * CELL)
-			b.size = Vector2(cw, cw)
-			b.custom_minimum_size = Vector2(cw, cw)
-			b.pressed.connect(_on_cell.bind(Vector2i(q, r)))
-			grid_box.add_child(b)
-			_cells.append(b)
+	hex.configure(g.x, g.y)
 
 func _build_action_bar() -> void:
 	for child in action_bar.get_children():
@@ -170,12 +156,8 @@ func _pump() -> void:
 			banner.text = "Your move. Pick an action, then a target tile."
 
 func _redraw() -> void:
-	var g: Vector2i = _engine.grid
-	for i in _cells.size():
-		var pos := Vector2i(i % g.x, i / g.x)
-		var b: Button = _cells[i]
-		b.text = _glyph(pos)
-		b.disabled = _pending == ""   # tiles are only pickable while targeting
+	hex.enabled = _pending != ""   # tiles are only pickable while targeting
+	hex.queue_redraw()
 	# Log tail.
 	var lines: Array = _engine.log
 	var tail: Array = lines.slice(maxi(0, lines.size() - 14), lines.size())
@@ -203,6 +185,18 @@ func _glyph(pos: Vector2i) -> String:
 		if t["pos"] == pos:
 			return "^"
 	return "."
+
+## Fill tint for a hex. Alpha 0 lets HexGrid use its default empty-cell colour.
+func _cell_color(pos: Vector2i) -> Color:
+	for u in _engine.units:
+		if u["pos"] == pos:
+			if u["down"]:
+				return Color(0.14, 0.14, 0.16)
+			return Color(0.16, 0.20, 0.34) if u["team"] == "player" else Color(0.30, 0.14, 0.16)
+	for t in _engine.traps:
+		if t["pos"] == pos:
+			return Color(0.28, 0.22, 0.10)
+	return Color(0, 0, 0, 0)
 
 # --- Input ------------------------------------------------------------------
 func _on_action(id: String) -> void:
@@ -250,8 +244,8 @@ func _on_hold() -> void:
 # --- End --------------------------------------------------------------------
 func _on_over(win: String) -> void:
 	_pending = ""
-	for i in _cells.size():
-		(_cells[i] as Button).disabled = true
+	hex.enabled = false
+	hex.queue_redraw()
 	if win == "player":
 		banner.text = "You win the duel."
 	else:
