@@ -30,6 +30,7 @@ var clock: Clock
 var actors: Array = []           # of Actor
 var player: Actor = null
 var fired: Dictionary = {}       # occurrence id -> true (world fire-once ledger)
+var dev_mode: bool = false       # player-facing: show numbers instead of words
 
 var _time_step := 20
 var _max_steps := 200
@@ -358,11 +359,12 @@ func to_dict() -> Dictionary:
 	var actor_dicts: Array = []
 	for a in actors:
 		actor_dicts.append(a.to_dict())
-	return {"clock": clock.to_dict(), "fired": fired.duplicate(true), "actors": actor_dicts}
+	return {"clock": clock.to_dict(), "fired": fired.duplicate(true), "dev_mode": dev_mode, "actors": actor_dicts}
 
 func from_dict(d: Dictionary) -> void:
 	clock.from_dict(d.get("clock", {}))
 	fired = (d.get("fired", {}) as Dictionary).duplicate(true)
+	dev_mode = bool(d.get("dev_mode", dev_mode))
 	var saved: Array = d.get("actors", [])
 	if saved.is_empty():
 		return

@@ -33,6 +33,8 @@ const MODE_SCENES := {
 	"saves": "res://scenes/modes/SaveLoadMode.tscn",
 	"editor": "res://scenes/modes/EditorMode.tscn",
 	"content_editor": "res://scenes/modes/SchemaEditorMode.tscn",
+	"core_academy": "res://scenes/modes/CoreAcademyMode.tscn",
+	"core_saves": "res://scenes/modes/CoreSavesMode.tscn",
 }
 
 var _host: Node = null

@@ -110,10 +110,15 @@ schema-driven editor, no raw-JSON required.
 | Editable numeric tuning (need decay, learning rates) | Built + tested |
 | Seed content (validates clean) | Built |
 | **Runtime `World`/`Sim` loop on the core** (`core/World.gd`) | Built + tested — advances the clock, drifts needs/resources, refills daily, runs unified NPC turns, resolves class learning + recurring/one-time events, save/load |
-| **Game UI (Academy/menus) on the core** | Not yet — still the legacy modes on `GameState` |
-| **Save/load over `Actor`s** | Not yet (Actor has `to_dict`/`from_dict`; a SaveManager is the next seam) |
+| **Game UI — Academy screen on the core** (`scenes/modes/CoreAcademyMode.gd`) | Built + smoke-tested — reads the player `Actor`/`World`, graded location prose, Descriptor words (dev = numbers via F2), action list from `available_interactions`, taking an action drives the world. Reached via "New Game (core)". |
+| **Numberless surface** (`core/Descriptor.gd`) | Built + tested — number→word in one place, one dev-mode branch |
+| **Save/load over `Actor`s** (`core/SaveManager.gd`) | Built + tested — slots over `World.to_dict`, header-only `slot_info` |
+| **The live runtime handle** (`core/Game.gd` autoload) | Built — one `Content` + one `World` the modes read |
+| **Other menus (character/schedule/people/spells/inventory/lexicon) on the core** | Not yet — still legacy on `GameState` |
+| **VN dialogue on the core** | Not yet — `content/conversations.json` exists; `CoreAcademyMode` stubs the launch |
 | **Combat consuming `Actor`s** | Not yet |
 
-The legacy prototype still runs and its 244 tests still pass; the core adds 65.
-Migration is incremental: build the `World` loop and re-point the modes at the
-core, one screen at a time, deleting the `GameState` halves as they're replaced.
+The legacy prototype still runs (reachable via the "(legacy)" menu entries) and
+its 244 tests still pass; the core suite is now 114. Migration is incremental:
+re-point the remaining modes at the `World`, one screen at a time, deleting the
+`GameState`/`Students` halves as they're replaced.

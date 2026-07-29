@@ -18,6 +18,7 @@ GameData="*res://scripts/GameData.gd"
 GameState="*res://scripts/GameState.gd"
 Students="*res://scripts/Students.gd"
 Lexicon="*res://scripts/Lexicon.gd"
+Game="*res://core/Game.gd"
 Director="*res://scripts/Director.gd"
 
 [display]

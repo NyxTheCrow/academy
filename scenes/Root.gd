@@ -32,6 +32,13 @@ func _app_loop() -> void:
 				var loaded: Dictionary = await Director.run_mode("saves", {"load_only": true})
 				if loaded.get("loaded", false):
 					await Director.run_mode("academy", {})
+			"new_game_core":
+				Game.new_game()
+				await Director.run_mode("core_academy", {})
+			"load_game_core":
+				var lc: Dictionary = await Director.run_mode("core_saves", {"load_only": true})
+				if lc.get("loaded", false):
+					await Director.run_mode("core_academy", {})
 			"editor":
 				await Director.run_mode("editor", {"standalone": true})
 			"content_editor":

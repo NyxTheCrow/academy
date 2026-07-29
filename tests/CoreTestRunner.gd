@@ -14,6 +14,8 @@ const ContentC := preload("res://core/Content.gd")
 const SchemaC := preload("res://core/ContentSchema.gd")
 const ValidatorC := preload("res://core/ContentValidator.gd")
 const WorldC := preload("res://core/World.gd")
+const DescriptorC := preload("res://core/Descriptor.gd")
+const SaveManagerC := preload("res://core/SaveManager.gd")
 
 var _passed := 0
 var _failed := 0
@@ -34,6 +36,9 @@ func _ready() -> void:
 	_test_world_npc_attendance()
 	_test_world_occurrences()
 	_test_world_save_load()
+	_test_descriptors()
+	_test_save_manager()
+	_test_core_academy_smoke()
 	print("\n==== core: %d passed, %d failed ====" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -366,6 +371,63 @@ func _test_world_save_load() -> void:
 	_eq(w2.clock.minutes_of_day, 812, "clock minute restored")
 	_check(w2.fired.get("some_event", false), "fired-event ledger restored")
 	_eq(w2.actors.size(), w.actors.size(), "roster restored")
+
+func _test_descriptors() -> void:
+	print("[descriptors — numberless surface]")
+	_eq(DescriptorC.skill(0), "Untrained", "skill 0 -> Untrained")
+	_eq(DescriptorC.skill(20), "Skilled", "skill 20 -> Skilled")
+	_eq(DescriptorC.resource("energy", 90), "Fresh", "energy 90 -> Fresh")
+	_eq(DescriptorC.resource("focus", 10), "Burnt out", "focus 10 -> Burnt out")
+	_eq(DescriptorC.resource("mana", 90), "Brimming", "mana 90 -> Brimming")
+	_eq(DescriptorC.need("hunger", 5), "Starving", "hunger 5 -> Starving")
+	_eq(DescriptorC.relationship(0), "Stranger", "bond 0 -> Stranger")
+	# The one dev-mode branch: word in player mode, number in dev mode.
+	_eq(DescriptorC.value(false, "resource", "energy", 90), "Fresh", "player mode shows the word")
+	_eq(DescriptorC.value(true, "resource", "energy", 90), "90", "dev mode shows the number")
+	_eq(DescriptorC.value(true, "skill", "shaping", 3.5), "3.50", "dev mode shows skill as a float")
+
+func _test_save_manager() -> void:
+	print("[save manager — slots over a World]")
+	var w = _new_world()
+	w.player.location = "gardens"
+	w.player.apply({"skills": {"shaping": 2.5}, "tags": ["pyromancer"]})
+	w.clock.day_count = 3
+	w.clock.minutes_of_day = 615
+	_check(SaveManagerC.save(w, 5), "save writes a slot")
+	var info: Dictionary = SaveManagerC.slot_info(5)
+	_check(info.get("exists", false), "slot header reads without a full load")
+	_eq(str(info.get("name", "")), w.player.name, "header carries the player name")
+	var w2 = _new_world()
+	_check(SaveManagerC.load_into(w2, 5), "load succeeds")
+	_eq(w2.player.location, "gardens", "loaded location")
+	_approx(w2.player.get_skill("shaping"), 2.5, "loaded skill")
+	_check(w2.player.has_tag("pyromancer"), "loaded tag")
+	_eq(w2.clock.day_count, 3, "loaded clock day")
+	_eq(w2.clock.minutes_of_day, 615, "loaded clock minute")
+	SaveManagerC.delete(5)
+	_check(not SaveManagerC.slot_info(5).get("exists", false), "slot deleted")
+
+func _test_core_academy_smoke() -> void:
+	print("[core academy — the UI runs on the World]")
+	Game.boot()  # fresh world for the mode to read
+	var packed: PackedScene = load("res://scenes/modes/CoreAcademyMode.tscn")
+	var ac = packed.instantiate()
+	add_child(ac)  # _ready builds the UI and binds to Game.world
+	_check(ac.action_container.get_child_count() > 0, "the academy renders an action list from the World")
+	# Taking an action drives the World: the clock advances by the action's duration.
+	var study := _find_iid_w(Game.world, "study_room")
+	_check(not study.is_empty(), "study is available in the dorm")
+	var t0: String = Game.world.clock.time_string()
+	ac._on_action(study)
+	_check(Game.world.clock.time_string() != t0, "taking an action advances the world clock through the UI")
+	ac.free()
+	Game.boot()  # leave a clean world for anything after
+
+func _find_iid_w(w, iid: String) -> Dictionary:
+	for i in w.available_interactions(w.player):
+		if str(i.get("id", "")) == iid:
+			return i
+	return {}
 
 func _iids(interactions: Array) -> Array:
 	var out: Array = []

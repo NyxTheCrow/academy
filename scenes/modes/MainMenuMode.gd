@@ -34,8 +34,10 @@ func _build_ui() -> void:
 	v.add_child(sub)
 	v.add_child(HSeparator.new())
 
-	v.add_child(_menu_button("New Game", func(): finished.emit({"action": "new_game"})))
-	v.add_child(_menu_button("Load Game", func(): finished.emit({"action": "load_game"})))
+	v.add_child(_menu_button("New Game (core)", func(): finished.emit({"action": "new_game_core"})))
+	v.add_child(_menu_button("Load Game (core)", func(): finished.emit({"action": "load_game_core"})))
+	v.add_child(_menu_button("New Game (legacy)", func(): finished.emit({"action": "new_game"})))
+	v.add_child(_menu_button("Load Game (legacy)", func(): finished.emit({"action": "load_game"})))
 	v.add_child(_menu_button("Editor (data)", func(): finished.emit({"action": "editor"})))
 	v.add_child(_menu_button("Content Editor (new)", func(): finished.emit({"action": "content_editor"})))
 	v.add_child(_menu_button("Quit", func(): get_tree().quit()))
