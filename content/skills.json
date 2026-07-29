@@ -1,0 +1,21 @@
+[
+	{ "id": "humanities", "name": "Humanities", "parent": "", "hidden": true, "description": "Breadth of worldly, non-magical learning: history, politics, manners." },
+	{ "id": "history", "name": "History", "parent": "humanities", "hidden": true, "description": "Knowledge of the past — dynasties, wars, and the old magical orders." },
+	{ "id": "modern_politics", "name": "Modern Politics", "parent": "humanities", "hidden": true, "description": "Grasp of present-day powers, factions, and law." },
+	{ "id": "etiquette", "name": "Etiquette", "parent": "humanities", "hidden": true, "description": "Poise and correct conduct in polite and courtly company." },
+
+	{ "id": "shaping", "name": "Shaping", "parent": "", "hidden": true, "description": "Practical command of raw magic — bending mana into a working effect." },
+	{ "id": "shaping_speed", "name": "Shaping Speed", "parent": "shaping", "hidden": true, "description": "How quickly you can raise and release a shaped effect." },
+	{ "id": "shaping_precision", "name": "Shaping Precision", "parent": "shaping", "hidden": true, "description": "How finely and accurately you can control a shaped effect." },
+
+	{ "id": "mana_awareness", "name": "Mana Awareness", "parent": "", "hidden": true, "description": "Sensitivity to the flow of mana in the world around you." },
+	{ "id": "self_mana_awareness", "name": "Self Mana Awareness", "parent": "mana_awareness", "hidden": true, "description": "Sensitivity to your own reserves, flow, and strain — drives how precisely your mana reads." },
+
+	{ "id": "magical_theory", "name": "Magical Theory", "parent": "", "hidden": true, "description": "Formal, book-learned understanding of how magic works." },
+	{ "id": "shaping_theory", "name": "Shaping Theory", "parent": "magical_theory", "hidden": true, "description": "The theory behind practical shaping." },
+	{ "id": "sorcery_theory", "name": "Sorcery Theory", "parent": "magical_theory", "hidden": true, "description": "The theory of sorcery." },
+	{ "id": "wizardry_theory", "name": "Wizardry Theory", "parent": "magical_theory", "hidden": true, "description": "The theory of wizardry." },
+
+	{ "id": "perception", "name": "Perception", "parent": "", "hidden": true, "description": "How much you notice — physical detail, and subtle change." },
+	{ "id": "insight", "name": "Insight", "parent": "perception", "hidden": true, "description": "Reading people and situations beneath the surface." }
+]

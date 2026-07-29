@@ -1,0 +1,47 @@
+{
+	"dormitories": {
+		"name": "Dormitories",
+		"description": "Your small dormitory room off the right plaza: a bed, a desk, and a wardrobe.",
+		"connections": ["right_plaza"],
+		"tags": ["indoors", "private", "restful"]
+	},
+	"right_plaza": {
+		"name": "Right Plaza",
+		"description": "The dormitories' plaza. The residence halls stand along one side, and a garden road leads off beneath a stone arch.",
+		"connections": ["main_plaza", "dormitories", "gardens"],
+		"tags": ["outdoors"]
+	},
+	"main_plaza": {
+		"name": "Main Plaza",
+		"description": "The heart of the academy. The Dueling Palace and the main academic building face each other across the square, and paved roads branch to the left and right plazas.",
+		"connections": ["right_plaza", "dueling_palace", "main_academic_building", "secondary_academic_building"],
+		"tags": ["outdoors", "social"]
+	},
+	"main_academic_building": {
+		"name": "Main Academic Building",
+		"description": "Rows of desks beneath a vaulted, rune-carved ceiling. The academy's core lectures are held here.",
+		"connections": ["main_plaza"],
+		"tags": ["indoors", "classroom"]
+	},
+	"secondary_academic_building": {
+		"name": "Secondary Academic Building",
+		"description": "An annexe of smaller halls and workshops off the main plaza, where the practical courses meet.",
+		"connections": ["main_plaza"],
+		"tags": ["indoors", "classroom"]
+	},
+	"dueling_palace": {
+		"name": "Dueling Palace",
+		"description": "A sand-floored arena warded for magical combat, its galleries hung with duelling trophies.",
+		"connections": ["main_plaza"],
+		"tags": ["indoors", "arena"]
+	},
+	"gardens": {
+		"name": "Gardens",
+		"description": [
+			{ "requires": { "min_skills": { "mana_awareness": 5 } }, "text": "Terraced gardens beyond the dormitories' plaza. To your trained sense the ward-lines threaded through the hedges glow faintly, a slow tide of mana pooling in the old stone basins." },
+			{ "text": "Terraced gardens beyond the dormitories' plaza, quiet and green under the dusk." }
+		],
+		"connections": ["right_plaza"],
+		"tags": ["outdoors", "restful"]
+	}
+}

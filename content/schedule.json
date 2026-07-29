@@ -1,0 +1,27 @@
+[
+	{
+		"id": "law", "name": "Introduction to Law", "kind": "class",
+		"room": "main_academic_building", "skill": "modern_politics", "teacher": "adler",
+		"days": ["Monday", "Wednesday", "Friday"], "start": "09:00", "end": "11:00",
+		"description": [
+			{ "text": "Magister Adler works through precedent at the lectern, testing each claim against the next." }
+		]
+	},
+	{
+		"id": "aetherics", "name": "Introduction to Aetherics", "kind": "class",
+		"room": "main_academic_building", "skill": "mana_awareness", "teacher": "fenn",
+		"days": ["Tuesday", "Thursday", "Saturday"], "start": "09:00", "end": "11:00",
+		"description": [
+			{ "requires": { "min_skills": { "self_mana_awareness": 6 } }, "text": "Doctor Fenn guides the class to reach for the ambient flow; you find it at once and spend the hour refining rather than searching." },
+			{ "requires": { "min_skills": { "self_mana_awareness": 2 } }, "text": "Doctor Fenn guides the class to reach for the ambient flow; you catch its edge and lose it, over and over, learning a little from each near-miss." },
+			{ "text": "Doctor Fenn speaks of 'feeling the flow' and you feel nothing at all — only the cold of the hall. You copy the motions and hope the sense comes later." }
+		]
+	},
+	{
+		"id": "curfew", "name": "Curfew", "kind": "curfew",
+		"room": "dormitories",
+		"days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+		"start": "22:00", "end": "23:59",
+		"description": "Return to the dormitories and sleep to restore your energy."
+	}
+]

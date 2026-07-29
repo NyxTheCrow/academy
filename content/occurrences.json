@@ -1,0 +1,20 @@
+[
+	{
+		"id": "adler_calls_on_you",
+		"attach_to": "law",
+		"once": true,
+		"trigger": { "week": 1 },
+		"description": [
+			{ "requires": { "min_skills": { "modern_politics": 4 } }, "text": "Adler fixes on you: 'Defend the claimant.' You have the precedent ready, and lay it out cleanly; a few classmates glance over, reassessing." },
+			{ "text": "Adler fixes on you without warning: 'Defend the claimant.' You stumble through it, half-remembering the reading, and sit down hot-faced — but you will not forget this case again." }
+		],
+		"effects": { "skills": { "modern_politics": 1.0 }, "flags": { "spoke_in_law": true } }
+	},
+	{
+		"id": "noticed_by_professor",
+		"once": true,
+		"trigger": { "flags": { "attended_lecture": true } },
+		"description": "After the lecture a professor holds you back a moment. 'You have promise,' she says. You feel emboldened — perhaps you could hold your own in a duel now.",
+		"effects": { "flags": { "noticed_by_professor": true }, "tags": ["can_duel"] }
+	}
+]

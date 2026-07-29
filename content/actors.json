@@ -1,0 +1,55 @@
+{
+	"player": {
+		"name": "Student",
+		"kind": "player",
+		"is_player": true,
+		"location": "dormitories",
+		"tags": ["student", "enrolled"],
+		"traits": [],
+		"skills": {},
+		"needs": {},
+		"resources": {}
+	},
+	"elara": {
+		"name": "Elara",
+		"kind": "student",
+		"location": "main_academic_building",
+		"tags": ["student", "enrolled", "dressed"],
+		"traits": ["bookish"],
+		"skills": { "history": 2, "sorcery_theory": 1 },
+		"weights": { "focus_class": 4, "socialize": 1, "daydream": 0.5 }
+	},
+	"cassius": {
+		"name": "Cassius",
+		"kind": "student",
+		"location": "dueling_palace",
+		"tags": ["student", "enrolled", "dressed"],
+		"traits": ["duelist_trained"],
+		"skills": { "shaping": 3 },
+		"weights": { "focus_class": 1, "socialize": 4, "daydream": 1 }
+	},
+	"nyx": {
+		"name": "Nyx",
+		"kind": "student",
+		"location": "main_plaza",
+		"tags": ["student", "enrolled", "dressed"],
+		"traits": ["pyromancer_born", "mana_sensitive"],
+		"skills": { "mana_awareness": 4, "shaping": 2 },
+		"weights": { "focus_class": 4, "socialize": 1, "daydream": 0.5 }
+	},
+	"adler": {
+		"name": "Magister Corvane Adler",
+		"kind": "faculty",
+		"location": "main_academic_building",
+		"tags": ["faculty", "dressed", "teacher"],
+		"skills": { "modern_politics": 20, "history": 12 }
+	},
+	"fenn": {
+		"name": "Doctor Ysolde Fenn",
+		"kind": "faculty",
+		"location": "main_academic_building",
+		"tags": ["faculty", "dressed", "teacher", "mage"],
+		"traits": ["mana_sensitive"],
+		"skills": { "mana_awareness": 22, "self_mana_awareness": 18 }
+	}
+}

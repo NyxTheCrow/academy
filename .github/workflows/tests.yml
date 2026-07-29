@@ -29,5 +29,8 @@ jobs:
             exit 1
           fi
 
-      - name: Run spine tests
+      - name: Run spine tests (legacy prototype)
         run: ./godot --headless --path . tests/TestRunner.tscn
+
+      - name: Run core tests (new foundation + content validation)
+        run: ./godot --headless --path . tests/CoreTestRunner.tscn

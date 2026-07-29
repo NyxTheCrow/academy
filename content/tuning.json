@@ -1,0 +1,19 @@
+{
+	"clock": {
+		"start_minutes": 420,
+		"day_minutes": 1440,
+		"weeks_per_month": 4,
+		"months_per_trimester": 3,
+		"trimesters_per_year": 3,
+		"school_days_per_week": 5,
+		"walk_minutes": 5
+	},
+	"learning": {
+		"attend_per_week": 0.25,
+		"focus_per_week": 0.5
+	},
+	"world": {
+		"time_step": 20,
+		"max_steps": 200
+	}
+}

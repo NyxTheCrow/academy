@@ -1,0 +1,76 @@
+{
+	"change_clothes": {
+		"name": "Change into uniform",
+		"where": ["dormitories"],
+		"duration": 5,
+		"requires": { "without_tags": ["dressed"] },
+		"effects": { "tags": ["dressed"], "remove_tags": ["scruffy"] },
+		"description": "You change into the grey-and-blue of a first-year."
+	},
+	"wash_up": {
+		"name": "Wash up",
+		"where": ["dormitories"],
+		"duration": 10,
+		"effects": { "energy": 5, "needs": { "hygiene": 30 }, "tags": ["fresh"] }
+	},
+	"study_room": {
+		"name": "Study at your desk",
+		"where": ["dormitories"],
+		"duration": 30,
+		"requires": { "min_resources": { "focus": 8 } },
+		"effects": { "energy": -10, "resources": { "focus": -8 } },
+		"description": [
+			{ "requires": { "min_skills": { "sorcery_theory": 4 } }, "text": "The theory falls open for you now; you read ahead, connecting principles the lecture only gestured at." },
+			{ "text": "You work through the assigned reading at your desk, forcing the ideas to stick." }
+		]
+	},
+	"sleep": {
+		"name": "Sleep until morning",
+		"where": ["dormitories"],
+		"duration": 0,
+		"sleep": true
+	},
+	"stretch": {
+		"name": "Stretch your legs",
+		"where": ["gardens"],
+		"duration": 5,
+		"effects": { "energy": 3, "needs": { "calm": 3 } }
+	},
+	"chat_elara": {
+		"name": "Talk with Elara",
+		"where": ["gardens"],
+		"duration": 20,
+		"requires": { "time_after": "17:00" },
+		"dialogue": "elara_evening"
+	},
+	"focus_class": {
+		"name": "Focus on the class",
+		"where": ["main_academic_building", "secondary_academic_building"],
+		"duration": 20,
+		"requires": { "tags": ["enrolled"] },
+		"learn_mode": "focus",
+		"effects": { "energy": -6, "resources": { "focus": -6 }, "flags": { "attended_lecture": true } }
+	},
+	"socialize": {
+		"name": "Socialize",
+		"where": ["main_academic_building", "secondary_academic_building"],
+		"duration": 20,
+		"requires": { "tags": ["enrolled"] },
+		"learn_mode": "attend",
+		"effects": { "energy": -3, "needs": { "calm": 4 } }
+	},
+	"daydream": {
+		"name": "Daydream",
+		"where": ["main_academic_building", "secondary_academic_building"],
+		"duration": 20,
+		"requires": { "tags": ["enrolled"] },
+		"learn_mode": "attend",
+		"effects": { "energy": 1, "needs": { "calm": 3 } }
+	},
+	"spar": {
+		"name": "Spar with a training dummy",
+		"where": ["dueling_palace"],
+		"duration": 30,
+		"effects": { "energy": -15 }
+	}
+}

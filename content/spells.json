@@ -1,0 +1,14 @@
+[
+	{ "id": "ward", "name": "Ward", "element": "Force", "requires": {}, "description": "A basic protective ward every student learns in their first week." },
+	{ "id": "ember", "name": "Ember Bolt", "element": "Fire", "requires": { "tags": ["mage"] }, "description": "A small dart of flame. The first offensive spell taught to mages." },
+	{ "id": "fire_wall", "name": "Fire Wall", "element": "Fire", "requires": { "tags": ["pyromancer"] }, "description": "Raise a wall of flame that burns anyone who enters or lingers." },
+	{ "id": "mend", "name": "Mending", "element": "Life", "requires": { "tags": ["scholar"] }, "description": "Knit small wounds and steady frayed nerves." },
+	{
+		"id": "mana_sense", "name": "Mana Sense", "element": "Aether", "requires": {},
+		"description": [
+			{ "requires": { "min_skills": { "self_mana_awareness": 8 } }, "text": "You read your reserves to the drop — a precise inner gauge of how much you hold and how fast it ebbs." },
+			{ "requires": { "min_skills": { "self_mana_awareness": 3 } }, "text": "You can feel roughly how full you are — a vague sense of high or low, brightening as you practise." },
+			{ "text": "You reach inward and feel only a confused warmth; whether your reserves are full or nearly spent, you honestly cannot tell." }
+		]
+	}
+]

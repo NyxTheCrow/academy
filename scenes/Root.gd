@@ -34,5 +34,7 @@ func _app_loop() -> void:
 					await Director.run_mode("academy", {})
 			"editor":
 				await Director.run_mode("editor", {"standalone": true})
+			"content_editor":
+				await Director.run_mode("content_editor", {"standalone": true})
 			_:
 				pass  # unknown/closed — show the menu again

@@ -1,0 +1,5 @@
+[
+	{ "id": "energy", "name": "Energy", "max": 100, "start": 100, "daily_refill": true, "description": "How rested you are. Drains as you act; a night's sleep restores it. Fresh down to Exhausted." },
+	{ "id": "focus", "name": "Focus", "max": 100, "start": 100, "daily_refill": true, "description": "Your remaining mental bandwidth for the day — how much more you can absorb before your mind is spent. Sharp down to Burnt out." },
+	{ "id": "mana", "name": "Mana Reserves", "max": 100, "start": 100, "regen_per_min": 0.08, "description": "Your inner reservoir of magic — Brimming down to Empty. Recovers with rest." }
+]

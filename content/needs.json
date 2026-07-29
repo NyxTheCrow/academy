@@ -1,0 +1,7 @@
+[
+	{ "id": "hunger", "name": "Hunger", "start": 75, "decay_per_min": -0.08, "description": "How fed you are, by your own reckoning — Full down to Starving. Eat to restore it." },
+	{ "id": "thirst", "name": "Thirst", "start": 75, "decay_per_min": -0.12, "description": "How hydrated you feel — Slaked down to Dry as dust. Drink to restore it." },
+	{ "id": "bladder", "name": "Bladder", "start": 85, "decay_per_min": -0.10, "description": "How badly you need to relieve yourself — Empty down to Desperate." },
+	{ "id": "hygiene", "name": "Hygiene", "start": 85, "decay_per_min": -0.04, "description": "How clean you feel — Fresh down to Reeking. Wash up to restore it." },
+	{ "id": "calm", "name": "Calm", "start": 50, "decay_per_min": 0.0, "baseline": 50, "description": "Composure under stress and fear — Serene down to Panicked. Always eases back toward a baseline over time." }
+]

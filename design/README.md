@@ -22,6 +22,8 @@ Each doc tags its claims:
 | `05-character-creation-and-backgrounds.md` | Backgrounds as the big branch multiplier |
 | `06-open-questions.md` | The running list of unresolved decisions |
 | `07-mapping-to-current-build.md` | Which ideas the prototype already supports |
+| `08-combat-framework.md` | The tick/hex WEGO combat framework |
+| `09-new-core-architecture.md` | **The restructured `core/` + `content/` foundation** (unified actors, locations⟂events, recurring+one-time events, graded descriptions, schema-driven editor) |
 
 ## Guiding principle
 

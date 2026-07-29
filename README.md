@@ -17,6 +17,22 @@ up so content can go in:
 > From the design chats: **the clock is the backbone, the game state is the
 > nervous system, and the Director is the switchboard between screens.**
 
+## New core foundation (`core/` + `content/`)
+
+A clean, restructured base is being grown alongside this prototype and is the
+intended direction — see **`design/09-new-core-architecture.md`**. It unifies the
+player and NPCs as one `Actor`, separates locations (places) from events
+(recurring timetable + one-time sub-events), makes stat-gated "graded reveal"
+descriptions a first-class primitive, and is driven by a single **content schema**
+that powers a **schema-driven editor** ("Content Editor (new)" on the main menu)
+and a validator. It has its own headless suite:
+
+```bash
+godot --headless tests/CoreTestRunner.tscn
+```
+
+Everything below describes the still-running legacy prototype it will replace.
+
 ## Core systems
 
 The world runs on **two core states — TIME and LOCATION — and a shared

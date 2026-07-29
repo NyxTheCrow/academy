@@ -1,0 +1,24 @@
+{
+	"elara_evening": {
+		"lines": [
+			{ "speaker": "Elara", "text": "There you are! I saved us a table by the window. The whole tower's quiet tonight." },
+			{ "speaker": "You", "text": [
+				{ "requires": { "min_skills": { "insight": 4 } }, "text": "(There's a tightness around her eyes she's trying to hide — something's wrong, and it isn't the exams.)" },
+				{ "text": "It's been a long week. I could use the company." }
+			] },
+			{ "speaker": "Elara", "text": "Then stay a while. Tell me — what's been on your mind lately?" },
+			{ "choices": [
+				{ "text": "\"Honestly? The exams terrify me.\"", "effects": { "relationships": { "elara": 3 }, "flags": { "confided_in_elara": true } }, "goto": "wrap" },
+				{ "text": "\"Just glad to be here with you.\"", "effects": { "relationships": { "elara": 2 }, "needs": { "calm": 5 } }, "goto": "wrap" },
+				{ "text": "\"You seem troubled. What is it?\"", "requires": { "min_skills": { "insight": 4 } }, "effects": { "relationships": { "elara": 4 }, "flags": { "read_elara": true } }, "goto": "confide" }
+			] },
+
+			{ "label": "confide" },
+			{ "speaker": "Elara", "text": "...You noticed. It's my family. But — not tonight. Thank you for seeing it." },
+			{ "speaker": "You", "text": "Whenever you're ready." },
+
+			{ "label": "wrap" },
+			{ "speaker": "Elara", "text": "You always know what to say. Same time next week?" }
+		]
+	}
+}

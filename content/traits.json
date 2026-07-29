@@ -1,0 +1,7 @@
+[
+	{ "id": "quick_study_shaping", "name": "Quick Study (Shaping)", "description": "Shaping comes easily; you master shaped effects faster than your peers.", "learn_rates": { "shaping": 1.5, "shaping_precision": 1.5 } },
+	{ "id": "bookish", "name": "Bookish", "description": "Raised among books. Learns history and theory quickly, and starts as a Scholar.", "grants_tags": ["scholar"], "learn_rates": { "history": 1.5, "sorcery_theory": 1.3 } },
+	{ "id": "mana_sensitive", "name": "Mana-Sensitive", "description": "Born with an unusual feel for mana; your sense of it sharpens far faster than normal.", "learn_rates": { "mana_awareness": 1.5, "self_mana_awareness": 2.0 } },
+	{ "id": "pyromancer_born", "name": "Born to Fire", "description": "Raw talent for flame that unsettles the faculty.", "grants_tags": ["mage", "pyromancer"] },
+	{ "id": "duelist_trained", "name": "Trained Duelist", "description": "Trained to fight early. May duel formally, and can Brace in combat.", "grants_tags": ["duelist", "can_duel"] }
+]
