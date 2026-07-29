@@ -358,6 +358,14 @@ func _on_action_pressed(a: Dictionary) -> void:
 	elif a.has("goto"):
 		GameState.set_location(str(a["goto"]))
 		GameState.advance_time(dur)
+	elif a.get("class_event", false):
+		# A bespoke in-class action: resolve its (possibly level-dependent)
+		# description and put that in the journal instead of a generic line.
+		var txt := GameState.resolve_class_event_text(a)
+		GameState.apply_effects(a.get("effects", {}))
+		GameState.player_learn(a)   # class stat gain
+		GameState.advance_time(dur)
+		GameState.message.emit(txt if txt != "" else "You take part: %s." % a.get("name", "…"))
 	else:
 		GameState.apply_effects(a.get("effects", {}))
 		GameState.player_learn(a)   # class stat gain, if this is an in-class action

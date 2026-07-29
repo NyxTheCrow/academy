@@ -75,7 +75,16 @@ func _view_week() -> void:
 		if is_today:
 			head = "[color=lightgreen]● %s (today)[/color]" % wd
 		var events := _events_for(wd)
-		var summary := ", ".join(PackedStringArray(events.map(func(e): return str(e.get("name", ""))))) if not events.is_empty() else "—"
+		var lines: Array = events.map(func(e):
+			var where := str(e.get("location", ""))
+			var tm := str(e.get("time", ""))
+			var suffix := ""
+			if tm != "":
+				suffix += "  ·  " + tm
+			if where != "":
+				suffix += "  ·  " + where
+			return "%s%s" % [str(e.get("name", "")), suffix])
+		var summary := "\n    ".join(PackedStringArray(lines)) if not lines.is_empty() else "—"
 		content.add_child(_rich("%s\n[color=gray]    %s[/color]" % [head, summary]))
 
 func _view_month() -> void:

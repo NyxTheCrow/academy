@@ -1,0 +1,85 @@
+{
+	"__schema__": "Per-class in-class actions. Keyed by a class's class_id (see schedule.json). Each class lists `events`; each event is one thing the PLAYER can do while that class is in session, and replaces the generic Focus/Socialize/Daydream verbs for the player (NPCs still use the generic verbs). Fields: id (unique), name (button label), learn ('focus' | 'attend' — drives how much of the class's stat it grants), effects (optional, applied on take), descriptions (ordered variants; the FIRST whose optional `requires` is met is shown in the journal, so put specific / higher-level variants first and a plain default with no `requires` last). `requires` uses the same shape as everything else (min_stats/tags/without_tags/flags/…), so a description can branch on ANY stat — e.g. how a mana exercise reads depending on your shaping level.",
+
+	"law": {
+		"events": [
+			{ "id": "law_case", "name": "Work the assigned case", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "text": "You work through the assigned case, testing each precedent against the next until the reasoning holds." }
+				] },
+			{ "id": "law_listen", "name": "Follow the argument", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You follow the arguments loosely, catching the shape of the law if not every detail." }
+				] }
+		]
+	},
+
+	"aetherics": {
+		"events": [
+			{ "id": "aetherics_sense", "name": "Attempt the mana-sensing exercise", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "requires": { "min_stats": { "shaping": 3 } },
+						"text": "Shaping has taught your hands the feel of live mana, so when the class reaches for the ambient flow you find it almost at once — and spend the hour refining rather than searching." },
+					{ "requires": { "min_stats": { "shaping": 1 } },
+						"text": "You have shaped enough to know the mana is really there; you catch the edge of the current and lose it, over and over, but each near-miss teaches you a little." },
+					{ "text": "The others murmur about 'feeling the flow' and you feel nothing at all — only the cold of the hall and your own frustration. You copy the motions and hope the sense comes later." }
+				] },
+			{ "id": "aetherics_listen", "name": "Take in the theory", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You let the lecture wash over you, noting what you can of the diagrams of flow and reserve." }
+				] }
+		]
+	},
+
+	"history": {
+		"events": [
+			{ "id": "history_trace", "name": "Trace the dynasties", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "text": "You trace the dynasties and their wars, fixing the order of it in your memory." }
+				] },
+			{ "id": "history_muse", "name": "Let it wash over you", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You half-listen, letting the old names drift past like a story told at a fire." }
+				] }
+		]
+	},
+
+	"pe": {
+		"events": [
+			{ "id": "pe_drill", "name": "Push through the drill", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "text": "You push through the conditioning drills, forcing yourself to read every feint and tell before it lands." }
+				] },
+			{ "id": "pe_pace", "name": "Pace yourself", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You go through the motions of the drill, breaking a light sweat but saving your strength." }
+				] }
+		]
+	},
+
+	"practical_shaping": {
+		"events": [
+			{ "id": "shaping_work", "name": "Work the shaping set", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "text": "You bend a thread of raw mana into the set shape, over and over, until your hands stop shaking." }
+				] },
+			{ "id": "shaping_watch", "name": "Watch and copy", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You watch the demonstration and copy it loosely, more spectator than shaper." }
+				] }
+		]
+	},
+
+	"sorcery_intro": {
+		"events": [
+			{ "id": "sorcery_study", "name": "Wrestle with first principles", "learn": "focus", "effects": { "energy": -6, "stats": { "focus": -6 } },
+				"descriptions": [
+					{ "text": "You wrestle with the first principles of sorcery, filling the margins of your notes with questions." }
+				] },
+			{ "id": "sorcery_skim", "name": "Skim the theory", "learn": "attend", "effects": { "energy": -3, "needs": { "calm": 4 } },
+				"descriptions": [
+					{ "text": "You skim along the surface of the theory, catching the gist and little else." }
+				] }
+		]
+	}
+}

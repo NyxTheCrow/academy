@@ -322,6 +322,39 @@ func apply_class_learning(target_stats: Dictionary, loc: String, activity: Dicti
 func player_learn(activity: Dictionary) -> void:
 	apply_class_learning(stats, location, activity)
 
+## The bespoke in-class actions a class defines (data/class_sessions.json),
+## shaped like activities so they slot straight into available_actions. Each
+## carries `class_learn` (its learn mode) and a `descriptions` list resolved on
+## take. Empty when the class defines none — the generic verbs are the fallback.
+func class_events(class_id: String) -> Array:
+	if class_id == "":
+		return []
+	var defs: Dictionary = GameData.class_sessions.get(class_id, {})
+	var out: Array = []
+	for ev in defs.get("events", []):
+		if not requirement_met(ev.get("requires", {}), tags, stats, energy):
+			continue
+		out.append({
+			"id": str(ev.get("id", class_id + "_event")),
+			"name": str(ev.get("name", "Take part")),
+			"duration": int(ev.get("duration", 20)),
+			"class_learn": str(ev.get("learn", "attend")),
+			"effects": ev.get("effects", {}),
+			"descriptions": ev.get("descriptions", []),
+			"class_event": true,
+		})
+	return out
+
+## Pick the description a class event shows right now. The FIRST variant whose
+## optional `requires` is met wins (author specific / higher-level variants
+## first, a plain no-`requires` default last), so the same action can read
+## differently depending on any of the player's stats — e.g. shaping level.
+func resolve_class_event_text(event: Dictionary) -> String:
+	for d in event.get("descriptions", []):
+		if requirement_met(d.get("requires", {}), tags, stats, energy):
+			return str(d.get("text", ""))
+	return ""
+
 ## Skip ahead to the start of the next class here today, and take your seat.
 func wait_for_class() -> void:
 	var e := next_class_today()
@@ -420,11 +453,21 @@ func current_location() -> Dictionary:
 func available_actions() -> Array:
 	var loc := current_location()
 	var out: Array = []
+	# A class in session may define its own bespoke in-class actions; when it
+	# does they replace the generic learning verbs (Focus/Socialize/Daydream)
+	# for the player. NPCs keep using the generic verbs.
+	var events := class_events(str(class_in_session(location).get("class_id", "")))
 	# Activities live in their own registry; a location just lists which it offers.
 	for aid in loc.get("activities", []):
 		var a := GameData.get_activity(str(aid))
-		if not a.is_empty() and requirement_met(a.get("requires", {}), tags, stats, energy):
+		if a.is_empty():
+			continue
+		if not events.is_empty() and str(a.get("class_learn", "")) != "":
+			continue  # superseded by this class's own events
+		if requirement_met(a.get("requires", {}), tags, stats, energy):
 			out.append(a)
+	for ev in events:
+		out.append(ev)
 	for conn in loc.get("connections", []):
 		var dest: Dictionary = GameData.locations.get(conn, {})
 		out.append({

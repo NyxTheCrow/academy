@@ -17,6 +17,7 @@ var backgrounds: Array = []      # character-creation backgrounds
 var spells: Array = []           # spell list
 var items: Dictionary = {}       # item_id -> { name, description, use? }
 var schedule: Array = []         # recurring timetable entries
+var class_sessions: Dictionary = {} # class_id -> { events: [...] } bespoke in-class actions
 var tags_registry: Array = []    # documented tags (editable reference list)
 var tuning: Dictionary = {}      # editable numeric knobs (decay, baselines, ...)
 var tick_actions: Dictionary = {} # prototype timeline-combat action defs
@@ -43,6 +44,7 @@ func reload() -> void:
 	spells = _load_array(src_path("spells.json"))
 	items = _load_dict(src_path("items.json"))
 	schedule = _load_array(src_path("schedule.json"))
+	class_sessions = _load_dict(src_path("class_sessions.json"))
 	tags_registry = _load_array(src_path("tags.json"))
 	tuning = _load_dict(src_path("tuning.json"))
 	tick_actions = _load_dict(src_path("tick_actions.json"))

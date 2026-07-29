@@ -21,6 +21,7 @@ func _ready() -> void:
 	_test_tag_gated_actions()
 	_test_classes()
 	_test_learning()
+	_test_class_events()
 	_test_npc_attendance()
 	_test_combat_action_filter()
 	_test_event_firing()
@@ -155,8 +156,9 @@ func _test_tag_gated_actions() -> void:
 	# longer quietly self-study through the lecture.
 	GameState.advance_time(150)  # 09:30 Monday — Law is in session
 	_check(not GameState.class_now().is_empty(), "a class is in session at 09:30 Monday")
-	_check("focus_class" in _action_ids(), "in-class actions appear during class")
-	_check("daydream" in _action_ids(), "daydream is an in-class option")
+	# Law defines its own in-class events, which replace the generic verbs.
+	_check("law_case" in _action_ids(), "the class's own in-class action appears during class")
+	_check(not ("focus_class" in _action_ids()), "generic in-class verbs are superseded by the class's events")
 	_check(not ("wait_for_class" in _action_ids()), "cannot wait once class is in session")
 	_check(not ("study_class" in _action_ids()), "cannot study quietly during class")
 	# Duel gate
@@ -232,6 +234,43 @@ func _test_learning() -> void:
 	GameState.apply_class_learning(np_stats, "main_academic_building", act)
 	_eq(float(np_stats[str(law["stat"])]), float(mc_stats[str(law["stat"])]),
 		"MC and NPC grow the class stat by the same amount")
+
+func _test_class_events() -> void:
+	print("[per-class in-class events]")
+	# Each class carries its own bespoke in-class actions.
+	_check(not GameState.class_events("law").is_empty(), "a class defines its own in-class events")
+	_check(GameState.class_events("").is_empty(), "no class -> no events")
+	_check(GameState.class_events("not_a_class").is_empty(), "unknown class -> no events (falls back to generic)")
+
+	# During Law, the player is offered Law's events, not the generic verbs, and
+	# taking one still routes through the shared learning path.
+	GameState.reset()
+	GameState.set_location("main_academic_building")
+	GameState.advance_time(120)  # 09:00 Monday — Law in session
+	var ids := _action_ids()
+	_check("law_case" in ids, "Law's own action is offered during Law")
+	_check(not ("focus_class" in ids), "the generic verb is replaced during a class with events")
+	var law_ev: Dictionary = {}
+	for a in GameState.available_actions():
+		if str(a.get("id", "")) == "law_case":
+			law_ev = a
+	var before := float(GameState.stats.get("modern_politics", 0))
+	GameState.player_learn(law_ev)
+	_check(float(GameState.stats.get("modern_politics", 0)) > before, "a class event raises the class's stat")
+
+	# A description branches on ANY stat: the Aetherics mana-sensing exercise
+	# reads differently depending on the player's SHAPING level.
+	var sense := {}
+	for ev in GameData.class_sessions.get("aetherics", {}).get("events", []):
+		if str(ev.get("id", "")) == "aetherics_sense":
+			sense = {"descriptions": ev.get("descriptions", [])}
+	GameState.reset()
+	GameState.stats["shaping"] = 0
+	var novice := GameState.resolve_class_event_text(sense)
+	GameState.stats["shaping"] = 5
+	var adept := GameState.resolve_class_event_text(sense)
+	_check(novice != "" and adept != "", "the exercise has text at both levels")
+	_check(novice != adept, "the exercise reads differently by shaping level")
 
 func _test_npc_attendance() -> void:
 	print("[npc attendance + learning]")
@@ -336,6 +375,7 @@ func _test_data_loaded() -> void:
 	_check(GameData.spells.size() >= 3, "spells loaded")
 	_check(GameData.items.size() >= 2, "items loaded")
 	_check(GameData.schedule.size() >= 2, "schedule loaded")
+	_check(GameData.class_sessions.has("law"), "class sessions loaded")
 	_check(GameData.tags_registry.size() >= 5, "tags registry loaded")
 	_check(GameData.stats_registry.size() >= 15, "stats registry loaded (15+)")
 	_check(GameData.tuning.has("need_decay_per_minute"), "tuning loaded")
