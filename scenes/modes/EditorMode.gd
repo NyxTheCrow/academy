@@ -18,6 +18,7 @@ const FILES := [
 	["Items", "items.json", "items"],
 	["Spells", "spells.json", "spells"],
 	["Schedule", "schedule.json", "schedule"],
+	["Class Sessions", "class_sessions.json", "class_sessions"],
 	["Combat Actions", "combat_actions.json", "combat_actions"],
 	["Timeline Actions (proto)", "tick_actions.json", "tick_actions"],
 	["Backgrounds", "backgrounds.json", "backgrounds"],
@@ -38,6 +39,13 @@ const TEMPLATES := {
 		"tpl": {"name": "New Activity", "duration": 10, "effects": {}, "requires": {}}},
 	"faculty": {"kind": "dict", "label": "teacher", "prefix": "new_teacher",
 		"tpl": {"name": "New Teacher", "title": "", "teaches": ""}},
+	"class_sessions": {"kind": "dict", "label": "class's in-class events", "prefix": "new_class_id",
+		"tpl": {"events": [
+			{"id": "new_event", "name": "New in-class action", "learn": "attend", "effects": {},
+				"descriptions": [
+					{"requires": {"min_stats": {}}, "text": "Shown when the requirement is met (author higher-level variants first)."},
+					{"text": "Default description, shown when nothing above matched."}
+				]}]}},
 	"items": {"kind": "dict", "label": "item", "prefix": "new_item",
 		"tpl": {"name": "New Item", "description": "", "use": {}, "consumable": false}},
 	"encounters": {"kind": "dict", "label": "encounter", "prefix": "new_encounter",
@@ -195,6 +203,7 @@ func _runtime_data(key: String) -> Variant:
 		"spells": return GameData.spells
 		"items": return GameData.items
 		"schedule": return GameData.schedule
+		"class_sessions": return GameData.class_sessions
 		"tags": return GameData.tags_registry
 		"stats": return GameData.stats_registry
 		"tuning": return GameData.tuning
@@ -246,6 +255,7 @@ func _apply_runtime(key: String, parsed: Variant) -> void:
 		"spells": GameData.spells = parsed
 		"items": GameData.items = parsed
 		"schedule": GameData.schedule = parsed
+		"class_sessions": GameData.class_sessions = parsed
 		"tags": GameData.tags_registry = parsed
 		"stats": GameData.stats_registry = parsed
 		"tuning": GameData.tuning = parsed

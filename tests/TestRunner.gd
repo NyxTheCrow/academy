@@ -35,6 +35,7 @@ func _ready() -> void:
 	_test_save_slots()
 	_test_data_overrides()
 	_test_modes_and_director()
+	_test_editor_coverage()
 	_test_tick_combat()
 
 	print("\n==== %d passed, %d failed ====" % [_passed, _failed])
@@ -521,6 +522,23 @@ func _test_modes_and_director() -> void:
 		_check(m != null and m.has_method("enter"), "%s script attached" % fname)
 		if m != null:
 			m.free()
+
+## Every file the Data Editor lists must be wired to real runtime data (get and
+## apply), so new data tables can't silently fall through as an empty {}.
+func _test_editor_coverage() -> void:
+	print("[editor data coverage]")
+	var packed: PackedScene = load("res://scenes/modes/EditorMode.tscn")
+	var m = packed.instantiate()
+	var keys: Array = []
+	for entry in m.FILES:
+		var key := str(entry[2])
+		keys.append(key)
+		var data = m._runtime_data(key)
+		# A wired key returns its populated table; the fall-through returns {}.
+		_check(not (data is Dictionary and (data as Dictionary).is_empty()),
+			"editor exposes runtime data for '%s'" % key)
+	_check("class_sessions" in keys, "class sessions are editable in the Data Editor")
+	m.free()
 
 # Untyped return so callers dispatch the engine's methods dynamically (a
 # RefCounted-typed handle wouldn't expose them to the static checker).
