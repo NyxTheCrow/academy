@@ -15,7 +15,12 @@ static func validate(content, schema: Dictionary) -> Array:
 	for type in schema:
 		var spec: Dictionary = schema[type]
 		var col = content.collection(type)
-		var entries := _entries(col)
+		var entries: Array
+		if str(spec.get("collection", "")) == "single":
+			# One implicit entry: the object itself (e.g. tuning.json).
+			entries = [[type, col]] if col is Dictionary else []
+		else:
+			entries = _entries(col)
 		for pair in entries:
 			var eid: String = pair[0]
 			var entry: Dictionary = pair[1]

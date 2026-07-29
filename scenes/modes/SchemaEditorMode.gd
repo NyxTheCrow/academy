@@ -152,15 +152,23 @@ func _rebuild_type_list() -> void:
 		b.pressed.connect(_select_type.bind(t))
 		type_list.add_child(b)
 
+func _is_single() -> bool:
+	return str(_schema.get(_type, {}).get("collection", "")) == "single"
+
 func _select_type(t: String) -> void:
 	_type = t
 	_entry = {}
 	_key = ""
 	_rebuild_entry_list()
 	_clear_form()
-	_set_status("[color=gray]%d entries. Pick one, or add a new %s.[/color]" % [_entry_ids().size(), t])
+	if _is_single():
+		_select_entry("(settings)")
+	else:
+		_set_status("[color=gray]%d entries. Pick one, or add a new %s.[/color]" % [_entry_ids().size(), t])
 
 func _entry_ids() -> Array:
+	if _is_single():
+		return ["(settings)"]
 	var col = _working.get(_type, null)
 	if col is Dictionary:
 		return col.keys()
@@ -174,13 +182,15 @@ func _entry_ids() -> Array:
 func _rebuild_entry_list() -> void:
 	for c in entry_list.get_children():
 		c.queue_free()
-	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 4)
-	bar.add_child(_btn("+ New", _on_new_entry))
-	bar.add_child(_btn("Dup", _on_duplicate))
-	bar.add_child(_btn("Del", _on_delete))
-	entry_list.add_child(bar)
-	entry_list.add_child(HSeparator.new())
+	# A single-object type (tuning) has no roster — just its one settings entry.
+	if not _is_single():
+		var bar := HBoxContainer.new()
+		bar.add_theme_constant_override("separation", 4)
+		bar.add_child(_btn("+ New", _on_new_entry))
+		bar.add_child(_btn("Dup", _on_duplicate))
+		bar.add_child(_btn("Del", _on_delete))
+		entry_list.add_child(bar)
+		entry_list.add_child(HSeparator.new())
 	for eid in _entry_ids():
 		var b := Button.new()
 		b.text = eid
@@ -191,6 +201,11 @@ func _rebuild_entry_list() -> void:
 		entry_list.add_child(b)
 
 func _select_entry(eid: String) -> void:
+	if _is_single():
+		_key = eid
+		_entry = _working[_type]
+		_build_form()
+		return
 	var col = _working.get(_type, null)
 	if col is Dictionary:
 		_key = eid
@@ -523,6 +538,8 @@ func _fresh_id(base: String) -> String:
 	return "%s_%d" % [base, n]
 
 func _on_new_entry() -> void:
+	if _is_single():
+		return
 	var e := _default_entry()
 	var nid := _fresh_id("new_" + _type.trim_suffix("s"))
 	var col = _working[_type]
@@ -536,7 +553,7 @@ func _on_new_entry() -> void:
 	_set_status("[color=lightgreen]Added %s. Edit, then Save.[/color]" % nid)
 
 func _on_duplicate() -> void:
-	if _entry.is_empty():
+	if _is_single() or _entry.is_empty():
 		return
 	var clone: Dictionary = _entry.duplicate(true)
 	var nid := _fresh_id(_key + "_copy")
@@ -550,7 +567,7 @@ func _on_duplicate() -> void:
 	_select_entry(nid)
 
 func _on_delete() -> void:
-	if _key == "":
+	if _is_single() or _key == "":
 		return
 	var col = _working[_type]
 	if col is Dictionary:

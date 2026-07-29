@@ -13,6 +13,7 @@ const EventsC := preload("res://core/Events.gd")
 const ContentC := preload("res://core/Content.gd")
 const SchemaC := preload("res://core/ContentSchema.gd")
 const ValidatorC := preload("res://core/ContentValidator.gd")
+const WorldC := preload("res://core/World.gd")
 
 var _passed := 0
 var _failed := 0
@@ -28,6 +29,11 @@ func _ready() -> void:
 	_test_content_loads()
 	_test_schema_and_validation()
 	_test_editor_smoke()
+	_test_world_time_and_drift()
+	_test_world_interactions_and_learning()
+	_test_world_npc_attendance()
+	_test_world_occurrences()
+	_test_world_save_load()
 	print("\n==== core: %d passed, %d failed ====" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -223,6 +229,16 @@ func _test_schema_and_validation() -> void:
 	for iss in issues:
 		print("    ISSUE: %s" % iss)
 	_eq(issues.size(), 0, "shipped content validates cleanly against the schema")
+	# The numeric knobs must be editable: need-decay is a field on the needs type,
+	# and class-learning rates live in the editable single-object tuning type.
+	_check(schema.has("tuning") and str(schema["tuning"]["collection"]) == "single",
+		"tuning is an editable single-object type")
+	_check(c.tuning.get("learning", {}).has("focus_per_week"),
+		"class learning rate (skill per week) is exposed and editable")
+	var need_fields: Array = []
+	for f in schema["needs"]["fields"]:
+		need_fields.append(str(f["key"]))
+	_check("decay_per_min" in need_fields, "need-decay is an editable field on each need")
 
 func _test_editor_smoke() -> void:
 	print("[schema editor — builds a form for every type]")
@@ -250,3 +266,115 @@ func _test_editor_smoke() -> void:
 	_check(ed._entry_ids().size() == before + 1, "New entry adds a row to the working copy")
 	_check(ed._validate_type() is Array, "per-type validation returns a list of issues")
 	ed.free()
+
+# --- World (runtime sim loop) -----------------------------------------------
+func _new_world():
+	var c = ContentC.new()
+	c.load_all()
+	var w = WorldC.new()
+	w.setup(c)
+	return w
+
+func _test_world_time_and_drift() -> void:
+	print("[world — clock, drift, daily refill]")
+	var w = _new_world()
+	_check(w.player != null and w.player.is_player, "world has a player actor")
+	_check(w.actors.size() >= 3, "world builds the full roster")
+	var hunger0: float = w.player.get_need("hunger")
+	w.player.resources["energy"] = 40.0
+	w.advance_time(600)  # a long stretch
+	_check(w.player.get_need("hunger") < hunger0, "hunger drifts down over time")
+	_eq(w.clock.time_string(), "17:00", "clock advanced 10h from 07:00")
+	# Crossing the day boundary refills daily resources (energy/focus).
+	w.advance_time(1000)  # into the next day
+	_check(w.clock.day_count == 1, "a day rolled over")
+	_eq(w.player.get_resource("energy"), 100.0, "energy refills on the new day")
+
+func _test_world_interactions_and_learning() -> void:
+	print("[world — interactions + class learning]")
+	var w = _new_world()
+	# In the dorm you can study and move; class actions are hidden.
+	var ids := _iids(w.available_interactions(w.player))
+	_check("study_room" in ids, "dorm offers study")
+	_check("go_right_plaza" in ids, "dorm offers movement")
+	_check(not ("focus_class" in ids), "in-class actions hidden outside a class")
+	# Put the player in Law (Monday 09:00) and learn.
+	w.player.location = "main_academic_building"
+	w.clock.day_count = 0        # Monday
+	w.clock.minutes_of_day = 540 # 09:00
+	var class_ids := _iids(w.available_interactions(w.player))
+	_check("focus_class" in class_ids, "in-class actions appear during a class")
+	var before: float = w.player.get_skill("modern_politics")
+	var focus := _find_iid(w, "focus_class")
+	w.resolve_interaction(w.player, focus)
+	_check(w.player.get_skill("modern_politics") > before, "focusing in Law raises modern_politics")
+	# A full week of focusing lands near the tuned target (0.5).
+	var w2 = _new_world()
+	var law: Dictionary = {}
+	for c in w2.content.schedule:
+		if str(c.get("id", "")) == "law":
+			law = c
+	var per := w2.class_learn_amount(law, "focus", 20)
+	var slots := 6  # 2h / 20min
+	_approx(per * law["days"].size() * slots, 0.5, "a week of focusing ≈ 0.5 in the class skill")
+
+func _test_world_npc_attendance() -> void:
+	print("[world — NPCs attend on the same path]")
+	var w = _new_world()
+	w.clock.day_count = 0
+	w.clock.minutes_of_day = 540  # 09:00 Monday, Law in session
+	var elara = w.actor_by_id("elara")
+	var before: float = elara.get_skill("modern_politics")
+	# NPCs act inside the tick, through the very same interactions.
+	w.advance_time(40)  # two 20-min ticks of class
+	_check(elara.get_skill("modern_politics") > before, "an NPC accrues the class skill via the shared path")
+
+func _test_world_occurrences() -> void:
+	print("[world — one-time events + attached sub-events]")
+	var w = _new_world()
+	# Attached sub-event: Adler calls on you, once, in week 1.
+	w.player.location = "main_academic_building"
+	w.clock.day_count = 7        # Monday of week 1
+	w.clock.minutes_of_day = 540 # 09:00 (Law is MWF)
+	var res := w.resolve_interaction(w.player, _find_iid(w, "focus_class"))
+	_eq(str(res.get("one_time_id", "")), "adler_calls_on_you", "the attached sub-event fires inside the class")
+	_check(w.player.flags.get("spoke_in_law", false), "the sub-event's effect applied")
+	# Free-standing occurrence: attending a lecture (sets attended_lecture) later
+	# fires 'noticed_by_professor', granting can_duel.
+	var w2 = _new_world()
+	w2.player.location = "main_academic_building"
+	w2.clock.day_count = 0
+	w2.clock.minutes_of_day = 540
+	w2.player_take(_find_iid(w2, "focus_class"))  # sets flag, then advance_time fires the occurrence
+	_check(w2.player.has_tag("can_duel"), "a free-standing occurrence fires and grants a tag")
+
+func _test_world_save_load() -> void:
+	print("[world — save/load round-trip]")
+	var w = _new_world()
+	w.player.location = "gardens"
+	w.player.apply({"skills": {"shaping": 3.5}, "tags": ["pyromancer"]})
+	w.clock.day_count = 4
+	w.clock.minutes_of_day = 812
+	w.fired["some_event"] = true
+	var snap := w.to_dict()
+	var w2 = _new_world()
+	w2.from_dict(snap)
+	_eq(w2.player.location, "gardens", "location restored")
+	_approx(w2.player.get_skill("shaping"), 3.5, "skill restored")
+	_check(w2.player.has_tag("pyromancer"), "tag restored")
+	_eq(w2.clock.day_count, 4, "clock day restored")
+	_eq(w2.clock.minutes_of_day, 812, "clock minute restored")
+	_check(w2.fired.get("some_event", false), "fired-event ledger restored")
+	_eq(w2.actors.size(), w.actors.size(), "roster restored")
+
+func _iids(interactions: Array) -> Array:
+	var out: Array = []
+	for i in interactions:
+		out.append(str(i.get("id", "")))
+	return out
+
+func _find_iid(w, iid: String) -> Dictionary:
+	for i in w.available_interactions(w.player):
+		if str(i.get("id", "")) == iid:
+			return i
+	return {}

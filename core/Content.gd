@@ -37,11 +37,8 @@ func load_all() -> void:
 		var parsed: Variant = _parse(_src_path(file))
 		if col == "array":
 			tables[type] = parsed if parsed is Array else []
-		else:
+		else:  # "dict" and "single" both load as a Dictionary
 			tables[type] = parsed if parsed is Dictionary else {}
-	tuning = _parse(_src_path("tuning.json")) if FileAccess.file_exists(_src_path("tuning.json")) else {}
-	if not (tuning is Dictionary):
-		tuning = {}
 	_bind_handles()
 
 func _bind_handles() -> void:
@@ -60,6 +57,7 @@ func _bind_handles() -> void:
 	spells = tables.get("spells", [])
 	items = tables.get("items", {})
 	conversations = tables.get("conversations", {})
+	tuning = tables.get("tuning", {})
 
 # --- Generic access (for the validator + editor) ----------------------------
 func collection(type: String) -> Variant:

@@ -169,6 +169,14 @@ static func all() -> Dictionary:
 				{"key": "consumable", "label": "Consumed on use", "type": "bool", "optional": true},
 			],
 		},
+		"tuning": {
+			"label": "Tuning (numbers)", "file": "tuning.json", "collection": "single",
+			"fields": [
+				{"key": "clock", "label": "Clock & calendar", "type": "map_num", "optional": true},
+				{"key": "learning", "label": "Class learning rate — skill gained per week (focus / attend)", "type": "map_num", "optional": true},
+				{"key": "world", "label": "World tick (time_step, max_steps)", "type": "map_num", "optional": true},
+			],
+		},
 		"conversations": {
 			"label": "Conversations (branching)", "file": "conversations.json", "collection": "dict",
 			"fields": [

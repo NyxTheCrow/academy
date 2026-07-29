@@ -92,6 +92,11 @@ From that one schema:
   references, unknown requirement/effect keys, malformed description blocks. A
   headless test runs it on shipped content, so bad data fails CI.
 
+Numeric tuning is editable too: per-need **decay rates** are fields on the needs
+type, and the **class-learning rates** (skill gained per week) live in a
+single-object `tuning` type — both edited with number spinners in the same
+schema-driven editor, no raw-JSON required.
+
 ## Status
 
 | Piece | State |
@@ -102,8 +107,9 @@ From that one schema:
 | Recurring + one-time sub-events | Built + tested |
 | Traits / learn-faster | Built + tested |
 | Schema + schema-driven editor + validator | Built + smoke-tested |
+| Editable numeric tuning (need decay, learning rates) | Built + tested |
 | Seed content (validates clean) | Built |
-| **Runtime `World`/`Sim` loop on the core** | Not yet — the tick loop that drives needs drift, NPC turns, event firing over `Actor`s |
+| **Runtime `World`/`Sim` loop on the core** (`core/World.gd`) | Built + tested — advances the clock, drifts needs/resources, refills daily, runs unified NPC turns, resolves class learning + recurring/one-time events, save/load |
 | **Game UI (Academy/menus) on the core** | Not yet — still the legacy modes on `GameState` |
 | **Save/load over `Actor`s** | Not yet (Actor has `to_dict`/`from_dict`; a SaveManager is the next seam) |
 | **Combat consuming `Actor`s** | Not yet |
